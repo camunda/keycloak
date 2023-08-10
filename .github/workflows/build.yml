@@ -14,7 +14,6 @@ jobs:
       uses: camunda/infra-global-github-actions/common-tooling@main
       with:
         java-enabled: false
-        python-enabled: false
         yarn-enabled: false
     - name: Build
       uses: docker/build-push-action@v4
@@ -24,4 +23,20 @@ jobs:
         tags: camunda/keycloak-aws:latest
     - name: KeyCloak Show-Config
       run: |
-        docker run camunda/keycloak-aws:latest show-config
+        docker run camunda/keycloak-aws:latest show-config >> docker.log
+        echo "config=$(cat docker.log | tr '\n' ' ')" >> "$GITHUB_ENV"
+    - name: Assert Config
+      env:
+        CONFIG: ${{ env.config }}
+      shell: python
+      run: |
+        import os
+
+        print('Checking that the plugins were installed properly')
+
+        config = os.environ.get('CONFIG')
+        assert 'aws-advanced-jdbc-wrapper' in config
+        assert 'sts' in config
+        assert 'apache-client' in config
+        assert 'kc.db =  postgres' in config
+        assert 'kc.health-enabled =  true' in config
