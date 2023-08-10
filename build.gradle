@@ -1,0 +1,34 @@
+apply plugin: 'groovy'
+
+repositories {
+    mavenCentral()
+}
+
+def jdbcversion = '2.2.2'      // set to latest version of aws-advanced-jdbc-wrapper package
+def awsSdkVersion = '2.20.107' // set to latest version of software.amazon.awssdk
+
+dependencies {
+    implementation group: 'software.amazon.jdbc', name: 'aws-advanced-jdbc-wrapper', version: jdbcversion
+    implementation group: 'software.amazon.awssdk', name: 'apache-client', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'auth', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'aws-core', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'aws-json-protocol', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'aws-query-protocol', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'endpoints-spi', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'http-client-spi', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'json-utils', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'metrics-spi', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'profiles', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'protocol-core', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'rds', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'regions', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'sdk-core', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'sts', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'third-party-jackson-core', version: awsSdkVersion
+    implementation group: 'software.amazon.awssdk', name: 'utils', version: awsSdkVersion
+}
+
+task copyDependencies(type: Copy) {
+    from configurations.runtimeClasspath
+    into "lib"
+}

@@ -1,0 +1,27 @@
+---
+name: ci
+
+on:
+  push:
+
+jobs:
+  docker:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install if required common software tooling
+      uses: camunda/infra-global-github-actions/common-tooling@main
+      with:
+        java-enabled: false
+        python-enabled: false
+        yarn-enabled: false
+    - name: Build
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        load: true
+        tags: camunda/keycloak-aws:latest
+    - name: KeyCloak Show-Config
+      run: |
+        docker run camunda/keycloak-aws:latest show-config
