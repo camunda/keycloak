@@ -28,15 +28,4 @@ jobs:
     - name: Assert Config
       env:
         CONFIG: ${{ env.config }}
-      shell: python
-      run: |
-        import os
-
-        print('Checking that the plugins were installed properly')
-
-        config = os.environ.get('CONFIG')
-        assert 'aws-advanced-jdbc-wrapper' in config
-        assert 'sts' in config
-        assert 'apache-client' in config
-        assert 'kc.db =  postgres' in config
-        assert 'kc.health-enabled =  true' in config
+      run: python3 ./.github/scripts/build-check/main.py
