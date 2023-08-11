@@ -4,8 +4,8 @@ repositories {
     mavenCentral()
 }
 
-def jdbcversion = '2.2.2'      // set to latest version of aws-advanced-jdbc-wrapper package
-def awsSdkVersion = '2.20.107' // set to latest version of software.amazon.awssdk
+def jdbcversion = '2.2.3'      // set to latest version of aws-advanced-jdbc-wrapper package
+def awsSdkVersion = '2.20.123' // set to latest version of software.amazon.awssdk
 
 dependencies {
     implementation group: 'software.amazon.jdbc', name: 'aws-advanced-jdbc-wrapper', version: jdbcversion
