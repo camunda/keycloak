@@ -4,7 +4,9 @@ repositories {
     mavenCentral()
 }
 
+// renovate: datasource=github-tags depName=awslabs/aws-advanced-jdbc-wrapper
 def jdbcversion = '2.2.3'      // set to latest version of aws-advanced-jdbc-wrapper package
+// renovate: datasource=github-tags depName=aws/aws-sdk-java-v2
 def awsSdkVersion = '2.20.123' // set to latest version of software.amazon.awssdk
 
 dependencies {
