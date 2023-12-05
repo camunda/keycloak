@@ -7,7 +7,7 @@ repositories {
 // renovate: datasource=github-tags depName=awslabs/aws-advanced-jdbc-wrapper
 def jdbcversion = '2.3.1'      // set to latest version of aws-advanced-jdbc-wrapper package
 // renovate: datasource=github-tags depName=aws/aws-sdk-java-v2
-def awsSdkVersion = '2.21.37' // set to latest version of software.amazon.awssdk
+def awsSdkVersion = '2.21.38' // set to latest version of software.amazon.awssdk
 
 dependencies {
     implementation group: 'software.amazon.jdbc', name: 'aws-advanced-jdbc-wrapper', version: jdbcversion
