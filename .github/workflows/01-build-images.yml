@@ -1,0 +1,39 @@
+---
+# desc: build container images, perform static tests then push
+#       this workflow will only use current as tag container tag reference, dedicated workflow exists for releasing versionned image
+
+name: build-images
+
+on:
+  push:
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install if required common software tooling
+        uses: camunda/infra-global-github-actions/common-tooling@main
+        with:
+          java-enabled: false
+          yarn-enabled: false
+
+      # TODO: integrate QEMU in standard tooling
+      # - name: Set up QEMU
+      #   uses: docker/setup-qemu-action@v3
+
+      - name: Build image using Camunda docker build
+        uses: camunda/infra-global-github-actions/build-docker-image@main
+        with:
+          registry_host: ${{ vars.CONTAINER_REGISTRY }}
+          registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry_password: ${{ secrets.DOCKERHUB_TOKEN }}
+          force_push: true
+          image_name: ${{ vars.CONTAINER_IMAGE_NAME }}
+          #build_args: # TODO: integrate commit infos etc
+          build_context: .
+          # TODO: modify this one to integrate "platforms"
+          #build_platforms: linux/amd64,linux/arm64
+          #docker_load: false # TODO: re-enabled, disabled due to a bug on multiarch

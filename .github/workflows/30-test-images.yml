@@ -1,0 +1,61 @@
+---
+# desc: build container images, perform static tests then push
+
+name: test-images
+
+on:
+  workflow_run:
+    workflows: ["build-images"]
+    types:
+      - completed
+
+jobs:
+  test-base-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install if required common software tooling
+        uses: camunda/infra-global-github-actions/common-tooling@main
+        with:
+          java-enabled: false
+          yarn-enabled: false
+
+      - name: KeyCloak Show-Config
+        run: |
+          docker run camunda/keycloak-aws:latest show-config >> docker.log
+          echo "config=$(cat docker.log | tr '\n' ' ')" >> "$GITHUB_ENV"
+
+      - name: Assert Config
+        env:
+          CONFIG: ${{ env.config }}
+        run: python3 ./.github/scripts/build-check/main.py
+
+  test-postgres-integ:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install if required common software tooling
+        uses: camunda/infra-global-github-actions/common-tooling@main
+        with:
+          java-enabled: false
+          yarn-enabled: false
+
+
+      - name: Start Test Environment
+        uses: ./.github/actions/compose
+        with:
+          compose_file: ${{ github.workspace }}/docker-compose.yml
+          project_name: keycloak
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ./.github/scripts/integration/requirements.txt
+      - name: Test Environment
+        run: python3 ./.github/scripts/integration/main.py
+
+# TODO: add tests (static framework tbd) then push
