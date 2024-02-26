@@ -30,7 +30,7 @@ FROM quay.io/keycloak/keycloak:22.0
 LABEL maintainer="Camunda" \
       name="camunda/keycloak" \
       summary="Keycloak with AWS wrapper" \
-      io.k8s.description= "Keycloak with AWS wrapper." \
+      io.k8s.description="Keycloak with AWS wrapper." \
       io.k8s.display-name="keycloak" \
       description="Keycloak with AWS wrapper." \
       org.opencontainers.image.authors="Camunda" \
