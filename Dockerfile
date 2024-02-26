@@ -27,13 +27,25 @@ RUN /opt/keycloak/bin/kc.sh build
 FROM quay.io/keycloak/keycloak:22.0
 
 # OCI annotations to image
-LABEL org.opencontainers.image.authors="Camunda" \
-      org.opencontainers.image.title="Camunda keycloak" \
-      org.opencontainers.image.description="Camunda keycloak image" \
-      org.opencontainers.image.documentation="https://hub.docker.com/camunda/keycloak/" \
+LABEL maintainer="Camunda" \
+      name="camunda/keycloak" \
+      summary="Keycloak with AWS wrapper" \
+      io.k8s.description= "Keycloak with AWS wrapper." \
+      io.k8s.display-name="keycloak" \
+      description="Keycloak with AWS wrapper." \
+      org.opencontainers.image.authors="Camunda" \
       org.opencontainers.image.vendor="Camunda" \
-      org.opencontainers.image.url="https://github.com/camunda/container-keycloak" \
-      org.opencontainers.image.licenses="TODO: TBD"
+      org.opencontainers.image.documentation="https://hub.docker.com/camunda/keycloak/" \
+      org.opencontainers.image.licenses="Apache License 2.0"
+      # the following labels are generated at buildtime - see https://github.com/docker/metadata-action
+      # org.opencontainers.image.title
+      # org.opencontainers.image.description
+      # org.opencontainers.image.description
+      # org.opencontainers.image.url
+      # org.opencontainers.image.created
+      # org.opencontainers.image.revision
+      # org.opencontainers.image.source
+      # org.opencontainers.image.version
 
 # Enable health and metrics support
 ENV KC_HEALTH_ENABLED=true
