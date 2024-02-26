@@ -20,20 +20,13 @@ jobs:
           java-enabled: false
           yarn-enabled: false
 
-      # TODO: integrate QEMU in standard tooling
-      # - name: Set up QEMU
-      #   uses: docker/setup-qemu-action@v3
-
       - name: Build image using Camunda docker build
-        uses: camunda/infra-global-github-actions/build-docker-image@main
+        uses: camunda/infra-global-github-actions/build-docker-image@feature/container-build-multiarch
         with:
           registry_host: ${{ vars.CONTAINER_REGISTRY }}
           registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
           registry_password: ${{ secrets.DOCKERHUB_TOKEN }}
           force_push: true
           image_name: ${{ vars.CONTAINER_IMAGE_NAME }}
-          #build_args: # TODO: integrate commit infos etc
           build_context: .
-          # TODO: modify this one to integrate "platforms"
-          #build_platforms: linux/amd64,linux/arm64
-          #docker_load: false # TODO: re-enabled, disabled due to a bug on multiarch
+          build_platforms: linux/amd64,linux/arm64

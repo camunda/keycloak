@@ -22,6 +22,7 @@ jobs:
           java-enabled: false
           yarn-enabled: false
 
+      # TODO: use current version of the image in the shell
       - name: KeyCloak Show-Config
         run: |
           docker run camunda/keycloak-aws:latest show-config >> docker.log

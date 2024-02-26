@@ -19,7 +19,7 @@ services:
         timeout: 5s
         retries: 3
   keycloak:
-      image: langleu/keycloak:latest
+      image: langleu/keycloak:latest # TODO: replace with current image
       build: .
       command: start-dev
       environment:
