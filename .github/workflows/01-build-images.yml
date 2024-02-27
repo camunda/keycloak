@@ -30,3 +30,6 @@ jobs:
           image_name: ${{ vars.CONTAINER_IMAGE_NAME }}
           build_context: .
           build_platforms: linux/amd64,linux/arm64
+
+      - name: Test built images
+        uses: .github/workflows/30-test-images.yml

@@ -4,10 +4,8 @@
 name: test-images
 
 on:
-  workflow_run:
-    workflows: ["build-images"]
-    types:
-      - completed
+  workflow_call:
+
 
 jobs:
   test-base-image:
@@ -45,7 +43,6 @@ jobs:
         with:
           java-enabled: false
           yarn-enabled: false
-
 
       - name: Start Test Environment
         uses: ./.github/actions/compose
