@@ -8,8 +8,20 @@ on:
   push:
 
 jobs:
+  trigger-next-workflows:
+    runs-on: ubuntu-22.04
+    needs:
+      - docker-build
+    steps:
+      - name: Test built images
+        uses: ./.github/workflows/30-test-images.yml@main
+        with:
+          test_image_name: ${{ needs.docker-build.outputs.built_image_metadata | jq -r '.image.name + ":" + .containerimage.digest' }}
+
   docker-build:
     runs-on: ubuntu-latest
+    outputs:
+      built_image_metadata: ${{ steps.build-image-step.outputs.metadata }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,6 +33,7 @@ jobs:
           yarn-enabled: false
 
       - name: Build image using Camunda docker build
+        id: build-image-step
         uses: camunda/infra-global-github-actions/build-docker-image@feature/container-build-multiarch
         with:
           registry_host: ${{ vars.CONTAINER_REGISTRY }}
@@ -30,6 +43,3 @@ jobs:
           image_name: ${{ vars.CONTAINER_IMAGE_NAME }}
           build_context: .
           build_platforms: linux/amd64,linux/arm64
-
-      - name: Test built images
-        uses: ./.github/workflows/30-test-images.yml

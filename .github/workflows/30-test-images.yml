@@ -5,9 +5,23 @@ name: test-images
 
 on:
   workflow_call:
+    inputs:
+      test_image_name:
+        description: "Fully qualified image name with registry and tag (e.g. `docker.io/myuser/myimage:feature@sha256:378738...`)"
+        required: true
+        type: string
 
 
 jobs:
+  trigger-next-workflows:
+    runs-on: ubuntu-22.04
+    needs:
+      - test-base-image
+      - test-postgres-integ
+    steps:
+      - name: Publish images
+        uses: ./.github/workflows/90-publish-images.yml
+
   test-base-image:
     runs-on: ubuntu-latest
     steps:
@@ -20,10 +34,17 @@ jobs:
           java-enabled: false
           yarn-enabled: false
 
+      - name: Login to the registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.CONTAINER_REGISTRY }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       # TODO: use current version of the image in the shell
       - name: KeyCloak Show-Config
         run: |
-          docker run camunda/keycloak-aws:latest show-config >> docker.log
+          docker run ${{ inputs.test_image_name }} show-config >> docker.log
           echo "config=$(cat docker.log | tr '\n' ' ')" >> "$GITHUB_ENV"
 
       - name: Assert Config
@@ -44,6 +65,13 @@ jobs:
           java-enabled: false
           yarn-enabled: false
 
+      - name: Login to the registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.CONTAINER_REGISTRY }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Start Test Environment
         uses: ./.github/actions/compose
         with:
@@ -55,5 +83,6 @@ jobs:
           pip install -r ./.github/scripts/integration/requirements.txt
       - name: Test Environment
         run: python3 ./.github/scripts/integration/main.py
+
 
 # TODO: add tests (static framework tbd) then push
