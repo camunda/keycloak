@@ -37,7 +37,7 @@ jobs:
         uses: camunda/infra-global-github-actions/build-docker-image@feature/container-build-multiarch
         with:
           registry_host: ${{ vars.CONTAINER_REGISTRY }}
-          registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry_username: ${{ vars.DOCKERHUB_USERNAME }}
           registry_password: ${{ secrets.DOCKERHUB_TOKEN }}
           force_push: true
           image_name: ${{ vars.CONTAINER_IMAGE_NAME }}
@@ -52,8 +52,8 @@ jobs:
           image_name=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."image.name"')
           digest=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."containerimage.digest"')
           full_image_name="${image_name}@${digest}"
-          echo "full_image_name=${full_image_name}" >> $GITHUB_ENV
           echo "full_image_name=${full_image_name}" >> $GITHUB_OUTPUT
+          echo "$full_image_name"
 
   test-base-image:
     runs-on: ubuntu-latest
@@ -73,7 +73,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ vars.CONTAINER_REGISTRY }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: KeyCloak Show-Config
@@ -108,7 +108,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ vars.CONTAINER_REGISTRY }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Start Test Environment
