@@ -2,9 +2,10 @@
 # desc: workflow dedicated to all the pre-commit verifications (lint)
 
 name: lint
+
 on:
- - push
- - pull_request_target
+  push:
+  pull_request_target:
 
 jobs:
   pre-commit:
