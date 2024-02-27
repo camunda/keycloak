@@ -7,7 +7,7 @@ COPY build.gradle /home/gradle
 RUN gradle copyDependencies
 
 # quay.io is the new repository of keycloak (https://lists.jboss.org/archives/list/keycloak-user@lists.jboss.org/message/7CRWKAAYI5WJTUXUZR6K73XV7P4TLZZ2/)
-FROM quay.io/keycloak/keycloak:23 as builder
+FROM quay.io/keycloak/keycloak:23.0 as builder
 
 # Enable health and metrics support
 ENV KC_HEALTH_ENABLED=true
@@ -24,7 +24,7 @@ RUN /opt/keycloak/bin/kc.sh build
 
 # final keycloak image
 
-FROM quay.io/keycloak/keycloak:23
+FROM quay.io/keycloak/keycloak:23.0
 
 # OCI annotations to image
 LABEL maintainer="Camunda" \
