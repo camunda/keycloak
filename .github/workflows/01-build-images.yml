@@ -13,10 +13,18 @@ jobs:
     needs:
       - docker-build
     steps:
+      - name: Compute fully qualified image
+        run: |
+          image_metadata="${{ needs.docker-build.outputs.built_image_metadata }}"
+          image_name=$(echo "$image_metadata" | jq -r '.image.name')
+          digest=$(echo "$image_metadata" | jq -r '.containerimage.digest')
+          test_image_name="${image_name}:${digest}"
+          echo "test_image_name=${test_image_name}" >> $GITHUB_ENV
+
       - name: Test built images
         uses: ./.github/workflows/30-test-images.yml@main
         with:
-          test_image_name: ${{ needs.docker-build.outputs.built_image_metadata | jq -r '.image.name + ":" + .containerimage.digest' }}
+          test_image_name: ${{ env.test_image_name }}
 
   docker-build:
     runs-on: ubuntu-latest
