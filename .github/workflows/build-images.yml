@@ -46,7 +46,7 @@ jobs:
       - name: Compute target built image fully qualified name from metadata
         id: compute-image-name-step
         run: |
-          image_metadata="${{ steps.build-image-step.outputs.image_metadata }}"
+          image_metadata='${{ steps.build-image-step.outputs.image_metadata }}'
           image_name=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."image.name"')
           digest=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."containerimage.digest"')
           full_image_name="${image_name}@${digest}"
