@@ -6,7 +6,7 @@ volumes:
 
 services:
   postgres:
-      image: postgres
+      image: ${COMPOSE_POSTGRES_IMAGE:-postgres}
       volumes:
         - postgres_data:/var/lib/postgresql/data
       environment:
@@ -19,7 +19,7 @@ services:
         timeout: 5s
         retries: 3
   keycloak:
-      image: langleu/keycloak:latest # TODO: replace with current image
+      image: ${COMPOSE_KEYCLOAK_IMAGE:-camunda/keycloak:latest}
       build: .
       command: start-dev
       environment:
