@@ -22,6 +22,10 @@ jobs:
     if: ${{ github.event_name == 'push' }}
     outputs:
       full_image_name: ${{ steps.compute-image-name-step.outputs.full_image_name }}
+# TODO: later, we should be able to build multiple versions of keycloak
+    # strategy:
+    #   matrix:
+    #     keycloak_version: [keycloak-22, keycloak-23]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -89,9 +93,13 @@ jobs:
   test-postgres-integ:
     strategy:
       matrix:
-        runner: [ubuntu-22.04, aws-core-2-default, aws-arm-core-2-default, gcp-core-2-default]
+        runner_desc:
+          - {runner: ubuntu-22.04, postgres_replicas: 1, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_url: "jdbc:aws-wrapper:postgresql://postgres:5432/keycloak" }
+          - {runner: aws-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_url: "jdbc:aws-wrapper:postgresql://postgres:5432/keycloak" }
+          - {runner: aws-arm-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_url: "jdbc:aws-wrapper:postgresql://postgres:5432/keycloak" }
+          - {runner: gcp-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_url: "jdbc:aws-wrapper:postgresql://postgres:5432/keycloak" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner_desc.runner }}
     needs:
       - build-image
     steps:
@@ -111,12 +119,26 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # TODO: database name and generation should be unique and destroyed at the end
+
       - name: Start Test Environment
         uses: ./.github/actions/compose
         with:
           compose_file: ${{ github.workspace }}/docker-compose.yml
           project_name: keycloak
         env:
+
+          POSTGRES_DB: "${{ matrix.runner_desc.postgres_database }}"
+          POSTGRES_USER: "${{ matrix.runner_desc.postgres_username }}"
+          POSTGRES_PASSWORD: "${{ matrix.runner_desc.postgres_password }}"
+
+          KC_DB_USERNAME: "${{ matrix.runner_desc.postgres_username }}"
+          KC_DB_PASSWORD: "${{ matrix.runner_desc.postgres_password }}"
+          KC_DB_DRIVER: "${{ matrix.runner_desc.keycloak_db_driver }}"
+          KC_DB_URL: "${{ matrix.runner_desc.keycloak_db_url }}"
+
+          COMPOSE_POSTGRES_IMAGE: "postgres:${{ matrix.postgres_version }}"
+          COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
           COMPOSE_KEYCLOAK_IMAGE: ${{ needs.build-image.outputs.full_image_name }}
 
       - name: Install dependencies
