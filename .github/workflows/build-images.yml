@@ -20,6 +20,8 @@ jobs:
   build-image:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' }}
+    outputs:
+      full_image_name: ${{ steps.compute-image-name-step.outputs.full_image_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,7 +53,7 @@ jobs:
           digest=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."containerimage.digest"')
           full_image_name="${image_name}@${digest}"
           echo "full_image_name=${full_image_name}" >> $GITHUB_ENV
-          echo "::set-output name=full_image_name::${full_image_name}"
+          echo "full_image_name=${full_image_name}" >> $GITHUB_OUTPUT
 
   test-base-image:
     runs-on: ubuntu-latest
@@ -85,7 +87,11 @@ jobs:
         run: python3 ./.github/scripts/build-check/main.py
 
   test-postgres-integ:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        runner: [ubuntu-22.04, aws-core-2-default, aws-arm-core-2-default, gcp-core-2-default]
+        postgres_version: [15] # reference: https://www.keycloak.org/server/db
+    runs-on: ${{ matrix.runner }}
     needs:
       - build-image
     steps:
