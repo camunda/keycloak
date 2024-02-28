@@ -120,9 +120,9 @@ jobs:
       matrix:
         runner_desc:
           - {runner: ubuntu-22.04, postgres_replicas: 1, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "postgres", keycloak_db_port: "5432" }
-          - {runner: aws-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "camunda-ci-eks-aurora-postgresql-${{ matrix.postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
-          - {runner: aws-arm-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "camunda-ci-eks-aurora-postgresql-${{ matrix.postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
-          - {runner: gcp-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "${{ matrix.postgres_version }}", keycloak_db_port: "5432" }
+          - {runner: aws-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
+          - {runner: aws-arm-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
+          - {runner: gcp-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "${{ postgres_version }}", keycloak_db_port: "5432" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
     runs-on: ${{ matrix.runner_desc.runner }}
     needs:
