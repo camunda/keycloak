@@ -33,6 +33,7 @@ jobs:
         with:
           java-enabled: false
           yarn-enabled: false
+          python-version: 3
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
@@ -83,6 +84,7 @@ jobs:
         with:
           java-enabled: false
           yarn-enabled: false
+          python-version: 3
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
@@ -136,6 +138,7 @@ jobs:
         with:
           java-enabled: false
           yarn-enabled: false
+          python-version: 3
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
