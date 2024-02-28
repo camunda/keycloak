@@ -40,12 +40,13 @@ LABEL maintainer="Camunda" \
       # the following labels are generated at buildtime - see https://github.com/docker/metadata-action
       # org.opencontainers.image.title
       # org.opencontainers.image.description
-      # org.opencontainers.image.description
       # org.opencontainers.image.url
       # org.opencontainers.image.created
       # org.opencontainers.image.revision
       # org.opencontainers.image.source
       # org.opencontainers.image.version
+
+      # TODO: check w/ https://github.com/camunda/camunda-optimize/blob/f071d2d2d7e01ca438c9828f6130c0af6cd46bb0/Dockerfile#L56
 
 # Enable health and metrics support
 ENV KC_HEALTH_ENABLED=true

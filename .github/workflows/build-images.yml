@@ -36,18 +36,31 @@ jobs:
           java-enabled: false
           yarn-enabled: false
 
+      - name: Import secrets
+        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        id: secrets
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            secret/data/products/infrastructure-experience/ci/common MACHINE_PSW;
+            secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
+
       - name: Build image using Camunda docker build
         id: build-image-step
         uses: camunda/infra-global-github-actions/build-docker-image@feature/container-build-multiarch
         with:
-          registry_host: ${{ vars.CONTAINER_REGISTRY }}
-          registry_username: ${{ vars.DOCKERHUB_USERNAME }}
-          registry_password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry_host: ${{ vars.CONTAINER_REGISTRY_CI }}
+          registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
+          registry_password: ${{ steps.secrets.outputs.MACHINE_PSW }}
           force_push: true
-          image_name: ${{ vars.CONTAINER_IMAGE_NAME }}
+          image_name: ${{ vars.CONTAINER_IMAGE_NAME_CI }}
           build_context: .
           build_platforms: linux/amd64,linux/arm64
-
+          extra_tags: | # the ci- prefix ensures a build context, this image is treated as "temporary"
+            type=sha,enable=true,priority=1000,prefix=ci-sha-,suffix=,format=short
 
       - name: Compute target built image fully qualified name from metadata
         id: compute-image-name-step
@@ -73,12 +86,24 @@ jobs:
           java-enabled: false
           yarn-enabled: false
 
+      - name: Import secrets
+        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        id: secrets
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            secret/data/products/infrastructure-experience/ci/common MACHINE_PSW;
+            secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
+
       - name: Login to the registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ vars.CONTAINER_REGISTRY }}
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ vars.CONTAINER_REGISTRY_CI }}
+          username: ${{ steps.secrets.outputs.MACHINE_USR }}
+          password: ${{ steps.secrets.outputs.MACHINE_PSW }}
 
       - name: KeyCloak Show-Config
         run: |
@@ -122,12 +147,24 @@ jobs:
           echo "test_db_url=${test_db_url}" >> $GITHUB_ENV
           echo "test_db_url=$test_db_url"
 
+      - name: Import secrets
+        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        id: secrets
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            secret/data/products/infrastructure-experience/ci/common MACHINE_PSW;
+            secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
+
       - name: Login to the registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ vars.CONTAINER_REGISTRY }}
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ vars.CONTAINER_REGISTRY_CI }}
+          username: ${{ steps.secrets.outputs.MACHINE_USR }}
+          password: ${{ steps.secrets.outputs.MACHINE_PSW }}
 
       - name: Tear up Aurora PG (aws only)
         if: startsWith(matrix.runner_desc.runner, 'aws')
