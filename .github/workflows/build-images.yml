@@ -202,7 +202,7 @@ jobs:
 
       - name: Tear up Aurora PG (aws only)
         if: startsWith(matrix.runner_desc.runner, 'aws')
-        run: ./.helpers/actions/create-aurora-database.sh
+        run: ./.helpers/actions/create-aurora-pg-db.sh
         env:
           PGDATABASE: "${{ env.postgres_database }}"
           PGHOST: ${{ matrix.runner_desc.keycloak_db_host }}
@@ -243,7 +243,7 @@ jobs:
 
       - name: Tear down Aurora PG (aws only)
         if: startsWith(matrix.runner_desc.runner, 'aws')
-        run: ./.helpers/actions/delete-aurora-database.sh
+        run: ./.helpers/actions/delete-aurora-pg-db.sh
         env:
           PGDATABASE: "${{ env.postgres_database }}"
           PGHOST: ${{ matrix.runner_desc.keycloak_db_host }}
