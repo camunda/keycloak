@@ -119,10 +119,10 @@ jobs:
     strategy:
       matrix:
         runner_desc:
-          - {runner: ubuntu-22.04, postgres_replicas: 1, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "postgres", keycloak_db_port: "5432" }
-          - {runner: aws-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
-          - {runner: aws-arm-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
-          - {runner: gcp-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "{{ postgres_version }}", keycloak_db_port: "5432" }
+          - {runner: ubuntu-22.04, postgres_replicas: 1, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "postgres", keycloak_db_port: "5432" }
+          - {runner: aws-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
+          - {runner: aws-arm-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
+          - {runner: gcp-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "{{ postgres_version }}", keycloak_db_port: "5432" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
     runs-on: ${{ matrix.runner_desc.runner }}
     needs:
@@ -149,18 +149,42 @@ jobs:
             secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
             secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
 
+            secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_PASSWORD;
+            secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_USERNAME;
+
+      - name: Compute AWS variables
+        if: startsWith(matrix.runner_desc.runner, 'aws')
+        run: |
+          echo "postgres_user=${{ steps.secrets.outputs.AURORA_POSTGRESQL_USERNAME }}" >> $GITHUB_ENV
+          echo "postgres_password=${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}" >> $GITHUB_ENV
+          echo "postgres_user=${postgres_user}"
+
+      - name: Compute Ubuntu variables
+        if: startsWith(matrix.runner_desc.runner, 'ubuntu')
+        run: |
+          echo "postgres_user=keycloak" >> $GITHUB_ENV
+          echo "postgres_password=password" >> $GITHUB_ENV
+          echo "postgres_user=${postgres_user}"
+
+      - name: Compute GCP variables
+        if: startsWith(matrix.runner_desc.runner, 'gcp')
+        run: |
+          echo "postgres_user=keycloak" >> $GITHUB_ENV
+          echo "postgres_password=password" >> $GITHUB_ENV
+          echo "postgres_user=${postgres_user}"
+
       - name: Declare test recipe variables
         shell: bash
         run: |
-          test_db_name="db-${{ matrix.runner_desc.runner }}-${{ github.sha }}"
-          echo "test_db_name=${test_db_name}" >> $GITHUB_ENV
-          echo "test_db_name=$test_db_name"
+          postgres_database="db-${{ matrix.runner_desc.runner }}-${{ github.sha }}"
+          echo "postgres_database=${postgres_database}" >> $GITHUB_ENV
+          echo "postgres_database=$postgres_database"
 
           postgres_host=$(echo "${{ matrix.runner_desc.keycloak_db_host }}" | sed "s/{{ postgres_version }}/${{ matrix.postgres_version }}/g")
           echo "postgres_host=${postgres_host}" >> $GITHUB_ENV
           echo "postgres_host=${postgres_host}"
 
-          test_db_url="jdbc:aws-wrapper:postgresql://${postgres_host}:${{ matrix.runner_desc.keycloak_db_port }}/${test_db_name}"
+          test_db_url="jdbc:${{ matrix.runner_desc.keycloak_jdbc_protocol }}://${postgres_host}:${{ matrix.runner_desc.keycloak_db_port }}/${postgres_database}"
           echo "test_db_url=${test_db_url}" >> $GITHUB_ENV
           echo "test_db_url=$test_db_url"
 
@@ -171,15 +195,20 @@ jobs:
           username: ${{ steps.secrets.outputs.MACHINE_USR }}
           password: ${{ steps.secrets.outputs.MACHINE_PWD }}
 
+      # The self-hosted runner doesn't provide a postgres client and the prerequisites for make,
+      # so we need to install them manually
+      - name: Install required packages
+        run: sudo apt-get update && sudo apt-get install -y build-essential postgresql-client
+
       - name: Tear up Aurora PG (aws only)
         if: startsWith(matrix.runner_desc.runner, 'aws')
         run: ./.helpers/actions/create-aurora-database.sh
         env:
-          PGDATABASE: "${{ env.test_db_name }}"
+          PGDATABASE: "${{ env.postgres_database }}"
           PGHOST: ${{ matrix.runner_desc.keycloak_db_host }}
           PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
-          PGPASSWORD: ${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}
-          PGUSER: ${{ steps.secrets.outputs.AURORA_POSTGRESQL_USERNAME }}
+          PGPASSWORD: ${{ env.postgres_password }}
+          PGUSER: ${{ env.postgres_user }}
           PGUSER_IRSA: web-modeler-irsa # TODO: TDB
 
       # TODO: database name and generation should be unique and destroyed at the end
@@ -191,14 +220,14 @@ jobs:
           project_name: keycloak
         env:
 
-          POSTGRES_DB: "${{ matrix.runner_desc.postgres_database }}"
-          POSTGRES_USER: "${{ matrix.runner_desc.postgres_username }}"
-          POSTGRES_PASSWORD: "${{ matrix.runner_desc.postgres_password }}"
+          POSTGRES_DB: "${{ env.postgres_database }}"
+          POSTGRES_USER: "${{ env.postgres_username }}"
+          POSTGRES_PASSWORD: "${{ env.postgres_password }}"
 
-          KC_DB_USERNAME: "${{ matrix.runner_desc.postgres_username }}"
-          KC_DB_PASSWORD: "${{ matrix.runner_desc.postgres_password }}"
+          KC_DB_USERNAME: "${{ env.postgres_username }}"
+          KC_DB_PASSWORD: "${{ env.postgres_password }}"
           KC_DB_DRIVER: "${{ matrix.runner_desc.keycloak_db_driver }}"
-          KC_DB_URL: "${{ matrix.runner_desc.keycloak_db_url }}"
+          KC_DB_URL: "${{ env.test_db_url }}"
 
           COMPOSE_POSTGRES_IMAGE: "postgres:${{ matrix.postgres_version }}"
           COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
@@ -216,11 +245,11 @@ jobs:
         if: startsWith(matrix.runner_desc.runner, 'aws')
         run: ./.helpers/actions/delete-aurora-database.sh
         env:
-          PGDATABASE: "${{ env.test_db_name }}"
+          PGDATABASE: "${{ env.postgres_database }}"
           PGHOST: ${{ matrix.runner_desc.keycloak_db_host }}
           PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
-          PGPASSWORD: ${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}
-          PGUSER: ${{ steps.secrets.outputs.AURORA_POSTGRESQL_USERNAME }}
+          PGPASSWORD: ${{ env.postgres_password }}
+          PGUSER: ${{ env.postgres_user }}
 
   # TODO: add tests (static framework tbd) then push
 
