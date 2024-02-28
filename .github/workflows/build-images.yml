@@ -213,7 +213,7 @@ jobs:
         run: python3 ./.github/scripts/integration/main.py
 
       - name: Tear down Aurora PG (aws only)
-        if: startsWith(matrix.runner_desc.runner, 'aws') || always()
+        if: startsWith(matrix.runner_desc.runner, 'aws')
         run: ./.helpers/actions/delete-aurora-database.sh
         env:
           PGDATABASE: "${{ env.test_db_name }}"
