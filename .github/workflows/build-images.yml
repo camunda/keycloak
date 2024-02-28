@@ -1,7 +1,5 @@
 ---
-# desc: build container images, perform static tests then push
-#       this workflow will only use current as tag container tag reference, dedicated workflow exists for releasing versionned image
-
+# desc: build container images, perform static tests then publish
 name: build-images
 
 on:
@@ -123,7 +121,8 @@ jobs:
           - {runner: ubuntu-22.04, postgres_replicas: 1, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "postgres", keycloak_db_port: "5432" }
           - {runner: aws-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
           - {runner: aws-arm-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
-          - {runner: gcp-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "{{ postgres_version }}", keycloak_db_port: "5432" }
+          # not impleted:
+          # - {runner: gcp-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "{{ postgres_version }}", keycloak_db_port: "5432" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
     runs-on: ${{ matrix.runner_desc.runner }}
     needs:
@@ -146,6 +145,7 @@ jobs:
           method: approle
           roleId: ${{ secrets.VAULT_ROLE_ID }}
           secretId: ${{ secrets.VAULT_SECRET_ID }}
+          # for the moment, we share the secrets of the web-modeler for aurora
           secrets: |
             secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
             secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
@@ -156,9 +156,13 @@ jobs:
       - name: Compute AWS variables
         if: startsWith(matrix.runner_desc.runner, 'aws')
         run: |
-          echo "postgres_user=${{ steps.secrets.outputs.AURORA_POSTGRESQL_USERNAME }}" >> $GITHUB_ENV
-          echo "postgres_password=${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}" >> $GITHUB_ENV
-          echo "postgres_user=${postgres_user}"
+          echo "postgres_superuser=${{ steps.secrets.outputs.AURORA_POSTGRESQL_USERNAME }}" >> $GITHUB_ENV
+          echo "postgres_superuser_password=${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}" >> $GITHUB_ENV
+          echo "postgres_superuser=${postgres_superuser}"
+
+          echo "postgres_user=keycloak-irsa" >> $GITHUB_ENV
+          echo "postgres_password=" >> $GITHUB_ENV
+
 
       - name: Compute Ubuntu variables
         if: startsWith(matrix.runner_desc.runner, 'ubuntu')
@@ -167,12 +171,6 @@ jobs:
           echo "postgres_password=password" >> $GITHUB_ENV
           echo "postgres_user=${postgres_user}"
 
-      - name: Compute GCP variables
-        if: startsWith(matrix.runner_desc.runner, 'gcp')
-        run: |
-          echo "postgres_user=keycloak" >> $GITHUB_ENV
-          echo "postgres_password=password" >> $GITHUB_ENV
-          echo "postgres_user=${postgres_user}"
 
       - name: Declare test recipe variables
         shell: bash
@@ -208,11 +206,9 @@ jobs:
           PGDATABASE: "${{ env.postgres_database }}"
           PGHOST: ${{ env.postgres_host }}
           PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
-          PGPASSWORD: ${{ env.postgres_password }}
-          PGUSER: ${{ env.postgres_user }}
-          PGUSER_IRSA: web-modeler-irsa # TODO: TDB
-
-      # TODO: database name and generation should be unique and destroyed at the end
+          PGPASSWORD: ${{ env.postgres_superuser_password }}
+          PGUSER: ${{ env.postgres_superuser }}
+          PGUSER_IRSA: ${{ env.postgres_user }}
 
       - name: Start Test Environment
         uses: ./.github/actions/compose
@@ -234,6 +230,13 @@ jobs:
           COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
           COMPOSE_KEYCLOAK_IMAGE: ${{ needs.build-image.outputs.full_image_name }}
 
+          # AWS specific variables to forward, see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables
+          AWS_STS_REGIONAL_ENDPOINTS: "${{ AWS_STS_REGIONAL_ENDPOINTS }}"
+          AWS_DEFAULT_REGION: "${{ AWS_DEFAULT_REGION }}"
+          AWS_REGION: "${{ AWS_REGION }}"
+          AWS_ROLE_ARN: "${{ AWS_ROLE_ARN }}"
+          AWS_WEB_IDENTITY_TOKEN_FILE: "${{ AWS_WEB_IDENTITY_TOKEN_FILE }}"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -249,12 +252,10 @@ jobs:
           PGDATABASE: "${{ env.postgres_database }}"
           PGHOST: ${{ env.postgres_host }}
           PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
-          PGPASSWORD: ${{ env.postgres_password }}
-          PGUSER: ${{ env.postgres_user }}
+          PGPASSWORD: ${{ env.postgres_superuser_password }}
+          PGUSER: ${{ env.postgres_superuser }}
 
   # TODO: add tests (static framework tbd) then push
-
-  # TODO : cleanup images after test
 
   # TODO: implement
   # publish-image:
