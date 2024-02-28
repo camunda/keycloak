@@ -137,16 +137,6 @@ jobs:
           java-enabled: false
           yarn-enabled: false
 
-      - name: Declare test recipe variables
-        run: |
-          test_db_name="db-${{ matrix.runner_desc.runner }}-${{ github.sha }}"
-          echo "test_db_name=${test_db_name}" >> $GITHUB_ENV
-          echo "test_db_name=$test_db_name"
-
-          test_db_url="jdbc:aws-wrapper:postgresql://${{ matrix.runner_desc.keycloak_db_host }}:${{ matrix.runner_desc.keycloak_db_port }}/${test_db_name}"
-          echo "test_db_url=${test_db_url}" >> $GITHUB_ENV
-          echo "test_db_url=$test_db_url"
-
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
         id: secrets
@@ -158,6 +148,21 @@ jobs:
           secrets: |
             secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
             secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
+
+      - name: Declare test recipe variables
+        shell: bash
+        run: |
+          test_db_name="db-${{ matrix.runner_desc.runner }}-${{ github.sha }}"
+          echo "test_db_name=${test_db_name}" >> $GITHUB_ENV
+          echo "test_db_name=$test_db_name"
+
+          postgres_host=$(echo "${{ matrix.runner_desc.keycloak_db_host }}" | sed "s/{{ postgres_version }}/${{ matrix.postgres_version }}/g")
+          echo "postgres_host=${postgres_host}" >> $GITHUB_ENV
+          echo "postgres_host=${postgres_host}"
+
+          test_db_url="jdbc:aws-wrapper:postgresql://${postgres_host}:${{ matrix.runner_desc.keycloak_db_port }}/${test_db_name}"
+          echo "test_db_url=${test_db_url}" >> $GITHUB_ENV
+          echo "test_db_url=$test_db_url"
 
       - name: Login to the registry
         uses: docker/login-action@v3
