@@ -119,10 +119,10 @@ jobs:
     strategy:
       matrix:
         runner_desc:
-          - {runner: ubuntu-22.04, postgres_replicas: 1, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "postgres", keycloak_db_port: "5432" }
-          - {runner: aws-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
-          - {runner: aws-arm-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
-          - {runner: gcp-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "{{ postgres_version }}", keycloak_db_port: "5432" }
+          - {runner: ubuntu-22.04, postgres_replicas: 1, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "postgres", keycloak_db_port: "5432" }
+          - {runner: aws-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
+          - {runner: aws-arm-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
+          - {runner: gcp-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "{{ postgres_version }}", keycloak_db_port: "5432" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
     runs-on: ${{ matrix.runner_desc.runner }}
     needs:
@@ -180,7 +180,7 @@ jobs:
           echo "postgres_database=${postgres_database}" >> $GITHUB_ENV
           echo "postgres_database=$postgres_database"
 
-          postgres_host=$(echo "${{ matrix.runner_desc.keycloak_db_host }}" | sed "s/{{ postgres_version }}/${{ matrix.postgres_version }}/g")
+          postgres_host=$(echo "${{ matrix.runner_desc.keycloak_db_host_template }}" | sed "s/{{ postgres_version }}/${{ matrix.postgres_version }}/g")
           echo "postgres_host=${postgres_host}" >> $GITHUB_ENV
           echo "postgres_host=${postgres_host}"
 
@@ -205,7 +205,7 @@ jobs:
         run: ./.helpers/actions/create-aurora-pg-db.sh
         env:
           PGDATABASE: "${{ env.postgres_database }}"
-          PGHOST: ${{ matrix.runner_desc.keycloak_db_host }}
+          PGHOST: ${{ env.postgres_host }}
           PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
           PGPASSWORD: ${{ env.postgres_password }}
           PGUSER: ${{ env.postgres_user }}
@@ -246,7 +246,7 @@ jobs:
         run: ./.helpers/actions/delete-aurora-pg-db.sh
         env:
           PGDATABASE: "${{ env.postgres_database }}"
-          PGHOST: ${{ matrix.runner_desc.keycloak_db_host }}
+          PGHOST: ${{ env.postgres_host }}
           PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
           PGPASSWORD: ${{ env.postgres_password }}
           PGUSER: ${{ env.postgres_user }}
