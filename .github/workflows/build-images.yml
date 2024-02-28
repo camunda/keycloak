@@ -166,11 +166,11 @@ jobs:
           echo "postgres_user=keycloak-irsa" >> $GITHUB_ENV
           echo "postgres_password=" >> $GITHUB_ENV
 
-          echo "AWS_STS_REGIONAL_ENDPOINTS=${{ AWS_STS_REGIONAL_ENDPOINTS }}" >> $GITHUB_ENV
-          echo "AWS_DEFAULT_REGION=${{ AWS_DEFAULT_REGION }}" >> $GITHUB_ENV
-          echo "AWS_REGION=${{ AWS_REGION }}" >> $GITHUB_ENV
-          echo "AWS_ROLE_ARN=${{ AWS_ROLE_ARN }}" >> $GITHUB_ENV
-          echo "AWS_WEB_IDENTITY_TOKEN_FILE=${{ AWS_WEB_IDENTITY_TOKEN_FILE }}" >> $GITHUB_ENV
+          echo "AWS_STS_REGIONAL_ENDPOINTS=$AWS_STS_REGIONAL_ENDPOINTS" >> $GITHUB_ENV
+          echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION" >> $GITHUB_ENV
+          echo "AWS_REGION=$AWS_REGION" >> $GITHUB_ENV
+          echo "AWS_ROLE_ARN=$AWS_ROLE_ARN" >> $GITHUB_ENV
+          echo "AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE" >> $GITHUB_ENV
 
       - name: Compute Ubuntu variables
         if: startsWith(matrix.runner_desc.runner, 'ubuntu')
