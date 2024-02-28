@@ -117,6 +117,7 @@ jobs:
 
   test-postgres-integ:
     strategy:
+      fail-fast: false # don't propate failing jobs
       matrix:
         runner_desc:
           - {runner: ubuntu-22.04, postgres_replicas: 1, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "postgres", keycloak_db_port: "5432" }
