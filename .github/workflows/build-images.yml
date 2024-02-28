@@ -22,7 +22,7 @@ jobs:
     if: ${{ github.event_name == 'push' }}
     outputs:
       full_image_name: ${{ steps.compute-image-name-step.outputs.full_image_name }}
-# TODO: later, we should be able to build multiple versions of keycloak
+    # TODO: later, we should be able to build multiple versions of keycloak
     # strategy:
     #   matrix:
     #     keycloak_version: [keycloak-22, keycloak-23]
@@ -94,10 +94,10 @@ jobs:
     strategy:
       matrix:
         runner_desc:
-          - {runner: ubuntu-22.04, postgres_replicas: 1, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_url: "jdbc:aws-wrapper:postgresql://postgres:5432/keycloak" }
-          - {runner: aws-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_url: "jdbc:aws-wrapper:postgresql://postgres:5432/keycloak" }
-          - {runner: aws-arm-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_url: "jdbc:aws-wrapper:postgresql://postgres:5432/keycloak" }
-          - {runner: gcp-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_url: "jdbc:aws-wrapper:postgresql://postgres:5432/keycloak" }
+          - {runner: ubuntu-22.04, postgres_replicas: 1, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "postgres", keycloak_db_port: "5432" }
+          - {runner: aws-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "camunda-ci-eks-aurora-postgresql-${{ matrix.postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
+          - {runner: aws-arm-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "camunda-ci-eks-aurora-postgresql-${{ matrix.postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
+          - {runner: gcp-core-2-default, postgres_replicas: 0, postgres_database: keycloak, postgres_username: keycloak, postgres_password: password, keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host: "${{ matrix.postgres_version }}", keycloak_db_port: "5432" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
     runs-on: ${{ matrix.runner_desc.runner }}
     needs:
@@ -112,12 +112,33 @@ jobs:
           java-enabled: false
           yarn-enabled: false
 
+      - name: Declare test recipe variables
+        run: |
+          test_db_name="db-${{ matrix.runner_desc.runner }}-${{ github.sha }}"
+          echo "test_db_name=${test_db_name}" >> $GITHUB_ENV
+          echo "test_db_name=$test_db_name"
+
+          test_db_url="jdbc:aws-wrapper:postgresql://${{ matrix.runner_desc.keycloak_db_host }}:${{ matrix.runner_desc.keycloak_db_port }}/${test_db_name}"
+          echo "test_db_url=${test_db_url}" >> $GITHUB_ENV
+          echo "test_db_url=$test_db_url"
+
       - name: Login to the registry
         uses: docker/login-action@v3
         with:
           registry: ${{ vars.CONTAINER_REGISTRY }}
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Tear up Aurora PG (aws only)
+        if: startsWith(matrix.runner_desc.runner, 'aws')
+        run: ./.helpers/actions/create-aurora-database.sh
+        env:
+          PGDATABASE: "${{ env.test_db_name }}"
+          PGHOST: ${{ matrix.runner_desc.keycloak_db_host }}
+          PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
+          PGPASSWORD: ${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}
+          PGUSER: ${{ steps.secrets.outputs.AURORA_POSTGRESQL_USERNAME }}
+          PGUSER_IRSA: web-modeler-irsa # TODO: TDB
 
       # TODO: database name and generation should be unique and destroyed at the end
 
@@ -149,8 +170,19 @@ jobs:
       - name: Test Environment
         run: python3 ./.github/scripts/integration/main.py
 
+      - name: Tear down Aurora PG (aws only)
+        if: startsWith(matrix.runner_desc.runner, 'aws') || always()
+        run: ./.helpers/actions/delete-aurora-database.sh
+        env:
+          PGDATABASE: "${{ env.test_db_name }}"
+          PGHOST: ${{ matrix.runner_desc.keycloak_db_host }}
+          PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
+          PGPASSWORD: ${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}
+          PGUSER: ${{ steps.secrets.outputs.AURORA_POSTGRESQL_USERNAME }}
 
   # TODO: add tests (static framework tbd) then push
+
+  # TODO : cleanup images after test
 
   # TODO: implement
   # publish-image:
