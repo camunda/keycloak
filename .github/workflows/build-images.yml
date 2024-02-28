@@ -231,11 +231,11 @@ jobs:
           COMPOSE_KEYCLOAK_IMAGE: ${{ needs.build-image.outputs.full_image_name }}
 
           # AWS specific variables to forward, see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables
-          AWS_STS_REGIONAL_ENDPOINTS: "${{ AWS_STS_REGIONAL_ENDPOINTS }}"
-          AWS_DEFAULT_REGION: "${{ AWS_DEFAULT_REGION }}"
-          AWS_REGION: "${{ AWS_REGION }}"
-          AWS_ROLE_ARN: "${{ AWS_ROLE_ARN }}"
-          AWS_WEB_IDENTITY_TOKEN_FILE: "${{ AWS_WEB_IDENTITY_TOKEN_FILE }}"
+          AWS_STS_REGIONAL_ENDPOINTS: "${{ env.AWS_STS_REGIONAL_ENDPOINTS }}"
+          AWS_DEFAULT_REGION: "${{ env.AWS_DEFAULT_REGION }}"
+          AWS_REGION: "${{ env.AWS_REGION }}"
+          AWS_ROLE_ARN: "${{ env.AWS_ROLE_ARN }}"
+          AWS_WEB_IDENTITY_TOKEN_FILE: "${{ env.AWS_WEB_IDENTITY_TOKEN_FILE }}"
 
       - name: Install dependencies
         run: |
