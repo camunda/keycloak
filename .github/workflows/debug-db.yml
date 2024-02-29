@@ -121,7 +121,7 @@ jobs:
         run: |
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
-          ./aws/install
+          sudo ./aws/install
           export RDSHOST="${{ env.postgres_host }}"
           export PGPASSWORD="$(aws rds generate-db-auth-token --hostname $RDSHOST --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
           psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
