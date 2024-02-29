@@ -24,7 +24,7 @@ services:
   keycloak:
       image: ${COMPOSE_KEYCLOAK_IMAGE:-camunda/keycloak:latest}
       build: .
-      command: start-dev --log-level=DEBUG
+      command: "start-dev --log-level=${KEYCLOAK_LOG_LEVEL:-INFO} --verbose"
       environment:
         KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN:-admin}"
         KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-admin}"

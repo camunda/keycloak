@@ -120,11 +120,11 @@ jobs:
       fail-fast: false # don't propate failing jobs
       matrix:
         runner_desc:
-          - {runner: ubuntu-22.04, postgres_replicas: 1, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "postgres", keycloak_db_port: "5432" }
-          - {runner: aws-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
-          - {runner: aws-arm-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
+          - {runner: ubuntu-22.04, postgres_replicas: 1, keycloak_jdbc_protocol: "postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "postgres", keycloak_db_jdbc_query: "?wrapperPlugins=iam", keycloak_db_port: "5432" }
+          - {runner: aws-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_jdbc_query: "?wrapperPlugins=iam", keycloak_db_port: "5432" }
+          - {runner: aws-arm-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_jdbc_query: "?wrapperPlugins=iam", keycloak_db_port: "5432" }
           # GCloud SQL is not tested yet as we don't have a dedicated db, fallback on integrated db
-          - {runner: gcp-core-2-default, postgres_replicas: 1, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "postgres", keycloak_db_port: "5432" }
+          - {runner: gcp-core-2-default, postgres_replicas: 1, keycloak_jdbc_protocol: "postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "postgres", keycloak_db_jdbc_query: "?wrapperPlugins=iam", keycloak_db_port: "5432" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
     runs-on: ${{ matrix.runner_desc.runner }}
     needs:
@@ -258,6 +258,8 @@ jobs:
           KC_DB_PASSWORD: "${{ env.postgres_password }}"
           KC_DB_DRIVER: "${{ matrix.runner_desc.keycloak_db_driver }}"
           KC_DB_URL: "${{ env.test_db_url }}"
+
+          KEYCLOAK_LOG_LEVEL: "INFO"
 
           COMPOSE_POSTGRES_IMAGE: "postgres:${{ matrix.postgres_version }}"
           COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
