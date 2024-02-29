@@ -136,6 +136,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
+
       - name: Install if required common software tooling
         uses: camunda/infra-global-github-actions/common-tooling@main
         with:
@@ -167,9 +172,7 @@ jobs:
           echo "postgres_superuser_password=${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}" >> "$GITHUB_ENV"
           echo "postgres_superuser=${postgres_superuser}"
 
-          : # TODO: revert
-          : # echo "postgres_user=keycloak-irsa" >> "$GITHUB_ENV"
-          echo "postgres_user=web-modeler-irsa" >> "$GITHUB_ENV"
+          echo "postgres_user=keycloak-irsa" >> "$GITHUB_ENV"
           echo "postgres_user=${postgres_user}"
           echo "postgres_password=" >> "$GITHUB_ENV"
 
