@@ -1,7 +1,7 @@
 # quay.io is the new repository of keycloak (https://lists.jboss.org/archives/list/keycloak-user@lists.jboss.org/message/7CRWKAAYI5WJTUXUZR6K73XV7P4TLZZ2/)
 ARG BASE_IMAGE_NAME="quay.io/keycloak/keycloak:23.0"
-ARG BASE_IMAGE_SHA_AMD64="sha256:abab311ed9bcfa0620f30db677e4cafe49a98f55f0b84e5b3a0fcf520ce6d8fa"
-ARG BASE_IMAGE_SHA_ARM64="sha256:28346d74512ea6793fd5223a3af3f97cb94d7d489b814a39b866008bf3a56d9d"
+ARG BASE_IMAGE_SHA_AMD64="sha256:461bdabba2bd2de667b19b0c1831754cb0f1c6c1d1c85cd35ccfa65335078962"
+ARG BASE_IMAGE_SHA_ARM64="sha256:0b4a46b51fe9f9b7227c958bb4240ed8b06bf2f028e93a099014ecbae84c068a"
 
 
 FROM docker.io/gradle:jdk17-focal as lib
@@ -80,8 +80,6 @@ LABEL maintainer="Camunda" \
       # org.opencontainers.image.revision
       # org.opencontainers.image.source
       # org.opencontainers.image.version
-
-      # TODO: check w/ https://github.com/camunda/camunda-optimize/blob/f071d2d2d7e01ca438c9828f6130c0af6cd46bb0/Dockerfile#L56
 
 # Enable health and metrics support
 ENV KC_HEALTH_ENABLED=true
