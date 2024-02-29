@@ -123,8 +123,8 @@ jobs:
           - {runner: ubuntu-22.04, postgres_replicas: 1, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "postgres", keycloak_db_port: "5432" }
           - {runner: aws-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
           - {runner: aws-arm-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
-          # not impleted:
-          # - {runner: gcp-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "{{ postgres_version }}", keycloak_db_port: "5432" }
+          # GCloud SQL is not tested yet as we don't have a dedicated db, fallback on integrated db
+          - {runner: gcp-core-2-default, postgres_replicas: 1, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "postgres", keycloak_db_port: "5432" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
     runs-on: ${{ matrix.runner_desc.runner }}
     needs:
@@ -152,14 +152,14 @@ jobs:
             secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
             secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
 
-            # for the moment, we share the secrets of the web-modeler for aurora
+            : # for the moment, we share the secrets of the web-modeler for aurora
             secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_PASSWORD;
             secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_USERNAME;
 
       - name: Compute AWS variables
         if: startsWith(matrix.runner_desc.runner, 'aws')
         run: |
-          # aws aurora superuser is only used for bootstrapping a standard user that will auth using irsa
+          : # aws aurora superuser is only used for bootstrapping a standard user that will auth using irsa
           echo "postgres_superuser=${{ steps.secrets.outputs.AURORA_POSTGRESQL_USERNAME }}" >> $GITHUB_ENV
           echo "postgres_superuser_password=${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}" >> $GITHUB_ENV
           echo "postgres_superuser=${{ env.postgres_superuser }}"
@@ -168,7 +168,7 @@ jobs:
           echo "postgres_user=${{ env.postgres_user }}"
           echo "postgres_password=" >> $GITHUB_ENV
 
-          # export AWS variables
+          : # export AWS variables
           echo "AWS_STS_REGIONAL_ENDPOINTS=$AWS_STS_REGIONAL_ENDPOINTS" >> $GITHUB_ENV
           echo "AWS_STS_REGIONAL_ENDPOINTS=${{ env.AWS_STS_REGIONAL_ENDPOINTS }}"
           echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION" >> $GITHUB_ENV
@@ -183,7 +183,7 @@ jobs:
       - name: Compute Ubuntu variables
         if: startsWith(matrix.runner_desc.runner, 'ubuntu')
         run: |
-          # we use plain values that will be used by the postgres container
+          : # we use plain values that will be used by the postgres container
           echo "postgres_user=keycloak" >> $GITHUB_ENV
           echo "postgres_password=password" >> $GITHUB_ENV
           echo "postgres_user=${postgres_user}"
@@ -198,17 +198,17 @@ jobs:
             echo "compose_keycloak_depends_on=postgres" >> $GITHUB_ENV
           fi
 
-          # ensure uniqueness of the db name
+          : # ensure uniqueness of the db name
           postgres_database="db-${{ matrix.runner_desc.runner }}-${{ github.sha }}"
           echo "postgres_database=${postgres_database}" >> $GITHUB_ENV
           echo "postgres_database=$postgres_database"
 
-          # apply template on the address
+          : # apply template on the address
           postgres_host=$(echo "${{ matrix.runner_desc.keycloak_db_host_template }}" | sed "s/{{ postgres_version }}/${{ matrix.postgres_version }}/g")
           echo "postgres_host=${postgres_host}" >> $GITHUB_ENV
           echo "postgres_host=${postgres_host}"
 
-          # compute the keycloak db url
+          : # compute the keycloak db url
           test_db_url="jdbc:${{ matrix.runner_desc.keycloak_jdbc_protocol }}://${postgres_host}:${{ matrix.runner_desc.keycloak_db_port }}/${postgres_database}"
           echo "test_db_url=${test_db_url}" >> $GITHUB_ENV
           echo "test_db_url=$test_db_url"
