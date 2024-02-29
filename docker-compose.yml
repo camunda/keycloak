@@ -53,8 +53,8 @@ services:
       depends_on:
         - "${COMPOSE_KEYCLOAK_DEPENDS_ON:-postgres}"
       volumes:
-        - "${COMPOSE_KEYCLOAK_VOLUMES_1:-'/dev/null:/mynull'}"
-        - "${COMPOSE_KEYCLOAK_VOLUMES_2:-'/dev/null:/mynull'}"
+        - "${COMPOSE_KEYCLOAK_VOLUMES_1:-'/dev/null:/mynull1'}"
+        - "${COMPOSE_KEYCLOAK_VOLUMES_2:-'/dev/null:/mynull2'}"
 
 
 # /kcadm.sh get clients --realm master --server http://localhost:8080 --user admin --password admin

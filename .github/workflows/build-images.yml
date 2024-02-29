@@ -176,6 +176,9 @@ jobs:
           echo "postgres_user=${postgres_user}"
           echo "postgres_password=" >> "$GITHUB_ENV"
 
+          : # download rds ca certs
+          curl https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem -o "rds-ca-2019-root.pem"
+
           echo "compose_keycloak_volume_1=./rds-ca-2019-root.pem:/certs/rds-ca-2019-root.pem" >> "$GITHUB_ENV"
           echo "compose_keycloak_volume_2=$AWS_WEB_IDENTITY_TOKEN_FILE:$AWS_WEB_IDENTITY_TOKEN_FILE" >> "$GITHUB_ENV"
 
@@ -247,19 +250,16 @@ jobs:
           PGUSER: ${{ env.postgres_superuser }}
           PGUSER_IRSA: ${{ env.postgres_user }}
 
-      - name: Test aurora pg connection
+      - name: Test Aurora PG (aws only)
         if: startsWith(matrix.runner_desc.runner, 'aws')
         run: |
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
           sudo ./aws/install
 
-          : # download rds ca certs
-          curl https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem -o "rds-ca-2019-root.pem"
-
-          : # export RDSHOST="${{ env.postgres_host }}"
-          : # export PGPASSWORD="$(aws rds generate-db-auth-token --hostname $RDSHOST --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
-          : # psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
+          export RDSHOST="${{ env.postgres_host }}"
+          export PGPASSWORD="$(aws rds generate-db-auth-token --hostname $RDSHOST --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
+          psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
 
       - name: Start Test Environment
         uses: ./.github/actions/compose
@@ -282,8 +282,8 @@ jobs:
           COMPOSE_POSTGRES_IMAGE: "postgres:${{ matrix.postgres_version }}"
           COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
           COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ env.compose_keycloak_depends_on }}"
-          COMPOSE_KEYCLOAK_VOLUME_1: "${{ env.compose_keycloak_volume_1 || '/dev/null:/dummynull' }}"
-          COMPOSE_KEYCLOAK_VOLUME_2: "${{ env.compose_keycloak_volume_2 || '/dev/null:/dummynull' }}"
+          COMPOSE_KEYCLOAK_VOLUME_1: "${{ env.compose_keycloak_volume_1 || '/dev/null:/dummynull1' }}"
+          COMPOSE_KEYCLOAK_VOLUME_2: "${{ env.compose_keycloak_volume_2 || '/dev/null:/dummynull2' }}"
           # TODO: reverse
           # COMPOSE_KEYCLOAK_IMAGE: ${{ needs.build-image.outputs.full_image_name }}
           COMPOSE_KEYCLOAK_IMAGE: "registry.camunda.cloud/team-infrastructure-experience/keycloak@sha256:766f627ae1ef0aa16ca9af26989434e9c4f8684e9699b43c55afc0a877193d76"
