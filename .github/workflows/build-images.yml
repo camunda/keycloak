@@ -171,7 +171,7 @@ jobs:
           echo "postgres_user=${postgres_user}"
           echo "postgres_password=" >> "$GITHUB_ENV"
 
-          echo "compose_keycloak_volumes='./rds-ca-2019-root.pem:/certs/rds-ca-2019-root.pem'" >> "$GITHUB_ENV"
+          echo "compose_keycloak_volumes=./rds-ca-2019-root.pem:/certs/rds-ca-2019-root.pem" >> "$GITHUB_ENV"
 
           : # export AWS variables
           echo "AWS_STS_REGIONAL_ENDPOINTS=$AWS_STS_REGIONAL_ENDPOINTS" >> "$GITHUB_ENV"
