@@ -219,9 +219,9 @@ jobs:
           echo "postgres_host=${postgres_host}"
 
           : # compute the keycloak db url
-          test_db_url="'jdbc:${{ matrix.runner_desc.keycloak_jdbc_protocol }}://${postgres_host}:${{ matrix.runner_desc.keycloak_db_port }}/${postgres_database}${{ matrix.runner_desc.keycloak_db_jdbc_query }}'"
+          test_db_url="jdbc:${{ matrix.runner_desc.keycloak_jdbc_protocol }}://${postgres_host}:${{ matrix.runner_desc.keycloak_db_port }}/${postgres_database}${{ matrix.runner_desc.keycloak_db_jdbc_query }}"
           echo "test_db_url=${test_db_url}" >> "$GITHUB_ENV"
-          echo "test_db_url=$test_db_url"
+          echo "test_db_url=${test_db_url}"
 
       - name: Login to the registry
         uses: docker/login-action@v3
