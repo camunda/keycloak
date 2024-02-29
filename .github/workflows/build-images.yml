@@ -191,6 +191,13 @@ jobs:
       - name: Declare test recipe variables
         shell: bash
         run: |
+
+          if [ ${{ matrix.runner_desc.postgres_replicas }} -lt 1 ]; then
+            echo "compose_keycloak_depends_on=" >> $GITHUB_ENV
+          else
+            echo "compose_keycloak_depends_on=postgres" >> $GITHUB_ENV
+          fi
+
           # ensure uniqueness of the db name
           postgres_database="db-${{ matrix.runner_desc.runner }}-${{ github.sha }}"
           echo "postgres_database=${postgres_database}" >> $GITHUB_ENV
@@ -247,7 +254,7 @@ jobs:
 
           COMPOSE_POSTGRES_IMAGE: "postgres:${{ matrix.postgres_version }}"
           COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
-          COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ '' if matrix.runner_desc.postgres_replicas < 1 else 'postgres' }}"
+          COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ env.compose_keycloak_depends_on }}"
           COMPOSE_KEYCLOAK_IMAGE: ${{ needs.build-image.outputs.full_image_name }}
 
           # AWS specific variables to forward, see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables
