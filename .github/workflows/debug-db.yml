@@ -105,6 +105,13 @@ jobs:
       - name: Install required packages
         run: sudo apt-get update && sudo apt-get install -y build-essential postgresql-client
 
+      - name: Login to the registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.CONTAINER_REGISTRY_CI }}
+          username: ${{ steps.secrets.outputs.MACHINE_USR }}
+          password: ${{ steps.secrets.outputs.MACHINE_PWD }}
+
       - name: Tear up Aurora PG (aws only)
         if: startsWith(matrix.runner_desc.runner, 'aws')
         run: ./.helpers/actions/create-aurora-pg-db.sh
@@ -125,3 +132,49 @@ jobs:
           export RDSHOST="${{ env.postgres_host }}"
           export PGPASSWORD="$(aws rds generate-db-auth-token --hostname $RDSHOST --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
           psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
+
+      - name: Start Test Environment
+        uses: ./.github/actions/compose
+        with:
+          compose_file: ${{ github.workspace }}/docker-compose.yml
+          project_name: keycloak
+        env:
+
+          POSTGRES_DB: "${{ env.postgres_database }}"
+          POSTGRES_USER: "${{ env.postgres_username }}"
+          POSTGRES_PASSWORD: "${{ env.postgres_password }}"
+
+          KC_DB_USERNAME: "${{ env.postgres_username }}"
+          KC_DB_PASSWORD: "${{ env.postgres_password }}"
+          KC_DB_DRIVER: "${{ matrix.runner_desc.keycloak_db_driver }}"
+          KC_DB_URL: "${{ env.test_db_url }}"
+
+          COMPOSE_POSTGRES_IMAGE: "postgres:${{ matrix.postgres_version }}"
+          COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
+          COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ env.compose_keycloak_depends_on }}"
+          COMPOSE_KEYCLOAK_IMAGE: "registry.camunda.cloud/team-infrastructure-experience/keycloak@sha256:766f627ae1ef0aa16ca9af26989434e9c4f8684e9699b43c55afc0a877193d76"
+
+          # AWS specific variables to forward, see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables
+          AWS_STS_REGIONAL_ENDPOINTS: "${{ env.AWS_STS_REGIONAL_ENDPOINTS }}"
+          AWS_DEFAULT_REGION: "${{ env.AWS_DEFAULT_REGION }}"
+          AWS_REGION: "${{ env.AWS_REGION }}"
+          AWS_ROLE_ARN: "${{ env.AWS_ROLE_ARN }}"
+          AWS_WEB_IDENTITY_TOKEN_FILE: "${{ env.AWS_WEB_IDENTITY_TOKEN_FILE }}"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ./.github/scripts/integration/requirements.txt
+
+      - name: Test Environment
+        run: python3 ./.github/scripts/integration/main.py
+
+      - name: Tear down Aurora PG (aws only)
+        if: startsWith(matrix.runner_desc.runner, 'aws')
+        run: ./.helpers/actions/delete-aurora-pg-db.sh
+        env:
+          PGDATABASE: "${{ env.postgres_database }}"
+          PGHOST: ${{ env.postgres_host }}
+          PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
+          PGPASSWORD: ${{ env.postgres_superuser_password }}
+          PGUSER: ${{ env.postgres_superuser }}
