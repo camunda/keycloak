@@ -1,0 +1,124 @@
+---
+# desc: build container images, perform static tests then publish
+name: debug-db
+
+on:
+  push:
+  pull_request_target:
+
+jobs:
+
+  test-postgres-integ:
+    strategy:
+      fail-fast: false # don't propate failing jobs
+      matrix:
+        runner_desc:
+          - {runner: aws-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_port: "5432" }
+        postgres_version: [15] # reference: https://www.keycloak.org/server/db
+    runs-on: ${{ matrix.runner_desc.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install if required common software tooling
+        uses: camunda/infra-global-github-actions/common-tooling@main
+        with:
+          java-enabled: false
+          yarn-enabled: false
+          python-version: "3"
+
+      - name: Import secrets
+        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        id: secrets
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          # for the moment, we share the secrets of the web-modeler for aurora
+          secrets: |
+            secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
+            secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
+
+            secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_PASSWORD;
+            secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_USERNAME;
+
+      - name: Compute AWS variables
+        if: startsWith(matrix.runner_desc.runner, 'aws')
+        run: |
+          : # aws aurora superuser is only used for bootstrapping a standard user that will auth using irsa
+          echo "postgres_superuser=${{ steps.secrets.outputs.AURORA_POSTGRESQL_USERNAME }}" >> "$GITHUB_ENV"
+          echo "postgres_superuser_password=${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "postgres_superuser=${{ env.postgres_superuser }}"
+
+          echo "postgres_user=keycloak-irsa" >> "$GITHUB_ENV"
+          echo "postgres_user=${{ env.postgres_user }}"
+          echo "postgres_password=" >> "$GITHUB_ENV"
+
+          : # export AWS variables
+          echo "AWS_STS_REGIONAL_ENDPOINTS=$AWS_STS_REGIONAL_ENDPOINTS" >> "$GITHUB_ENV"
+          echo "AWS_STS_REGIONAL_ENDPOINTS=${{ env.AWS_STS_REGIONAL_ENDPOINTS }}"
+          echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION" >> "$GITHUB_ENV"
+          echo "AWS_DEFAULT_REGION=${{ env.AWS_DEFAULT_REGION }}"
+          echo "AWS_REGION=$AWS_REGION" >> "$GITHUB_ENV"
+          echo "AWS_REGION=${{ env.AWS_REGION }}"
+          echo "AWS_ROLE_ARN=$AWS_ROLE_ARN" >> "$GITHUB_ENV"
+          echo "AWS_ROLE_ARN=${{ env.AWS_ROLE_ARN }}"
+          echo "AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE" >> "$GITHUB_ENV"
+          echo "AWS_WEB_IDENTITY_TOKEN_FILE=${{ env.AWS_WEB_IDENTITY_TOKEN_FILE }}"
+
+      - name: Compute Ubuntu variables
+        if: startsWith(matrix.runner_desc.runner, 'ubuntu')
+        run: |
+          : # we use plain values that will be used by the postgres container
+          echo "postgres_user=keycloak" >> "$GITHUB_ENV"
+          echo "postgres_password=password" >> "$GITHUB_ENV"
+          echo "postgres_user=${postgres_user}"
+
+      - name: Declare test recipe variables
+        shell: bash
+        run: |
+
+          if (( "${{ matrix.runner_desc.postgres_replicas }}" < 1 )); then
+            echo "compose_keycloak_depends_on=" >> "$GITHUB_ENV"
+          else
+            echo "compose_keycloak_depends_on=postgres" >> "$GITHUB_ENV"
+          fi
+
+          : # ensure uniqueness of the db name
+          postgres_database="db-${{ matrix.runner_desc.runner }}-${{ github.sha }}"
+          echo "postgres_database=${postgres_database}" >> "$GITHUB_ENV"
+          echo "postgres_database=$postgres_database"
+
+          : # apply template on the address
+          postgres_host=$(echo "${{ matrix.runner_desc.keycloak_db_host_template }}" | sed "s/{{ postgres_version }}/${{ matrix.postgres_version }}/g")
+          echo "postgres_host=${postgres_host}" >> "$GITHUB_ENV"
+          echo "postgres_host=${postgres_host}"
+
+          : # compute the keycloak db url
+          test_db_url="jdbc:${{ matrix.runner_desc.keycloak_jdbc_protocol }}://${postgres_host}:${{ matrix.runner_desc.keycloak_db_port }}/${postgres_database}"
+          echo "test_db_url=${test_db_url}" >> "$GITHUB_ENV"
+          echo "test_db_url=$test_db_url"
+
+      # The self-hosted runner doesn't provide a postgres client and the prerequisites for make,
+      # so we need to install them manually
+      - name: Install required packages
+        run: sudo apt-get update && sudo apt-get install -y build-essential postgresql-client
+
+      - name: Tear up Aurora PG (aws only)
+        if: startsWith(matrix.runner_desc.runner, 'aws')
+        run: ./.helpers/actions/create-aurora-pg-db.sh
+        env:
+          PGDATABASE: "${{ env.postgres_database }}"
+          PGHOST: ${{ env.postgres_host }}
+          PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
+          PGPASSWORD: ${{ env.postgres_superuser_password }}
+          PGUSER: ${{ env.postgres_superuser }}
+          PGUSER_IRSA: ${{ env.postgres_user }}
+
+      - name: Test aurora pg connection
+        if: startsWith(matrix.runner_desc.runner, 'aws')
+        run: |
+          export RDSHOST="${{ env.postgres_host }}"
+          export PGPASSWORD="$(aws rds generate-db-auth-token --hostname $RDSHOST --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
+          psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
