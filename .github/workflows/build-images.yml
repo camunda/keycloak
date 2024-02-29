@@ -148,17 +148,18 @@ jobs:
           method: approle
           roleId: ${{ secrets.VAULT_ROLE_ID }}
           secretId: ${{ secrets.VAULT_SECRET_ID }}
-          # for the moment, we share the secrets of the web-modeler for aurora
           secrets: |
             secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
             secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
 
+            # for the moment, we share the secrets of the web-modeler for aurora
             secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_PASSWORD;
             secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_USERNAME;
 
       - name: Compute AWS variables
         if: startsWith(matrix.runner_desc.runner, 'aws')
         run: |
+          # aws aurora superuser is only used for bootstrapping a standard user that will auth using irsa
           echo "postgres_superuser=${{ steps.secrets.outputs.AURORA_POSTGRESQL_USERNAME }}" >> $GITHUB_ENV
           echo "postgres_superuser_password=${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}" >> $GITHUB_ENV
           echo "postgres_superuser=${{ env.postgres_superuser }}"
@@ -167,6 +168,7 @@ jobs:
           echo "postgres_user=${{ env.postgres_user }}"
           echo "postgres_password=" >> $GITHUB_ENV
 
+          # export AWS variables
           echo "AWS_STS_REGIONAL_ENDPOINTS=$AWS_STS_REGIONAL_ENDPOINTS" >> $GITHUB_ENV
           echo "AWS_STS_REGIONAL_ENDPOINTS=${{ env.AWS_STS_REGIONAL_ENDPOINTS }}"
           echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION" >> $GITHUB_ENV
@@ -181,22 +183,25 @@ jobs:
       - name: Compute Ubuntu variables
         if: startsWith(matrix.runner_desc.runner, 'ubuntu')
         run: |
+          # we use plain values that will be used by the postgres container
           echo "postgres_user=keycloak" >> $GITHUB_ENV
           echo "postgres_password=password" >> $GITHUB_ENV
           echo "postgres_user=${postgres_user}"
 
-
       - name: Declare test recipe variables
         shell: bash
         run: |
+          # ensure uniqueness of the db name
           postgres_database="db-${{ matrix.runner_desc.runner }}-${{ github.sha }}"
           echo "postgres_database=${postgres_database}" >> $GITHUB_ENV
           echo "postgres_database=$postgres_database"
 
+          # apply template on the address
           postgres_host=$(echo "${{ matrix.runner_desc.keycloak_db_host_template }}" | sed "s/{{ postgres_version }}/${{ matrix.postgres_version }}/g")
           echo "postgres_host=${postgres_host}" >> $GITHUB_ENV
           echo "postgres_host=${postgres_host}"
 
+          # compute the keycloak db url
           test_db_url="jdbc:${{ matrix.runner_desc.keycloak_jdbc_protocol }}://${postgres_host}:${{ matrix.runner_desc.keycloak_db_port }}/${postgres_database}"
           echo "test_db_url=${test_db_url}" >> $GITHUB_ENV
           echo "test_db_url=$test_db_url"
@@ -242,6 +247,7 @@ jobs:
 
           COMPOSE_POSTGRES_IMAGE: "postgres:${{ matrix.postgres_version }}"
           COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
+          COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ '' if matrix.runner_desc.postgres_replicas < 1 else 'postgres' }}"
           COMPOSE_KEYCLOAK_IMAGE: ${{ needs.build-image.outputs.full_image_name }}
 
           # AWS specific variables to forward, see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables

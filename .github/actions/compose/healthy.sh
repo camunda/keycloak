@@ -35,6 +35,11 @@ while [ $(date +%s) -lt $endTime ]; do
         fi
     done <<< $(eval $DOCKER_COMMAND ps --format json | jq -n '[inputs] | flatten | .[].Status')
     echo -en "\rWaiting for services... $cnt/$(eval $DOCKER_COMMAND ps --format json | jq -n '[inputs] | flatten | .[].Status' | wc -l)"
+
+    # see what happens
+    eval $DOCKER_COMMAND ps
+    eval $DOCKER_COMMAND logs
+
     if [[ $cnt -eq $(eval $DOCKER_COMMAND ps --format json | jq -n '[inputs] | flatten | .[].Status' | wc -l) ]]; then
         echo ""
         exit 0
