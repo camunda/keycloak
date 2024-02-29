@@ -141,10 +141,10 @@ jobs:
         env:
 
           POSTGRES_DB: "${{ env.postgres_database }}"
-          POSTGRES_USER: "${{ env.postgres_username }}"
+          POSTGRES_USER: "${{ env.postgres_user }}"
           POSTGRES_PASSWORD: "${{ env.postgres_password }}"
 
-          KC_DB_USERNAME: "${{ env.postgres_username }}"
+          KC_DB_USERNAME: "${{ env.postgres_user }}"
           KC_DB_PASSWORD: "${{ env.postgres_password }}"
           KC_DB_DRIVER: "${{ matrix.runner_desc.keycloak_db_driver }}"
           KC_DB_URL: "${{ env.test_db_url }}"
