@@ -236,6 +236,11 @@ jobs:
           PGUSER: ${{ env.postgres_superuser }}
           PGUSER_IRSA: ${{ env.postgres_user }}
 
+      - name: Test aurora pg connection
+        if: startsWith(matrix.runner_desc.runner, 'aws')
+        run: |
+          psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
+
       - name: Start Test Environment
         uses: ./.github/actions/compose
         with:
