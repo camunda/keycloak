@@ -165,25 +165,25 @@ jobs:
           : # aws aurora superuser is only used for bootstrapping a standard user that will auth using irsa
           echo "postgres_superuser=${{ steps.secrets.outputs.AURORA_POSTGRESQL_USERNAME }}" >> "$GITHUB_ENV"
           echo "postgres_superuser_password=${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}" >> "$GITHUB_ENV"
-          echo "postgres_superuser=${{ env.postgres_superuser }}"
+          echo "postgres_superuser=${postgres_superuser}"
 
           echo "postgres_user=keycloak-irsa" >> "$GITHUB_ENV"
-          echo "postgres_user=${{ env.postgres_user }}"
+          echo "postgres_user=${postgres_user}"
           echo "postgres_password=" >> "$GITHUB_ENV"
 
           echo "compose_keycloak_volumes='./rds-ca-2019-root.pem:/certs/rds-ca-2019-root.pem'" >> "$GITHUB_ENV"
 
           : # export AWS variables
           echo "AWS_STS_REGIONAL_ENDPOINTS=$AWS_STS_REGIONAL_ENDPOINTS" >> "$GITHUB_ENV"
-          echo "AWS_STS_REGIONAL_ENDPOINTS=${{ env.AWS_STS_REGIONAL_ENDPOINTS }}"
+          echo "AWS_STS_REGIONAL_ENDPOINTS=${AWS_STS_REGIONAL_ENDPOINTS}"
           echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION" >> "$GITHUB_ENV"
-          echo "AWS_DEFAULT_REGION=${{ env.AWS_DEFAULT_REGION }}"
+          echo "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
           echo "AWS_REGION=$AWS_REGION" >> "$GITHUB_ENV"
-          echo "AWS_REGION=${{ env.AWS_REGION }}"
+          echo "AWS_REGION=${AWS_REGION}"
           echo "AWS_ROLE_ARN=$AWS_ROLE_ARN" >> "$GITHUB_ENV"
-          echo "AWS_ROLE_ARN=${{ env.AWS_ROLE_ARN }}"
+          echo "AWS_ROLE_ARN=${AWS_ROLE_ARN}"
           echo "AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE" >> "$GITHUB_ENV"
-          echo "AWS_WEB_IDENTITY_TOKEN_FILE=${{ env.AWS_WEB_IDENTITY_TOKEN_FILE }}"
+          echo "AWS_WEB_IDENTITY_TOKEN_FILE=${AWS_WEB_IDENTITY_TOKEN_FILE}"
 
       - name: Compute Ubuntu variables
         if: startsWith(matrix.runner_desc.runner, 'ubuntu')
@@ -249,7 +249,7 @@ jobs:
           sudo ./aws/install
 
           : # download ca certs
-          wget https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem
+          curl https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem -o "rds-ca-2019-root.pem"
 
           : # export RDSHOST="${{ env.postgres_host }}"
           : # export PGPASSWORD="$(aws rds generate-db-auth-token --hostname $RDSHOST --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
