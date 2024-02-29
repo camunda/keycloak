@@ -272,7 +272,8 @@ jobs:
           POSTGRES_PASSWORD: "${{ env.postgres_password }}"
 
           KC_DB_USERNAME: "${{ env.postgres_user }}"
-          KC_DB_PASSWORD: "${{ env.postgres_password }}"
+          # TODO: better integrate password empty usecase
+          # KC_DB_PASSWORD: "${{ env.postgres_password }}"
           KC_DB_DRIVER: "${{ matrix.runner_desc.keycloak_db_driver }}"
           KC_DB_URL: "${{ env.test_db_url }}"
 
