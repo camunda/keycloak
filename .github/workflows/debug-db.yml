@@ -155,7 +155,7 @@ jobs:
           #COMPOSE_KEYCLOAK_IMAGE: "registry.camunda.cloud/team-infrastructure-experience/keycloak@sha256:766f627ae1ef0aa16ca9af26989434e9c4f8684e9699b43c55afc0a877193d76"
           COMPOSE_KEYCLOAK_IMAGE: "langleu/keycloak:latest"
 
-          KEYCLOAK_LOG_LEVEL: "DEBUG"
+          KEYCLOAK_LOG_LEVEL: "VERBOSE"
 
           # AWS specific variables to forward, see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables
           AWS_STS_REGIONAL_ENDPOINTS: "${{ env.AWS_STS_REGIONAL_ENDPOINTS }}"
