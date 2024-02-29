@@ -30,11 +30,11 @@ services:
         KEYCLOAK_ADMIN_PASSWORD: admin
 
         # Configure the database according to the external db configuration if needed
-        KC_DB_USERNAME: keycloak
-        KC_DB_PASSWORD: password
-        KC_DB_DRIVER: software.amazon.jdbc.Driver
-        KC_TRANSACTION_XA_ENABLED: false
-        KC_DB_URL: jdbc:aws-wrapper:postgresql://postgres:5432/keycloak
+        # KC_DB_USERNAME: keycloak
+        # KC_DB_PASSWORD: password
+        # KC_DB_DRIVER: software.amazon.jdbc.Driver
+        # KC_TRANSACTION_XA_ENABLED: false
+        # KC_DB_URL: jdbc:aws-wrapper:postgresql://postgres:5432/keycloak
       healthcheck:
         test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1
         interval: 15s
