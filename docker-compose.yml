@@ -34,7 +34,7 @@ services:
         #KC_DB_PASSWORD: "${KC_DB_PASSWORD:-password}"
         KC_DB_DRIVER: "${KC_DB_DRIVER:-software.amazon.jdbc.Driver}"
         KC_TRANSACTION_XA_ENABLED: "${KC_TRANSACTION_XA_ENABLED:-false}"
-        KC_DB_URL: "${KC_DB_PASSWORD:-jdbc:aws-wrapper:postgresql://postgres:5432/keycloak}"
+        KC_DB_URL: "${KC_DB_URL:-jdbc:aws-wrapper:postgresql://postgres:5432/keycloak}"
 
         # AWS specifics variables
         AWS_STS_REGIONAL_ENDPOINTS: "${AWS_STS_REGIONAL_ENDPOINTS:-}"
