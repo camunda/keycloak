@@ -108,7 +108,7 @@ jobs:
       - name: KeyCloak Show-Config
         run: |
           docker run "${{ needs.build-image.outputs.full_image_name }}" show-config >> docker.log
-          echo "config=$(cat docker.log | tr '\n' ' ')" >> "$GITHUB_ENV"
+          echo "config=$(< docker.log tr '\n' ' ')" >> "$GITHUB_ENV"
 
       - name: Assert Config
         env:
@@ -192,7 +192,7 @@ jobs:
         shell: bash
         run: |
 
-          if [ "${{ matrix.runner_desc.postgres_replicas }}" -lt 1 ]; then
+          if [[ "${{ matrix.runner_desc.postgres_replicas }}" -lt 1 ]]; then
             echo "compose_keycloak_depends_on=" >> "$GITHUB_ENV"
           else
             echo "compose_keycloak_depends_on=postgres" >> "$GITHUB_ENV"
