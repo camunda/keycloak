@@ -35,6 +35,14 @@ services:
         KC_DB_DRIVER: "${KC_DB_DRIVER:-software.amazon.jdbc.Driver}"
         KC_TRANSACTION_XA_ENABLED: "${KC_TRANSACTION_XA_ENABLED:-false}"
         KC_DB_URL: "${KC_DB_PASSWORD:-jdbc:aws-wrapper:postgresql://postgres:5432/keycloak}"
+
+        # AWS specifics variables
+        AWS_STS_REGIONAL_ENDPOINTS: "${AWS_STS_REGIONAL_ENDPOINTS:-}"
+        AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION:-}"
+        AWS_REGION: "${AWS_REGION:-}"
+        AWS_ROLE_ARN: "${AWS_ROLE_ARN:-}"
+        AWS_WEB_IDENTITY_TOKEN_FILE: "${AWS_WEB_IDENTITY_TOKEN_FILE:-}"
+
       healthcheck:
         test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1
         interval: 15s
