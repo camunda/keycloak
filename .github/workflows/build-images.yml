@@ -123,8 +123,8 @@ jobs:
       matrix:
         runner_desc:
           - {runner: ubuntu-22.04, postgres_replicas: 1, keycloak_jdbc_protocol: "postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "postgres", keycloak_db_jdbc_query: "", keycloak_db_port: "5432" }
-          - {runner: aws-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_jdbc_query: "?wrapperPlugins=iam", keycloak_db_port: "5432" }
-          - {runner: aws-arm-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_jdbc_query: "?wrapperPlugins=iam", keycloak_db_port: "5432" }
+          - {runner: aws-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require&sslrootcert=/certs/rds-ca-2019-root.pem", keycloak_db_port: "5432" }
+          - {runner: aws-arm-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require&sslrootcert=/certs/rds-ca-2019-root.pem", keycloak_db_port: "5432" }
           # GCloud SQL is not tested yet as we don't have a dedicated db, fallback on integrated db
           - {runner: gcp-core-2-default, postgres_replicas: 1, keycloak_jdbc_protocol: "postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "postgres", keycloak_db_jdbc_query: "", keycloak_db_port: "5432" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
@@ -170,6 +170,8 @@ jobs:
           echo "postgres_user=keycloak-irsa" >> "$GITHUB_ENV"
           echo "postgres_user=${{ env.postgres_user }}"
           echo "postgres_password=" >> "$GITHUB_ENV"
+
+          echo "compose_keycloak_volumes='./rds-ca-2019-root.pem:/certs/rds-ca-2019-root.pem'" >> "$GITHUB_ENV"
 
           : # export AWS variables
           echo "AWS_STS_REGIONAL_ENDPOINTS=$AWS_STS_REGIONAL_ENDPOINTS" >> "$GITHUB_ENV"
@@ -246,9 +248,12 @@ jobs:
           unzip awscliv2.zip
           sudo ./aws/install
 
-          export RDSHOST="${{ env.postgres_host }}"
-          export PGPASSWORD="$(aws rds generate-db-auth-token --hostname $RDSHOST --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
-          psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
+          : # download ca certs
+          wget https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem
+
+          : # export RDSHOST="${{ env.postgres_host }}"
+          : # export PGPASSWORD="$(aws rds generate-db-auth-token --hostname $RDSHOST --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
+          : # psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
 
       - name: Start Test Environment
         uses: ./.github/actions/compose
@@ -271,6 +276,7 @@ jobs:
           COMPOSE_POSTGRES_IMAGE: "postgres:${{ matrix.postgres_version }}"
           COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
           COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ env.compose_keycloak_depends_on }}"
+          COMPOSE_KEYCLOAK_VOLUMES: "${{ env.compose_keycloak_volumes }}"
           # TODO: reverse
           # COMPOSE_KEYCLOAK_IMAGE: ${{ needs.build-image.outputs.full_image_name }}
           COMPOSE_KEYCLOAK_IMAGE: "registry.camunda.cloud/team-infrastructure-experience/keycloak@sha256:766f627ae1ef0aa16ca9af26989434e9c4f8684e9699b43c55afc0a877193d76"

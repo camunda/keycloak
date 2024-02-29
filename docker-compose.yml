@@ -51,6 +51,9 @@ services:
       ports:
         - 8080:8080
       depends_on:
-      - "${COMPOSE_KEYCLOAK_DEPENDS_ON:-postgres}"
+        - "${COMPOSE_KEYCLOAK_DEPENDS_ON:-postgres}"
+      volumes:
+        - "${COMPOSE_KEYCLOAK_VOLUMES:-}"
+
 
 # /kcadm.sh get clients --realm master --server http://localhost:8080 --user admin --password admin
