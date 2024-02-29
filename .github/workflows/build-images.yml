@@ -167,7 +167,9 @@ jobs:
           echo "postgres_superuser_password=${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}" >> "$GITHUB_ENV"
           echo "postgres_superuser=${postgres_superuser}"
 
-          echo "postgres_user=keycloak-irsa" >> "$GITHUB_ENV"
+          : # TODO: revert
+          : # echo "postgres_user=keycloak-irsa" >> "$GITHUB_ENV"
+          echo "postgres_user=web-modeler-irsa" >> "$GITHUB_ENV"
           echo "postgres_user=${postgres_user}"
           echo "postgres_password=" >> "$GITHUB_ENV"
 
