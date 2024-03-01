@@ -17,9 +17,7 @@ jobs:
 
   build-image:
     runs-on: ubuntu-latest
-    # if: ${{ github.event_name == 'push' }}
-    if: false
-    # TODO: reneable
+    if: ${{ github.event_name == 'push' }}
     outputs:
       full_image_name: ${{ steps.compute-image-name-step.outputs.full_image_name }}
     # TODO: later, we should be able to build multiple versions of keycloak
@@ -129,9 +127,8 @@ jobs:
           - {runner: gcp-core-2-default, postgres_replicas: 1, keycloak_jdbc_protocol: "postgresql", keycloak_db_driver: org.postgresql.Driver, keycloak_db_host_template: "postgres", keycloak_db_jdbc_query: "", keycloak_db_port: "5432" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
     runs-on: ${{ matrix.runner_desc.runner }}
-    # TODO: renable
-    # needs:
-    #   - build-image
+    needs:
+      - build-image
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -281,9 +278,7 @@ jobs:
           COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ env.compose_keycloak_depends_on }}"
           COMPOSE_KEYCLOAK_VOLUME_1: "${{ env.compose_keycloak_volume_1 || '/dev/null:/dummynull1' }}"
           COMPOSE_KEYCLOAK_VOLUME_2: "${{ env.compose_keycloak_volume_2 || '/dev/null:/dummynull2' }}"
-          # TODO: reverse
-          # COMPOSE_KEYCLOAK_IMAGE: ${{ needs.build-image.outputs.full_image_name }}
-          COMPOSE_KEYCLOAK_IMAGE: "registry.camunda.cloud/team-infrastructure-experience/keycloak@sha256:766f627ae1ef0aa16ca9af26989434e9c4f8684e9699b43c55afc0a877193d76"
+          COMPOSE_KEYCLOAK_IMAGE: ${{ needs.build-image.outputs.full_image_name }}
 
           # AWS specific variables to forward, see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables
           AWS_STS_REGIONAL_ENDPOINTS: "${{ env.AWS_STS_REGIONAL_ENDPOINTS }}"
@@ -309,8 +304,6 @@ jobs:
           PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
           PGPASSWORD: ${{ env.postgres_superuser_password }}
           PGUSER: ${{ env.postgres_superuser }}
-
-  # TODO: add tests (static framework tbd) then push
 
   # TODO: implement
   # publish-image:
