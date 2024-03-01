@@ -3,16 +3,17 @@
     "config:recommended",
     "docker:enableMajor",
     ":dependencyDashboard",
-    ":semanticCommits"
+    ":semanticCommits",
   ],
   automerge: false,
-  regexManagers: [
+  customManagers: [
     {
+      customType: "regex",
       fileMatch: ["build.gradle$"],
       matchStrings: [
-        "renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.* (?<currentValue>.*)\\s"
+        "renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.* (?<currentValue>.*)\\s",
       ],
-      versioningTemplate: "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
-    }
-  ]
+      versioningTemplate: "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
+    },
+  ],
 }
