@@ -234,7 +234,8 @@ jobs:
           username: ${{ steps.secrets.outputs.MACHINE_USR }}
           password: ${{ steps.secrets.outputs.MACHINE_PWD }}
 
-                # TODO: before tests, add cleanup databases
+      # TODO: cleanup all old databases on a regular basis
+
       # The self-hosted runner doesn't provide a postgres client and the prerequisites for make,
       # so we need to install them manually
       - name: Install required packages
