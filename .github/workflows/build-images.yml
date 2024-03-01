@@ -253,7 +253,7 @@ jobs:
           python3 -m pip install awscli
 
           RDSHOST="${{ env.postgres_host }}" \
-          PGPASSWORD="$(aws rds generate-db-auth-token --hostname $RDSHOST --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})" \
+          PGPASSWORD="$(aws rds generate-db-auth-token --hostname "\$RDSHOST\" --port \"${{ matrix.runner_desc.keycloak_db_port }}\" --region \"${{ env.AWS_REGION }}\" --username \"${{ env.postgres_user }}\")" \
           psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
 
 
