@@ -234,6 +234,7 @@ jobs:
           username: ${{ steps.secrets.outputs.MACHINE_USR }}
           password: ${{ steps.secrets.outputs.MACHINE_PWD }}
 
+                # TODO: before tests, add cleanup databases
       # The self-hosted runner doesn't provide a postgres client and the prerequisites for make,
       # so we need to install them manually
       - name: Install required packages
@@ -260,6 +261,7 @@ jobs:
           export RDSHOST="${{ env.postgres_host }}"
           export PGPASSWORD="$(aws rds generate-db-auth-token --hostname $RDSHOST --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
           psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
+
 
       - name: Start Test Environment
         uses: ./.github/actions/compose
