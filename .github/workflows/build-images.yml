@@ -250,7 +250,7 @@ jobs:
       - name: Test Aurora PG (aws only)
         if: startsWith(matrix.runner_desc.runner, 'aws')
         run: |
-          pip install awscli
+          python3 -m pip install awscli
 
           RDSHOST="${{ env.postgres_host }}" \
           PGPASSWORD="$(aws rds generate-db-auth-token --hostname $RDSHOST --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})" \
