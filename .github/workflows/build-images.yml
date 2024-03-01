@@ -51,7 +51,7 @@ jobs:
 
       - name: Build image using Camunda docker build
         id: build-image-step
-        uses: camunda/infra-global-github-actions/build-docker-image@feature/container-build-multiarch
+        uses: camunda/infra-global-github-actions/build-docker-image@main
         with:
           registry_host: ${{ vars.CONTAINER_REGISTRY_CI }}
           registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -137,14 +137,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@main
+        uses: camunda/infra-global-github-actions/common-tooling@feature/arm-python
         with:
           java-enabled: false
           yarn-enabled: false
           python-version: "3.11"
-          python-architecture: x64 # workaround to enable python installation on arm and amd (see https://github.com/actions/setup-python/issues/108)
-          buildx-enabled: false
-          buildx-use: false
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
