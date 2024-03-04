@@ -6,7 +6,7 @@ COPY build.gradle /home/gradle
 
 RUN gradle copyDependencies
 
-FROM keycloak/keycloak:22.0 as builder
+FROM keycloak/keycloak:24.0 as builder
 
 # Enable health and metrics support
 ENV KC_HEALTH_ENABLED=true
@@ -21,7 +21,7 @@ WORKDIR /opt/keycloak
 
 RUN /opt/keycloak/bin/kc.sh build
 
-FROM keycloak/keycloak:22.0
+FROM keycloak/keycloak:24.0
 
 # Enable health and metrics support
 ENV KC_HEALTH_ENABLED=true
