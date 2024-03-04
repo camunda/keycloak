@@ -46,6 +46,13 @@ jobs:
             secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
             secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
 
+      - name: Compute keycloak version
+        id: compute-keycloak-version
+        run: |
+          keycloak_version_number=$(echo "${{ matrix.keycloak_version }}" | sed 's/keycloak-//')
+          echo "keycloak_version_number=${keycloak_version_number}" >> "$GITHUB_OUTPUT"
+          echo "keycloak_version_number=${keycloak_version_number}"
+
       - name: Build image using Camunda docker build
         id: build-image-step
         uses: camunda/infra-global-github-actions/build-docker-image@main
@@ -58,7 +65,7 @@ jobs:
           build_context: "./${{ matrix.keycloak_version }}/"
           build_platforms: linux/amd64,linux/arm64
           extra_tags: | # the ci- prefix ensures a build context, this image is treated as "temporary"
-            type=sha,enable=true,priority=1000,prefix=ci-sha-,suffix=,format=short
+            type=sha,enable=true,priority=1000,prefix=ci-${{ steps.compute-keycloak-version.outputs.keycloak_version_number }}-sha-,suffix=,format=short
 
       - name: Compute target built image fully qualified name from metadata
         id: compute-image-name-step
@@ -344,5 +351,19 @@ jobs:
           PGUSER: ${{ env.postgres_superuser }}
 
   # TODO: implement
-  # publish-image:
-  # release:
+  publish-image:
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+      - test-postgres-integ
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+  release:
+    runs-on: ubuntu-latest
+    needs:
+      - publish-image
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
