@@ -23,7 +23,7 @@ services:
 
   keycloak:
       image: ${COMPOSE_KEYCLOAK_IMAGE:-camunda/keycloak:latest}
-      build: .
+      build: ./keycloak-latest
       command: "start-dev --log-level=${KEYCLOAK_LOG_LEVEL:-INFO}"
       environment:
         KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN:-admin}"
