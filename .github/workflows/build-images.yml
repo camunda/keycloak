@@ -168,7 +168,9 @@ jobs:
           # GCloud SQL is not tested yet as we don't have a dedicated db, fallback on integrated db
           - {runner: gcp-core-2-default, postgres_replicas: 1, keycloak_jdbc_protocol: "postgresql", keycloak_db_driver: org.postgresql.Driver, keycloak_db_host_template: "postgres", keycloak_db_jdbc_query: "", keycloak_db_port: "5432" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
-        keycloak_version: [keycloak-22, keycloak-23]
+        # TODO: re-enable keycloak-22 if needed
+        # keycloak_version: [keycloak-22, keycloak-23]
+        keycloak_version: [keycloak-23]
     runs-on: ${{ matrix.runner_desc.runner }}
     needs:
       - build-image

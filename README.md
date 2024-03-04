@@ -2,7 +2,7 @@
 
 [Camunda](https://www.camunda.com/)
 
-This Docker image provides a generic Keycloak setup, enhanced with the Camunda c8 platform capabilities. It also includes an optional AWS wrapper, allowing for the use of AWS Identity and Access Management (IAM) Roles for Service Accounts (IRSA) for database authentication.
+This Docker image provides a generic Keycloak setup. It also includes an optional AWS wrapper, allowing for the use of AWS Identity and Access Management (IAM) Roles for Service Accounts (IRSA) for database authentication.
 
 ## Getting Started
 
