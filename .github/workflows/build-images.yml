@@ -121,7 +121,7 @@ jobs:
         id: set-keycloak-version
         run: |
           keycloak_image_version="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
-          echo "keycloak_image_version=${keycloak_image_version}" >> $GITHUB_ENV
+          echo "keycloak_image_version=${keycloak_image_version}" >> "$GITHUB_ENV"
           echo "keycloak_image_version=${keycloak_image_version}"
 
       - name: Import secrets
@@ -185,7 +185,7 @@ jobs:
         id: set-keycloak-version
         run: |
           keycloak_image_version="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
-          echo "keycloak_image_version=${keycloak_image_version}" >> $GITHUB_ENV
+          echo "keycloak_image_version=${keycloak_image_version}" >> "$GITHUB_ENV"
           echo "keycloak_image_version=${keycloak_image_version}"
 
       - name: Import secrets
