@@ -110,6 +110,12 @@ jobs:
           yarn-enabled: false
           python-version: "3"
 
+      - name: Set Keycloak Version
+        id: set-keycloak-version
+        run: |
+          echo "KEYCLOAK_IMAGE_VERSION=${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}" >> $GITHUB_ENV
+          echo "KEYCLOAK_IMAGE_VERSION=$KEYCLOAK_IMAGE_VERSION"
+
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
         id: secrets
@@ -131,7 +137,7 @@ jobs:
 
       - name: KeyCloak Show-Config
         run: |
-          docker run "${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}" show-config >> docker.log
+          docker run "${{ env.KEYCLOAK_IMAGE_VERSION }}" show-config >> docker.log
           echo "config=$(< docker.log tr '\n' ' ')" >> "$GITHUB_ENV"
 
       - name: Assert Config
@@ -150,9 +156,11 @@ jobs:
           # GCloud SQL is not tested yet as we don't have a dedicated db, fallback on integrated db
           - {runner: gcp-core-2-default, postgres_replicas: 1, keycloak_jdbc_protocol: "postgresql", keycloak_db_driver: org.postgresql.Driver, keycloak_db_host_template: "postgres", keycloak_db_jdbc_query: "", keycloak_db_port: "5432" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
+        keycloak_version: [keycloak-22, keycloak-23]
     runs-on: ${{ matrix.runner_desc.runner }}
     needs:
       - build-image
+      - read-build-image-output
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -164,6 +172,12 @@ jobs:
           yarn-enabled: false
           python-version: "3.11"
           python-cache: "pip"
+
+      - name: Set Keycloak Version
+        id: set-keycloak-version
+        run: |
+          echo "KEYCLOAK_IMAGE_VERSION=${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}" >> $GITHUB_ENV
+          echo "KEYCLOAK_IMAGE_VERSION=$KEYCLOAK_IMAGE_VERSION"
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
@@ -302,7 +316,7 @@ jobs:
           COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ env.compose_keycloak_depends_on }}"
           COMPOSE_KEYCLOAK_VOLUME_1: "${{ env.compose_keycloak_volume_1 || '/dev/null:/dummynull1' }}"
           COMPOSE_KEYCLOAK_VOLUME_2: "${{ env.compose_keycloak_volume_2 || '/dev/null:/dummynull2' }}"
-          COMPOSE_KEYCLOAK_IMAGE: ${{ needs.build-image.outputs.full_image_name }}
+          COMPOSE_KEYCLOAK_IMAGE: "${{ env.KEYCLOAK_IMAGE_VERSION }}"
 
           # AWS specific variables to forward, see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables
           AWS_STS_REGIONAL_ENDPOINTS: "${{ env.AWS_STS_REGIONAL_ENDPOINTS }}"
