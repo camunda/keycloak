@@ -55,7 +55,7 @@ jobs:
           registry_password: ${{ steps.secrets.outputs.MACHINE_PWD }}
           force_push: true
           image_name: ${{ vars.CONTAINER_IMAGE_NAME_CI }}
-          build_context: .
+          build_context: "./${{ matrix.keycloak_version }}/"
           build_platforms: linux/amd64,linux/arm64
           extra_tags: | # the ci- prefix ensures a build context, this image is treated as "temporary"
             type=sha,enable=true,priority=1000,prefix=ci-sha-,suffix=,format=short
