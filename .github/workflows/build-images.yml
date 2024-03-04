@@ -120,8 +120,9 @@ jobs:
       - name: Set Keycloak Version
         id: set-keycloak-version
         run: |
-          echo "KEYCLOAK_IMAGE_VERSION=${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}" >> $GITHUB_ENV
-          echo "KEYCLOAK_IMAGE_VERSION=$KEYCLOAK_IMAGE_VERSION"
+          keycloak_image_version="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+          echo "keycloak_image_version=${keycloak_image_version}" >> $GITHUB_ENV
+          echo "keycloak_image_version=${keycloak_image_version}"
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
@@ -144,7 +145,7 @@ jobs:
 
       - name: KeyCloak Show-Config
         run: |
-          docker run "${{ env.KEYCLOAK_IMAGE_VERSION }}" show-config >> docker.log
+          docker run "${{ env.keycloak_image_version }}" show-config >> docker.log
           echo "config=$(< docker.log tr '\n' ' ')" >> "$GITHUB_ENV"
 
       - name: Assert Config
@@ -183,8 +184,9 @@ jobs:
       - name: Set Keycloak Version
         id: set-keycloak-version
         run: |
-          echo "KEYCLOAK_IMAGE_VERSION=${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}" >> $GITHUB_ENV
-          echo "KEYCLOAK_IMAGE_VERSION=$KEYCLOAK_IMAGE_VERSION"
+          keycloak_image_version="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+          echo "keycloak_image_version=${keycloak_image_version}" >> $GITHUB_ENV
+          echo "keycloak_image_version=${keycloak_image_version}"
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
@@ -323,7 +325,7 @@ jobs:
           COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ env.compose_keycloak_depends_on }}"
           COMPOSE_KEYCLOAK_VOLUME_1: "${{ env.compose_keycloak_volume_1 || '/dev/null:/dummynull1' }}"
           COMPOSE_KEYCLOAK_VOLUME_2: "${{ env.compose_keycloak_volume_2 || '/dev/null:/dummynull2' }}"
-          COMPOSE_KEYCLOAK_IMAGE: "${{ env.KEYCLOAK_IMAGE_VERSION }}"
+          COMPOSE_KEYCLOAK_IMAGE: "${{ env.keycloak_image_version }}"
 
           # AWS specific variables to forward, see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables
           AWS_STS_REGIONAL_ENDPOINTS: "${{ env.AWS_STS_REGIONAL_ENDPOINTS }}"
