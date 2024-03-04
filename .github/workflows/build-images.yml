@@ -358,6 +358,58 @@ jobs:
           PGPASSWORD: ${{ env.postgres_superuser_password }}
           PGUSER: ${{ env.postgres_superuser }}
 
+  scan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # TODO: renable
+        # keycloak_version: [keycloak-22, keycloak-23]
+        keycloak_version: [keycloak-23]
+    needs:
+      - read-build-image-output
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Import secrets
+      uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+      id: secrets
+      with:
+        url: ${{ secrets.VAULT_ADDR }}
+        method: approle
+        roleId: ${{ secrets.VAULT_ROLE_ID }}
+        secretId: ${{ secrets.VAULT_SECRET_ID }}
+        secrets: |
+          secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
+          secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
+
+    - name: Login to the registry
+      uses: docker/login-action@v3
+      with:
+        registry: "${{ vars.CONTAINER_REGISTRY_CI }}"
+        username: "${{ steps.secrets.outputs.MACHINE_USR }}"
+        password: "${{ steps.secrets.outputs.MACHINE_PWD }}"
+
+    - name: Set Keycloak Version
+      id: set-keycloak-version
+      run: |
+        keycloak_image_version="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+        echo "keycloak_image_version=${keycloak_image_version}" >> "$GITHUB_ENV"
+        echo "keycloak_image_version=${keycloak_image_version}"
+
+    - name: Scan Docker image 🐳
+      uses: snyk/actions/docker@master
+      continue-on-error: true
+      with:
+        image: "${{ env.keycloak_image_version }}"
+        args: --file="./${{ matrix.keycloak_version }}/Dockerfile" --severity-threshold=high --sarif-file-output=snyk.sarif
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+    - name: Upload Snyk report as sarif 📦
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: snyk.sarif
+
   publish-image:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags')
@@ -370,6 +422,7 @@ jobs:
       - lint
       - read-build-image-output
       - test-postgres-integ
+      - scan
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -427,20 +480,6 @@ jobs:
           docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}"
           docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}-latest"
           docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}-${{github.ref_name}}"
-
-      - name: Scan Docker image 🐳
-        uses: snyk/actions/docker@master
-        continue-on-error: true
-        with:
-          image: "${{ env.dockerhub_target_name }}"
-          args: --file="./${{ matrix.keycloak_version }}/Dockerfile" --severity-threshold=high --sarif-file-output=snyk.sarif
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      - name: Upload Snyk report as sarif 📦
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: snyk.sarif
 
       - name: Push the image
         run: |
