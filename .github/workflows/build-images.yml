@@ -7,7 +7,7 @@ on:
     branches:
       - "**"
     tags:
-      - "[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{1,5}"
+      - "*-*-*-*"
   pull_request_target:
 
 jobs:
@@ -363,7 +363,9 @@ jobs:
     if: startsWith(github.ref, 'refs/tags')
     strategy:
       matrix:
-        keycloak_version: [keycloak-22, keycloak-23]
+        # TODO: renable
+        # keycloak_version: [keycloak-22, keycloak-23]
+        keycloak_version: [keycloak-23]
     needs:
       - lint
       - read-build-image-output
@@ -417,16 +419,32 @@ jobs:
           echo "dockerhub_target_name=${dockerhub_target_name}"
 
       - name: Pull built image
-        run: docker pull "${{ env.keycloak_image_version }}"
+        run: |
+          docker pull "${{ env.keycloak_image_version }}"
 
-      - name: Retag image for Docker Hub
-        run: docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}"
+      - name: Retag and push the image
+        run: |
+          docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}"
+          docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}-latest"
+          docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}-${{github.ref_name}}"
 
-      - name: Push image to Docker Hub
-        run: docker push "${{ env.dockerhub_target_name }}"
+      - name: Scan Docker image 🐳
+        uses: snyk/actions/docker@master
+        continue-on-error: true
+        with:
+          image: "${{ env.dockerhub_target_name }}"
+          args: --file="./${{ matrix.keycloak_version }}/Dockerfile" --severity-threshold=high --sarif-file-output=snyk.sarif
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-    # TODO: handle latest etc
-    # copy image from local registry and then republish it to dockerhub
+      - name: Upload Snyk report as sarif 📦
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: snyk.sarif
+
+      - name: Push the image
+        run: |
+          docker push "${{ env.dockerhub_target_name }}" --all-tags
 
   release:
     runs-on: ubuntu-latest
