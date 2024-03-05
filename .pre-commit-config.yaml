@@ -33,5 +33,5 @@ repos:
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
-        args: ["--strict"]
+        args: ["--strict" , "--force-scope"]
 ...

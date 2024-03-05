@@ -1,6 +1,6 @@
 # Camunda Keycloak Container Image
 
-[Camunda](https://www.camunda.com/)
+[Camunda](https://www.camunda.com/) [![build-images](https://github.com/camunda/keycloak/actions/workflows/build-images.yml/badge.svg?branch=main)](https://github.com/camunda/keycloak/actions/workflows/build-images.yml)
 
 This Docker image provides a generic Keycloak setup. It also includes an optional AWS wrapper, allowing for the use of AWS Identity and Access Management (IAM) Roles for Service Accounts (IRSA) for database authentication.
 
