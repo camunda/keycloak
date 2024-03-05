@@ -48,8 +48,9 @@ jobs:
     needs:
       - list-keycloak-versions
     strategy:
-       matrix:
-         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
+      fail-fast: false # don't propate failing jobs
+      matrix:
+        keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -132,6 +133,7 @@ jobs:
       - build-image
       - read-build-image-output
     strategy:
+      fail-fast: false # don't propate failing jobs
       matrix:
         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     steps:
@@ -384,6 +386,7 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false # don't propate failing jobs
       matrix:
         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     needs:
@@ -440,6 +443,7 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags')
     strategy:
+      fail-fast: false # don't propate failing jobs
       matrix:
         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     needs:
