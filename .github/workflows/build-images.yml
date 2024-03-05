@@ -288,7 +288,7 @@ jobs:
           echo "postgres_database=$postgres_database"
 
           : # get the postgres version to test
-          keycloak_version_number=$(echo "${{ matrix.keycloak_version }}" | sed 's/keycloak-//')
+          keycloak_version_number="$(echo '${{ matrix.keycloak_version }}' | sed 's/keycloak-//')"
           postgres_version=$(curl -s https://raw.githubusercontent.com/keycloak/keycloak/release/${keycloak_version_number}.0/pom.xml | \
           awk -F'[><]' '/<postgresql.version>/{print $3}')
           echo "postgres_version=${postgres_version}" >> "$GITHUB_ENV"
