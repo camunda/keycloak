@@ -35,9 +35,10 @@ jobs:
           : # List folders matching the pattern keycloak-*
           matrix_keycloak_versions=$(ls -d keycloak-*/ | grep -v 'keycloak-latest/')
 
-          # Export the list as an output in JSON format
-          matrix_keycloak_versions="[\"${matrix_keycloak_versions[@]}\"]"
-          echo "matrix_keycloak_versions=${matrix_keycloak_versions}" >> "$GITHUB_ENV"
+          : # Export the list as an output in JSON format
+          matrix_json=$(ls -d keycloak-*/ | grep -v 'keycloak-latest/' | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix_keycloak_versions=${matrix_json}" >> "$GITHUB_ENV"
+          echo "matrix_keycloak_versions=${matrix_json}"
 
 
   # TODO: https://github.com/camunda/infra-core/blob/5945bd96c0765837dafd43e87f3d8b25dacee895/.github/workflows/kubernetes-diff.yml#L90
