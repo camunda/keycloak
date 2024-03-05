@@ -193,7 +193,6 @@ jobs:
           - {runner: aws-arm-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require&sslrootcert=/certs/rds-ca-2019-root.pem", keycloak_db_port: "5432" }
           # GCloud SQL is not tested yet as we don't have a dedicated db, fallback on integrated db
           - {runner: gcp-core-2-default, postgres_replicas: 1, keycloak_jdbc_protocol: "postgresql", keycloak_db_driver: org.postgresql.Driver, keycloak_db_host_template: "postgres", keycloak_db_jdbc_query: "", keycloak_db_port: "5432" }
-        postgres_version: [15] # reference: https://www.keycloak.org/server/db
         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     runs-on: ${{ matrix.runner_desc.runner }}
     needs:
@@ -284,12 +283,18 @@ jobs:
           fi
 
           : # ensure uniqueness of the db name
-          postgres_database="db-${{ matrix.runner_desc.runner }}-${{ github.sha }}"
+          postgres_database="infex-keycloak-db-$(uuidgen)-${{ github.sha }}"
           echo "postgres_database=${postgres_database}" >> "$GITHUB_ENV"
           echo "postgres_database=$postgres_database"
 
+          : # get the postgres version to test
+          postgres_version=$(curl -s https://raw.githubusercontent.com/keycloak/keycloak/release/${{ matrix.keycloak_version }}.0/pom.xml | \
+          awk -F'[><]' '/<postgresql.version>/{print $3}')
+          echo "postgres_version=${postgres_version}" >> "$GITHUB_ENV"
+          echo "postgres_version=${postgres_version}"
+
           : # apply template on the address
-          postgres_host=$(echo "${{ matrix.runner_desc.keycloak_db_host_template }}" | sed "s/{{ postgres_version }}/${{ matrix.postgres_version }}/g")
+          postgres_host=$(echo "${{ matrix.runner_desc.keycloak_db_host_template }}" | sed "s/{{ postgres_version }}/${postgres_version}/g")
           echo "postgres_host=${postgres_host}" >> "$GITHUB_ENV"
           echo "postgres_host=${postgres_host}"
 
@@ -351,7 +356,7 @@ jobs:
 
           KEYCLOAK_LOG_LEVEL: "INFO,software.amazon.jdbc:FINEST"
 
-          COMPOSE_POSTGRES_IMAGE: "postgres:${{ matrix.postgres_version }}"
+          COMPOSE_POSTGRES_IMAGE: "postgres:${{ env.postgres_version }}"
           COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
           COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ env.compose_keycloak_depends_on }}"
           COMPOSE_KEYCLOAK_VOLUME_1: "${{ env.compose_keycloak_volume_1 || '/dev/null:/dummynull1' }}"
