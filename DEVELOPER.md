@@ -16,4 +16,12 @@ When adding a new version of Keycloak, follow these steps:
    - The pipeline of tests will automatically fetch this file and use the referenced version. For example: `<postgresql.version>15</postgresql.version>` indicates the target test version.
    - Locally, you can use this version for testing.
 
-Following these steps ensures a smooth integration of new Keycloak versions and consistent testing across the development environment. Happy coding!
+3. **Update to the Latest Keycloak Version:**
+   - Always ensure that you are using the latest version of Keycloak for development and testing.
+   - Create a symbolic link named `keycloak-latest` that points to the directory of the most recent Keycloak version. Use the following command as an example:
+     ```bash
+     ln -s keycloak-<latest_version> keycloak-latest
+     ```
+   Replace `<latest_version>` with the actual version number. This symbolic link will simplify referencing the latest version during development.
+
+Following these steps ensures a smooth integration of new Keycloak versions, consistent testing across the development environment, and easy access to the latest version. Happy coding!
