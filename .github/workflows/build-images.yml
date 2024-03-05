@@ -531,6 +531,9 @@ jobs:
       - publish-image
       - list-keycloak-versions
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Build Changelog
         id: github_release
         uses: mikepenz/release-changelog-builder-action@v4
