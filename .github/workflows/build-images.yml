@@ -283,6 +283,7 @@ jobs:
           fi
 
           : # ensure uniqueness of the db name
+          apt install -y uuidgen
           postgres_database="infex-keycloak-db-$(uuidgen)-${{ github.sha }}"
           echo "postgres_database=${postgres_database}" >> "$GITHUB_ENV"
           echo "postgres_database=$postgres_database"
