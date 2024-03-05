@@ -19,14 +19,39 @@ jobs:
       - uses: actions/setup-python@v3
       - uses: pre-commit/action@v3.0.0
 
+  # TODO: document dedicated tagging system:     git commit <==  tags: keycloak-22-2024-03-04-001
+
+  list-keycloak-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix_keycloak_versions: ${{ steps.set-matrix.outputs.matrix_keycloak_versions }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: List Keycloak Versions
+        id: set-matrix
+        run: |
+          : # List folders matching the pattern keycloak-*
+          matrix_keycloak_versions=$(ls -d keycloak-*/ | grep -v 'keycloak-latest/')
+
+          : # Export the list as an output
+          echo "matrix_keycloak_versions=${matrix_keycloak_versions}" >> "$GITHUB_ENV"
+          echo "matrix_keycloak_versions=${matrix_keycloak_versions}"
+
+
+
+  # TODO: https://github.com/camunda/infra-core/blob/5945bd96c0765837dafd43e87f3d8b25dacee895/.github/workflows/kubernetes-diff.yml#L90
   build-image:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' }}
     outputs:
       full_image_name: ${{ steps.compute-image-name-step.outputs.full_image_name }}
+    needs:
+      - list-keycloak-versions
     strategy:
        matrix:
-         keycloak_version: [keycloak-22, keycloak-23]
+         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -105,11 +130,12 @@ jobs:
   test-base-image:
     runs-on: ubuntu-latest
     needs:
+      - list-keycloak-versions
       - build-image
       - read-build-image-output
     strategy:
       matrix:
-        keycloak_version: [keycloak-22, keycloak-23]
+        keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -169,10 +195,10 @@ jobs:
           - {runner: gcp-core-2-default, postgres_replicas: 1, keycloak_jdbc_protocol: "postgresql", keycloak_db_driver: org.postgresql.Driver, keycloak_db_host_template: "postgres", keycloak_db_jdbc_query: "", keycloak_db_port: "5432" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
         # TODO: re-enable keycloak-22 if needed
-        # keycloak_version: [keycloak-22, keycloak-23]
-        keycloak_version: [keycloak-23]
+        keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     runs-on: ${{ matrix.runner_desc.runner }}
     needs:
+      - list-keycloak-versions
       - build-image
       - read-build-image-output
     steps:
@@ -364,8 +390,9 @@ jobs:
       matrix:
         # TODO: renable
         # keycloak_version: [keycloak-22, keycloak-23]
-        keycloak_version: [keycloak-23]
+        keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     needs:
+      - list-keycloak-versions
       - read-build-image-output
     steps:
     - uses: actions/checkout@v4
@@ -417,10 +444,11 @@ jobs:
       matrix:
         # TODO: renable
         # keycloak_version: [keycloak-22, keycloak-23]
-        keycloak_version: [keycloak-23]
+        keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     needs:
       - lint
       - read-build-image-output
+      - list-keycloak-versions
       - test-postgres-integ
       - scan
     steps:
@@ -489,6 +517,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - publish-image
+      - list-keycloak-versions
     steps:
       - name: Checkout
         uses: actions/checkout@v4
