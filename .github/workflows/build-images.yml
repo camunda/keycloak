@@ -192,7 +192,6 @@ jobs:
           # GCloud SQL is not tested yet as we don't have a dedicated db, fallback on integrated db
           - {runner: gcp-core-2-default, postgres_replicas: 1, keycloak_jdbc_protocol: "postgresql", keycloak_db_driver: org.postgresql.Driver, keycloak_db_host_template: "postgres", keycloak_db_jdbc_query: "", keycloak_db_port: "5432" }
         postgres_version: [15] # reference: https://www.keycloak.org/server/db
-        # TODO: re-enable keycloak-22 if needed
         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     runs-on: ${{ matrix.runner_desc.runner }}
     needs:
@@ -386,8 +385,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # TODO: renable
-        # keycloak_version: [keycloak-22, keycloak-23]
         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     needs:
       - list-keycloak-versions
@@ -444,8 +441,6 @@ jobs:
     if: startsWith(github.ref, 'refs/tags')
     strategy:
       matrix:
-        # TODO: renable
-        # keycloak_version: [keycloak-22, keycloak-23]
         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     needs:
       - lint
@@ -497,7 +492,7 @@ jobs:
           echo "keycloak_image_version=${keycloak_image_version}" >> "$GITHUB_ENV"
           echo "keycloak_image_version=${keycloak_image_version}"
 
-          dockerhub_target_name="${{ vars.CONTAINER_REGISTRY }}/${{ vars.CONTAINER_IMAGE_NAME }}:${{ matrix.keycloak_version }}"
+          dockerhub_target_name="${{ vars.CONTAINER_REGISTRY }}/${{ vars.CONTAINER_IMAGE_NAME }}"
           echo "dockerhub_target_name=${dockerhub_target_name}" >> "$GITHUB_ENV"
           echo "dockerhub_target_name=${dockerhub_target_name}"
 
@@ -507,9 +502,13 @@ jobs:
 
       - name: Retag and push the image
         run: |
-          docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}"
-          docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}-latest"
-          docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}-${{github.ref_name}}"
+          docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}"
+          docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}-latest"
+          docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}-${{github.ref_name}}"
+
+          if [ "$(readlink keycloak-latest)" = "${{ matrix.keycloak_version }}" ]; then
+            docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}:latest"
+          fi
 
       - name: Push the image
         run: |
