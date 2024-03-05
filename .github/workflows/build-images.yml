@@ -29,17 +29,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: List Keycloak Versions
+      - name: List Keycloak Versions from repository's folders
         id: set-matrix
         run: |
           : # List folders matching the pattern keycloak-*
           : # Export the list as an output in JSON format
-          matrix_json=$(ls -d keycloak-*/ | grep -v 'keycloak-latest/' | sed 's/\/$//' | jq -R -s -c 'split("\n")[:-1]')
+          matrix_json=$(printf "%s\n" keycloak-*/ | grep -v 'keycloak-latest/' | sed 's/\/$//' | jq -R -s -c 'split("\n")[:-1]')
           echo "matrix_keycloak_versions=${matrix_json}" >> "$GITHUB_OUTPUT"
           echo "matrix_keycloak_versions=${matrix_json}"
 
-
-  # TODO: https://github.com/camunda/infra-core/blob/5945bd96c0765837dafd43e87f3d8b25dacee895/.github/workflows/kubernetes-diff.yml#L90
   build-image:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' }}
