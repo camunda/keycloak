@@ -33,11 +33,9 @@ jobs:
         id: set-matrix
         run: |
           : # List folders matching the pattern keycloak-*
-          matrix_keycloak_versions=$(ls -d keycloak-*/ | grep -v 'keycloak-latest/')
-
           : # Export the list as an output in JSON format
-          matrix_json=$(ls -d keycloak-*/ | grep -v 'keycloak-latest/' | jq -R -s -c 'split("\n")[:-1]')
-          echo "matrix_keycloak_versions=${matrix_json}" >> "$GITHUB_ENV"
+          matrix_json=$(ls -d keycloak-*/ | grep -v 'keycloak-latest/' | sed 's/\/$//' | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix_keycloak_versions=${matrix_json}" >> "$GITHUB_OUTPUT"
           echo "matrix_keycloak_versions=${matrix_json}"
 
 
