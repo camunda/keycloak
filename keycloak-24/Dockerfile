@@ -1,7 +1,7 @@
 # quay.io is the new repository of keycloak (https://lists.jboss.org/archives/list/keycloak-user@lists.jboss.org/message/7CRWKAAYI5WJTUXUZR6K73XV7P4TLZZ2/)
-ARG BASE_IMAGE_NAME="quay.io/keycloak/keycloak:22.0"
-ARG BASE_IMAGE_SHA_AMD64="sha256:bad320e60a7fadfa36e37ccc56af3d50d0f4001c469cd2a7b363341480593a2b"
-ARG BASE_IMAGE_SHA_ARM64="sha256:607f6d35ca8157be460709aa03f3f6d5e313cdc7d739a9ca1623881a809a1805"
+ARG BASE_IMAGE_NAME="quay.io/keycloak/keycloak:24.0"
+ARG BASE_IMAGE_SHA_AMD64="sha256:be4ff90d66bd1cdfe79610a90eae2b187dff9926e5c1a99200eaf62b41433600"
+ARG BASE_IMAGE_SHA_ARM64="sha256:be4ff90d66bd1cdfe79610a90eae2b187dff9926e5c1a99200eaf62b41433600"
 
 
 FROM docker.io/gradle:jdk17-focal as lib
