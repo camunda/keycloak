@@ -58,16 +58,19 @@ jobs:
               PGUSER="keycloak-irsa"
 
               PGPASSWORD="${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}"
+
+              export PGPASSWORD
+              export PGPORT
+              export PGUSER
+              export PGHOST
+              export PGDATABASE
+              export RETENTION_INTERVAL
+
               user_exists="$(psql -U "${{ steps.secrets.outputs.AURORA_POSTGRESQL_USERNAME }}" -d "$PGDATABASE" -tAc "SELECT 1 FROM pg_roles WHERE rolname='$PGUSER'")"
 
               if [ "$user_exists" = "1" ]; then
                 PGPASSWORD="$(aws rds generate-db-auth-token --hostname "${PGHOST}" --port "${PGPORT}" --region "${AWS_REGION}" --username "${PGUSER}")"
                 export PGPASSWORD
-                export PGPORT
-                export PGUSER
-                export PGHOST
-                export PGDATABASE
-                export RETENTION_INTERVAL
                 bash ./.helpers/actions/drop-unused-db.sh
               else
                 echo "The user ${PGUSER} does not exist, skipping."
