@@ -73,6 +73,6 @@ jobs:
                 export PGPASSWORD
                 bash ./.helpers/actions/drop-unused-db.sh
               else
-                echo "The user ${PGUSER} does not exist, skipping."
+                echo "The user ${PGUSER} does not exist on '${PGHOST}:${PGPORT}', skipping."
               fi
           done
