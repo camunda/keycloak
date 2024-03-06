@@ -21,6 +21,20 @@ jobs:
           yarn-enabled: false
           python-version: "3.12"
 
+      - name: Import secrets
+        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        id: secrets
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          # for the moment, we share the secrets of the web-modeler for aurora
+          secrets: |
+
+            secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_PASSWORD;
+            secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_USERNAME;
+
       - name: Drop unused database
         run: |
           sudo apt-get update && sudo apt-get install -y build-essential postgresql-client
@@ -42,12 +56,20 @@ jobs:
               PGPORT="${db_info[1]}"
               PGDATABASE="postgres"
               PGUSER="keycloak-irsa"
-              PGPASSWORD="$(aws rds generate-db-auth-token --hostname "${PGHOST}" --port "${PGPORT}" --region "${AWS_REGION}" --username "${PGUSER}")"
-              export PGPASSWORD
-              export PGPORT
-              export PGUSER
-              export PGHOST
-              export PGDATABASE
-              export RETENTION_INTERVAL
-              bash ./.helpers/actions/drop-unused-db.sh
+
+              PGPASSWORD="${{ steps.secrets.outputs.AURORA_POSTGRESQL_PASSWORD }}"
+              user_exists="$(psql -U "${{ steps.secrets.outputs.AURORA_POSTGRESQL_USERNAME }}" -d "$PGDATABASE" -tAc "SELECT 1 FROM pg_roles WHERE rolname='$PGUSER'")"
+
+              if [ "$user_exists" = "1" ]; then
+                PGPASSWORD="$(aws rds generate-db-auth-token --hostname "${PGHOST}" --port "${PGPORT}" --region "${AWS_REGION}" --username "${PGUSER}")"
+                export PGPASSWORD
+                export PGPORT
+                export PGUSER
+                export PGHOST
+                export PGDATABASE
+                export RETENTION_INTERVAL
+                bash ./.helpers/actions/drop-unused-db.sh
+              else
+                echo "The user ${PGUSER} does not exist, skipping."
+              fi
           done
