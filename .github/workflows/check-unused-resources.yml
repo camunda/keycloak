@@ -1,6 +1,7 @@
 name: check-unused-resources
 
 on:
+  push:
   schedule:
     - cron: "0 0 * * *"
 
