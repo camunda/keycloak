@@ -10,24 +10,6 @@ jobs:
     runs-on: aws-core-2-default
     strategy:
       fail-fast: false # don't propate failing jobs
-      matrix:
-        pg:
-          - {
-              host: "camunda-ci-eks-aurora-postgresql-13.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com",
-              port: 5432,
-            }
-          - {
-              host: "camunda-ci-eks-aurora-postgresql-14.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com",
-              port: 5432,
-            }
-          - {
-              host: "camunda-ci-eks-aurora-postgresql-15.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com",
-              port: 5432,
-            }
-          - {
-              host: "camunda-ci-eks-aurora-postgresql-16.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com",
-              port: 5432,
-            }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,15 +28,26 @@ jobs:
 
           RETENTION_INTERVAL="2 days"
 
-          PGPORT="${{ matrix.pg.port }}"
-          PGDATABASE="postgres"
-          PGUSER="keycloak-irsa"
-          PGHOST="${{ matrix.pg.host }}"
-          PGPASSWORD="$(aws rds generate-db-auth-token --hostname ${PGHOST} --port ${PGPORT} --region ${{ env.AWS_REGION }} --username ${PGUSER})"
-          export PGPASSWORD
-          export PGPORT
-          export PGUSER
-          export PGHOST
-          export PGDATABASE
-          export RETENTION_INTERVAL
-          bash ./.helpers/actions/drop-unused-db.sh
+          # Define the databases in an array
+          databases=(
+          "camunda-ci-eks-aurora-postgresql-13.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com:5432"
+          "camunda-ci-eks-aurora-postgresql-14.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com:5432"
+          "camunda-ci-eks-aurora-postgresql-15.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com:5432"
+          "camunda-ci-eks-aurora-postgresql-16.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com:5432"
+          )
+
+          for db in "${databases[@]}"; do
+              IFS=':' read -ra db_info <<< "$db"
+              PGHOST="${db_info[0]}"
+              PGPORT="${db_info[1]}"
+              PGDATABASE="postgres"
+              PGUSER="keycloak-irsa"
+              PGPASSWORD="$(aws rds generate-db-auth-token --hostname "${PGHOST}" --port "${PGPORT}" --region "${AWS_REGION}" --username "${PGUSER}")"
+              export PGPASSWORD
+              export PGPORT
+              export PGUSER
+              export PGHOST
+              export PGDATABASE
+              export RETENTION_INTERVAL
+              bash ./.helpers/actions/drop-unused-db.sh
+          done
