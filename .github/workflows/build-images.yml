@@ -143,7 +143,7 @@ jobs:
         with:
           java-enabled: false
           yarn-enabled: false
-          python-version: "3"
+          python-version: "3.12"
 
       - name: Set Keycloak Version
         id: set-keycloak-version
@@ -206,7 +206,7 @@ jobs:
         with:
           java-enabled: false
           yarn-enabled: false
-          python-version: "3.11"
+          python-version: "3.12"
           python-cache: "pip"
 
       - name: Set Keycloak Version
