@@ -1,0 +1,52 @@
+name: check-unused-resources
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  check-unused-databases-aws:
+    runs-on: aws-core-2-default
+    strategy:
+      fail-fast: false # don't propate failing jobs
+      matrix:
+        pg:
+          - {
+              host: "camunda-ci-eks-aurora-postgresql-13.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com",
+              port: 5432,
+            }
+          - {
+              host: "camunda-ci-eks-aurora-postgresql-14.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com",
+              port: 5432,
+            }
+          - {
+              host: "camunda-ci-eks-aurora-postgresql-15.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com",
+              port: 5432,
+            }
+          - {
+              host: "camunda-ci-eks-aurora-postgresql-16.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com",
+              port: 5432,
+            }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Drop unused database
+        run: |
+          sudo apt-get update && sudo apt-get install -y build-essential postgresql-client
+          python3 -m pip install awscli
+
+          RETENTION_INTERVAL="2 days"
+
+          PGPORT="${{ matrix.pg.port }}"
+          PGDATABASE="postgres"
+          PGUSER="keycloak-irsa"
+          PGHOST="${{ matrix.pg.host }}"
+          PGPASSWORD="$(aws rds generate-db-auth-token --hostname ${PGHOST} --port ${PGPORT} --region ${{ env.AWS_REGION }} --username ${PGUSER})"
+          export PGPASSWORD
+          export PGPORT
+          export PGUSER
+          export PGHOST
+          export PGDATABASE
+          export RETENTION_INTERVAL
+          bash ./.helpers/actions/drop-unused-db.sh

@@ -21,8 +21,6 @@ jobs:
       - uses: actions/setup-python@v3
       - uses: pre-commit/action@v3.0.0
 
-  # TODO: document dedicated tagging system:     git commit <==  tags: keycloak-22-2024-03-04-001
-
   list-keycloak-versions:
     runs-on: ubuntu-latest
     outputs:
@@ -310,8 +308,6 @@ jobs:
           registry: ${{ vars.CONTAINER_REGISTRY_CI }}
           username: ${{ steps.secrets.outputs.MACHINE_USR }}
           password: ${{ steps.secrets.outputs.MACHINE_PWD }}
-
-      # TODO: cleanup all old databases on a regular basis
 
       # The self-hosted runner doesn't provide a postgres client and the prerequisites for make,
       # so we need to install them manually
