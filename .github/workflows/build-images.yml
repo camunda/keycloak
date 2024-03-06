@@ -15,14 +15,14 @@ on:
 jobs:
   lint:
     name: pre-commit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
       - uses: pre-commit/action@v3.0.0
 
   list-keycloak-versions:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       matrix_keycloak_versions: ${{ steps.set-matrix.outputs.matrix_keycloak_versions }}
     steps:
@@ -39,7 +39,7 @@ jobs:
           echo "matrix_keycloak_versions=${matrix_json}"
 
   build-image:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: ${{ github.event_name == 'push' }}
     outputs:
       full_image_name: ${{ steps.compute-image-name-step.outputs.full_image_name }}
@@ -114,7 +114,7 @@ jobs:
 
   ## Read matrix outputs
   read-build-image-output:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [build-image]
     steps:
       - uses: cloudposse/github-action-matrix-outputs-read@v1
@@ -125,7 +125,7 @@ jobs:
       result: "${{ steps.read.outputs.result }}"
 
   test-base-image:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
       - list-keycloak-versions
       - build-image
@@ -186,11 +186,38 @@ jobs:
       fail-fast: false # don't propate failing jobs
       matrix:
         runner_desc:
-          - {runner: ubuntu-22.04, postgres_replicas: 1, keycloak_jdbc_protocol: "postgresql", keycloak_db_driver: org.postgresql.Driver, keycloak_db_host_template: "postgres", keycloak_db_jdbc_query: "", keycloak_db_port: "5432" }
-          - {runner: aws-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require&sslrootcert=/certs/rds-ca-2019-root.pem", keycloak_db_port: "5432" }
-          - {runner: aws-arm-core-2-default, postgres_replicas: 0, keycloak_jdbc_protocol: "aws-wrapper:postgresql", keycloak_db_driver: software.amazon.jdbc.Driver, keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com", keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require&sslrootcert=/certs/rds-ca-2019-root.pem", keycloak_db_port: "5432" }
-          # GCloud SQL is not tested yet as we don't have a dedicated db, fallback on integrated db
-          - {runner: gcp-core-2-default, postgres_replicas: 1, keycloak_jdbc_protocol: "postgresql", keycloak_db_driver: org.postgresql.Driver, keycloak_db_host_template: "postgres", keycloak_db_jdbc_query: "", keycloak_db_port: "5432" }
+          - runner: "ubuntu-22.04"
+            postgres_replicas: 1
+            keycloak_jdbc_protocol: "postgresql"
+            keycloak_db_driver: "org.postgresql.Driver"
+            keycloak_db_host_template: "postgres"
+            keycloak_db_jdbc_query: ""
+            keycloak_db_port: "5432"
+
+          - runner: "aws-core-2-default"
+            postgres_replicas: 0
+            keycloak_jdbc_protocol: "aws-wrapper:postgresql"
+            keycloak_db_driver: "software.amazon.jdbc.Driver"
+            keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com"
+            keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require&sslrootcert=/certs/rds-ca-2019-root.pem"
+            keycloak_db_port: "5432"
+
+          - runner: "aws-arm-core-2-default"
+            postgres_replicas: 0
+            keycloak_jdbc_protocol: "aws-wrapper:postgresql"
+            keycloak_db_driver: "software.amazon.jdbc.Driver"
+            keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com"
+            keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require&sslrootcert=/certs/rds-ca-2019-root.pem"
+            keycloak_db_port: "5432"
+
+          - runner: "gcp-core-2-default"   # GCloud SQL is not tested yet as we don't have a dedicated db, fallback on integrated db
+            postgres_replicas: 1
+            keycloak_jdbc_protocol: "postgresql"
+            keycloak_db_driver: "org.postgresql.Driver"
+            keycloak_db_host_template: "postgres"
+            keycloak_db_jdbc_query: ""
+            keycloak_db_port: "5432"
+
         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     runs-on: ${{ matrix.runner_desc.runner }}
     needs:
@@ -224,13 +251,12 @@ jobs:
           method: approle
           roleId: ${{ secrets.VAULT_ROLE_ID }}
           secretId: ${{ secrets.VAULT_SECRET_ID }}
-          # for the moment, we share the secrets of the web-modeler for aurora
           secrets: |
             secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
             secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
 
-            secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_PASSWORD;
-            secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_USERNAME;
+            secret/data/products/infrastructure-experience/ci/common AURORA_POSTGRESQL_PASSWORD;
+            secret/data/products/infrastructure-experience/ci/common AURORA_POSTGRESQL_USERNAME;
 
       - name: Compute AWS variables
         if: startsWith(matrix.runner_desc.runner, 'aws')
@@ -281,7 +307,7 @@ jobs:
           fi
 
           : # ensure uniqueness of the db name
-          uuid="$(python3 -c 'import uuid; print(str(uuid.uuid4()))')"
+          uuid="$(cat /proc/sys/kernel/random/uuid)"
           postgres_database="infex-keycloak-db-${uuid}-${{ github.sha }}"
           echo "postgres_database=${postgres_database}" >> "$GITHUB_ENV"
           echo "postgres_database=$postgres_database"
@@ -386,7 +412,7 @@ jobs:
           PGUSER: ${{ env.postgres_superuser }}
 
   scan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false # don't propate failing jobs
       matrix:
@@ -442,7 +468,7 @@ jobs:
         sarif_file: snyk.sarif
 
   publish-image:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: startsWith(github.ref, 'refs/tags')
     strategy:
       fail-fast: false # don't propate failing jobs
@@ -524,7 +550,7 @@ jobs:
           docker push "${{ env.dockerhub_target_name }}" --all-tags
 
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: startsWith(github.ref, 'refs/tags')
     needs:
       - publish-image

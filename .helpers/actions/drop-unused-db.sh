@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO: this job is still WIP
+
 psql postgres << EOF
 \x
 

@@ -29,11 +29,10 @@ jobs:
           method: approle
           roleId: ${{ secrets.VAULT_ROLE_ID }}
           secretId: ${{ secrets.VAULT_SECRET_ID }}
-          # for the moment, we share the secrets of the web-modeler for aurora
           secrets: |
 
-            secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_PASSWORD;
-            secret/data/products/web-modeler/ci/common AURORA_POSTGRESQL_USERNAME;
+            secret/data/products/infrastructure-experience/ci/common AURORA_POSTGRESQL_PASSWORD;
+            secret/data/products/infrastructure-experience/ci/common AURORA_POSTGRESQL_USERNAME;
 
       - name: Drop unused database
         run: |

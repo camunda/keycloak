@@ -49,7 +49,3 @@ self-hosted-runner:
   - gcp-core-32-longrunning
   - gcp-core-32-release-big-ssd
   - gcp-core-32-longrunning-big-ssd
-  - n1-standard-32-netssd-preempt
-  - n1-standard-16-netssd-preempt
-  - n1-standard-8-netssd-preempt
-  - n1-standard-8-netssd-preempt-quick
