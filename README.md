@@ -1,29 +1,42 @@
 # Camunda Keycloak Container Image
 
-[Camunda](https://www.camunda.com/) [![build-images](https://github.com/camunda/keycloak/actions/workflows/build-images.yml/badge.svg?branch=main)](https://github.com/camunda/keycloak/actions/workflows/build-images.yml)
+[![build-images](https://img.shields.io/badge/Camunda-FC5D0D)](https://www.camunda.com/)
+[![build-images](https://github.com/camunda/keycloak/actions/workflows/build-images.yml/badge.svg?branch=main)](https://github.com/camunda/keycloak/actions/workflows/build-images.yml)
+[![Docker image](https://img.shields.io/badge/docker.io%2Fcamunda%2Fkeycloak-e4f0fb?logo=docker&label=docker%20amd64,arm64)](https://hub.docker.com/r/camunda/keycloak)
+[![Licence](https://img.shields.io/github/license/camunda/keycloak)](https://github.com/camunda/keycloak/blob/master/LICENSE)
 
 This Docker image provides a generic Keycloak setup. It also includes an optional AWS wrapper, allowing for the use of AWS Identity and Access Management (IAM) Roles for Service Accounts (IRSA) for database authentication.
 
 ## Getting Started
 
-To run Keycloak in a containerized environment, follow these steps:
+- 📘 For all Keycloak-related questions, please refer to the **official Keycloak documentation** at https://www.keycloak.org/guides#getting-started.
+
+-  🐳🚀 To **run Keycloak** in a containerized environment, follow these steps:
 
 ### Prerequisites
 
 Make sure you have Docker installed on your machine.
 
-### Starting the Container
+### ⚙️ Starting the Container
 
 To start the image, run:
 
 ```bash
 docker run --name mykeycloak -p 8443:8443 \
         -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
-        docker.io/camunda/keycloak:keycloak-23 \
+        docker.io/camunda/keycloak:keycloak-24 \
         start --optimized
 ```
 
 Keycloak will start in production mode, using secured HTTPS communication and will be available at [https://localhost:8443](https://localhost:8443).
+
+### 🏷️ Available Tags on Docker Hub
+
+Check out the available tags for the Camunda Keycloak Docker image on [Docker Hub](https://hub.docker.com/r/camunda/keycloak/tags):
+
+- `:latest`: Points to the latest stable build of the most recent Keycloak version.
+- `:keycloak-<version>-latest`: Points to the latest build of a specific Keycloak version.
+- `:keycloak-<version>-2023-03-04-004`: Tag with a specific date and incremental number. We recommend to **use this tag for production**, as it remains immutable. 🏷️
 
 ### Exposing the Container to a Different Port
 
@@ -32,7 +45,7 @@ If you want to expose the container using a different port, use the following co
 ```bash
 docker run --name mykeycloak -p 3000:8443 \
         -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
-        docker.io/camunda/keycloak:keycloak-23 \
+        docker.io/camunda/keycloak:keycloak-24 \
         start --optimized --hostname-port=3000
 ```
 
@@ -45,7 +58,7 @@ For development or testing purposes, use the development mode:
 ```bash
 docker run --name mykeycloak -p 8080:8080 \
         -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
-        docker.io/camunda/keycloak:keycloak-23 \
+        docker.io/camunda/keycloak:keycloak-24 \
         start-dev
 ```
 
@@ -59,7 +72,7 @@ If you have a realm to import, use the following command:
 docker run --name keycloak_unoptimized -p 8080:8080 \
         -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
         -v /path/to/realm/data:/opt/keycloak/data/import \
-        docker.io/camunda/keycloak:keycloak-23 \
+        docker.io/camunda/keycloak:keycloak-24 \
         start-dev --import-realm
 ```
 
@@ -71,7 +84,7 @@ To specify different memory settings, use the following command:
 docker run --name mykeycloak -p 8080:8080 \
         -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
         -e JAVA_OPTS_KC_HEAP="-XX:MaxHeapFreeRatio=30 -XX:MaxRAMPercentage=65" \
-        docker.io/camunda/keycloak:keycloak-23 \
+        docker.io/camunda/keycloak:keycloak-24 \
         start-dev
 ```
 
@@ -98,10 +111,10 @@ Don't forget to set the `serviceAccountName` of the deployment/statefulset to th
 
 ### Building the Image
 
-Navigate to the `keycloak-23` directory and execute the following command:
+Navigate to the `keycloak-24` directory and execute the following command:
 
 ```bash
-docker build . -t docker.io/camunda/keycloak:keycloak-23
+docker build . -t docker.io/camunda/keycloak:keycloak-24
 ```
 
 This Dockerfile includes the necessary dependencies and configurations for AWS Advanced JDBC Wrapper.
