@@ -15,4 +15,3 @@ WHERE datname NOT IN (
 AND datname NOT IN ('template0', 'template1', 'postgres')
 AND has_database_privilege(datname, 'CONNECT');
 EOF
-EOF
