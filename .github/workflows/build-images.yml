@@ -199,7 +199,7 @@ jobs:
             keycloak_jdbc_protocol: "aws-wrapper:postgresql"
             keycloak_db_driver: "software.amazon.jdbc.Driver"
             keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com"
-            keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require&sslrootcert=/certs/rds-ca-2019-root.pem"
+            keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require&sslrootcert=/certs/rds-ca-root.pem"
             keycloak_db_port: "5432"
 
           - runner: "aws-arm-core-2-default"
@@ -207,7 +207,7 @@ jobs:
             keycloak_jdbc_protocol: "aws-wrapper:postgresql"
             keycloak_db_driver: "software.amazon.jdbc.Driver"
             keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com"
-            keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require&sslrootcert=/certs/rds-ca-2019-root.pem"
+            keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require&sslrootcert=/certs/rds-ca-root.pem"
             keycloak_db_port: "5432"
 
           - runner: "gcp-core-2-default"   # GCloud SQL is not tested yet as we don't have a dedicated db, fallback on integrated db
@@ -271,9 +271,9 @@ jobs:
           echo "postgres_password=" >> "$GITHUB_ENV"
 
           : # download rds ca certs
-          curl https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem -o "rds-ca-2019-root.pem"
+          curl "$(python3 .github/scripts/aws-utils/find-latest-rds-ca.py)" -o "rds-ca-root.pem"
 
-          echo "compose_keycloak_volume_1=./rds-ca-2019-root.pem:/certs/rds-ca-2019-root.pem" >> "$GITHUB_ENV"
+          echo "compose_keycloak_volume_1=./rds-ca-root.pem:/certs/rds-ca-root.pem" >> "$GITHUB_ENV"
           echo "compose_keycloak_volume_2=$AWS_WEB_IDENTITY_TOKEN_FILE:$AWS_WEB_IDENTITY_TOKEN_FILE" >> "$GITHUB_ENV"
 
           : # export AWS variables
