@@ -199,7 +199,7 @@ jobs:
             keycloak_jdbc_protocol: "aws-wrapper:postgresql"
             keycloak_db_driver: "software.amazon.jdbc.Driver"
             keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com"
-            keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require&sslrootcert=/certs/rds-ca-root.pem"
+            keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require"
             keycloak_db_port: "5432"
 
           - runner: "aws-arm-core-2-default"
@@ -207,7 +207,7 @@ jobs:
             keycloak_jdbc_protocol: "aws-wrapper:postgresql"
             keycloak_db_driver: "software.amazon.jdbc.Driver"
             keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com"
-            keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require&sslrootcert=/certs/rds-ca-root.pem"
+            keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require"
             keycloak_db_port: "5432"
 
           - runner: "gcp-core-2-default"   # GCloud SQL is not tested yet as we don't have a dedicated db, fallback on integrated db
@@ -270,11 +270,7 @@ jobs:
           echo "postgres_user=${postgres_user}"
           echo "postgres_password=" >> "$GITHUB_ENV"
 
-          : # download rds ca certs
-          curl "$(python3 .github/scripts/aws-utils/find-latest-rds-ca.py)" -o "rds-ca-root.pem"
-
-          echo "compose_keycloak_volume_1=./rds-ca-root.pem:/certs/rds-ca-root.pem" >> "$GITHUB_ENV"
-          echo "compose_keycloak_volume_2=$AWS_WEB_IDENTITY_TOKEN_FILE:$AWS_WEB_IDENTITY_TOKEN_FILE" >> "$GITHUB_ENV"
+          echo "compose_keycloak_volume_1=$AWS_WEB_IDENTITY_TOKEN_FILE:$AWS_WEB_IDENTITY_TOKEN_FILE" >> "$GITHUB_ENV"
 
           : # export AWS variables
           echo "AWS_STS_REGIONAL_ENDPOINTS=$AWS_STS_REGIONAL_ENDPOINTS" >> "$GITHUB_ENV"
@@ -383,7 +379,6 @@ jobs:
           COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
           COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ env.compose_keycloak_depends_on }}"
           COMPOSE_KEYCLOAK_VOLUME_1: "${{ env.compose_keycloak_volume_1 || '/dev/null:/dummynull1' }}"
-          COMPOSE_KEYCLOAK_VOLUME_2: "${{ env.compose_keycloak_volume_2 || '/dev/null:/dummynull2' }}"
           COMPOSE_KEYCLOAK_IMAGE: "${{ env.keycloak_image_version }}"
 
           # AWS specific variables to forward, see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables

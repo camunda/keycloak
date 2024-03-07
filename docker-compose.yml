@@ -53,8 +53,7 @@ services:
       depends_on:
         - "${COMPOSE_KEYCLOAK_DEPENDS_ON:-postgres}"
       volumes:
-        - "${COMPOSE_KEYCLOAK_VOLUME_1:-/dev/null:/mynull1}"
-        - "${COMPOSE_KEYCLOAK_VOLUME_2:-/dev/null:/mynull2}"
+        - "${COMPOSE_KEYCLOAK_VOLUME_1:-/dev/null:/mynull1}" # can be used to inject irsa token
 
 
 # /kcadm.sh get clients --realm master --server http://localhost:8080 --user admin --password admin
