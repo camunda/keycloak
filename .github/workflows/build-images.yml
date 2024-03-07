@@ -401,8 +401,9 @@ jobs:
       - name: Test Environment
         run: python3 ./.github/scripts/integration/main.py
 
+        # TODO: check if tear down is always executed (make sure it will be cleaned up)
       - name: Tear down Aurora PG (aws only)
-        if: startsWith(matrix.runner_desc.runner, 'aws')
+        if: startsWith(matrix.runner_desc.runner, 'aws') && always()
         run: ./.helpers/actions/delete-aurora-pg-db.sh
         env:
           PGDATABASE: "${{ env.postgres_database }}"
