@@ -557,7 +557,3 @@ jobs:
           if [ "$(python3 ./.github/scripts/utils/find_latest_keycloak.py ./)" = "${{ matrix.keycloak_version }}" ]; then
             docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:latest" "${{ env.keycloak_image_name }}"
           fi
-
-      - name: Push the image
-        run: |
-          docker push "${{ env.dockerhub_target_name }}" --all-tags
