@@ -550,12 +550,12 @@ jobs:
           : # remove keycloak- prefix
           suffix_version=$(echo '${{ github.ref_name }}' | sed 's/keycloak-[0-9]*-//')
 
-          docker buildx imagetools create -t "${{ env.keycloak_image_name }}" "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}"
-          docker buildx imagetools create -t "${{ env.keycloak_image_name }}" "${{ env.dockerhub_target_name }}:${base_image_tag}"
-          docker buildx imagetools create -t "${{ env.keycloak_image_name }}" "${{ env.dockerhub_target_name }}:${base_image_tag}-${suffix_version}"
+          docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}" "${{ env.keycloak_image_name }}"
+          docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${base_image_tag}" "${{ env.keycloak_image_name }}"
+          docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${base_image_tag}-${suffix_version}" "${{ env.keycloak_image_name }}"
 
           if [ "$(python3 ./.github/scripts/utils/find_latest_keycloak.py ./)" = "${{ matrix.keycloak_version }}" ]; then
-            docker buildx imagetools create -t "${{ env.keycloak_image_name }}" "${{ env.dockerhub_target_name }}:latest"
+            docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:latest" "${{ env.keycloak_image_name }}"
           fi
 
       - name: Push the image
