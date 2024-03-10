@@ -5,6 +5,9 @@ inputs:
   keycloak_version:
     description: Keycloak version
     required: true
+  needs_build_image_output:
+    description: JSON output of the result matrix reading from the build step
+    required: true
 outputs:
   keycloak_image_name:
     description: Keycloak image name
@@ -15,6 +18,6 @@ runs:
       id: set-keycloak-image-name
       shell: bash
       run: |
-        keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[inputs.keycloak_version] }}"
+        keycloak_image_name="${{ fromJson(need_build_image_output).full_image_name[inputs.keycloak_version] }}"
         echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
         echo "keycloak_image_name=${keycloak_image_name}"

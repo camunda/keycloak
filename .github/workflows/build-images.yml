@@ -151,6 +151,7 @@ jobs:
         uses: ./.github/actions/set-keycloak-image-name
         with:
           keycloak_version: ${{ matrix.keycloak_version }}
+          needs_build_image_output: ${{ needs.read-build-image-output.outputs.result }}
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
@@ -241,6 +242,7 @@ jobs:
         uses: ./.github/actions/set-keycloak-image-name
         with:
           keycloak_version: ${{ matrix.keycloak_version }}
+          needs_build_image_output: ${{ needs.read-build-image-output.outputs.result }}
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
@@ -443,6 +445,7 @@ jobs:
       uses: ./.github/actions/set-keycloak-image-name
       with:
         keycloak_version: ${{ matrix.keycloak_version }}
+        needs_build_image_output: ${{ needs.read-build-image-output.outputs.result }}
 
     - name: Pull the image
       run: |
