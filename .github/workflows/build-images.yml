@@ -346,9 +346,11 @@ jobs:
           PGUSER: ${{ env.postgres_superuser }}
           PGUSER_IRSA: ${{ env.postgres_user }}
 
-      - name: Test Aurora PG (aws only)
+      - name: Ensure Aurora PG connectivity before tests (aws only)
         if: startsWith(matrix.runner_desc.runner, 'aws')
+        shell: bash
         run: |
+          : # perform a simple psql connection to the aws db before testing the irsa integration
           python3 -m pip install awscli
 
           PGPASSWORD="$(aws rds generate-db-auth-token --hostname ${{ env.postgres_host }} --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
