@@ -148,10 +148,11 @@ jobs:
 
       - name: Set Keycloak Image Name
         id: set-keycloak-image-name
-        uses: ./.github/actions/set-keycloak-image-name
-        with:
-          keycloak_version: ${{ matrix.keycloak_version }}
-          needs_build_image_output: ${{ needs.read-build-image-output.outputs.result }}
+        shell: bash
+        run: |
+          keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+          echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
+          echo "keycloak_image_name=${keycloak_image_name}"
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
@@ -239,10 +240,11 @@ jobs:
 
       - name: Set Keycloak Image Name
         id: set-keycloak-image-name
-        uses: ./.github/actions/set-keycloak-image-name
-        with:
-          keycloak_version: ${{ matrix.keycloak_version }}
-          needs_build_image_output: ${{ needs.read-build-image-output.outputs.result }}
+        shell: bash
+        run: |
+          keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+          echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
+          echo "keycloak_image_name=${keycloak_image_name}"
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
@@ -441,10 +443,11 @@ jobs:
 
       - name: Set Keycloak Image Name
         id: set-keycloak-image-name
-        uses: ./.github/actions/set-keycloak-image-name
-        with:
-          keycloak_version: ${{ matrix.keycloak_version }}
-          needs_build_image_output: ${{ needs.read-build-image-output.outputs.result }}
+        shell: bash
+        run: |
+          keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+          echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
+          echo "keycloak_image_name=${keycloak_image_name}"
 
       - name: Pull the image
         run: |
