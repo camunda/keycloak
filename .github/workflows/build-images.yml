@@ -539,9 +539,12 @@ jobs:
           base_image_tag=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile | awk -F'[:=]' '{print $NF}' | tr -d '"' || echo "Error: Image tag $1 not found in Dockerfile" && exit 1) && echo "$base_image_tag"
           echo "base_image_tag=${base_image_tag}"
 
+          : # remove keycloak- prefix
+          suffix_version=$(echo '${{ github.ref_name }}' | sed 's/keycloak-[0-9]*-//')
+
           docker buildx imagetools create -t "${{ env.keycloak_image_name }}" "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}"
           docker buildx imagetools create -t "${{ env.keycloak_image_name }}" "${{ env.dockerhub_target_name }}:${base_image_tag}"
-          docker buildx imagetools create -t "${{ env.keycloak_image_name }}" "${{ env.dockerhub_target_name }}:${base_image_tag}-${{ github.ref_name }}"
+          docker buildx imagetools create -t "${{ env.keycloak_image_name }}" "${{ env.dockerhub_target_name }}:${base_image_tag}-${suffix_version}"
 
           if [ "$(python3 ./.github/scripts/utils/find_latest_keycloak.py ./)" = "${{ matrix.keycloak_version }}" ]; then
             docker buildx imagetools create -t "${{ env.keycloak_image_name }}" "${{ env.dockerhub_target_name }}:latest"

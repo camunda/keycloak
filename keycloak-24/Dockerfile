@@ -4,6 +4,10 @@ ARG BASE_IMAGE_NAME="quay.io/keycloak/keycloak:24.0.1-0"
 ARG BASE_IMAGE_SHA_AMD64="sha256:050b5430f5a2f417ef41dd5ccdda70f900761bb757d08a17dd6957796e61acc9"
 ARG BASE_IMAGE_SHA_ARM64="sha256:be4ff90d66bd1cdfe79610a90eae2b187dff9926e5c1a99200eaf62b41433600"
 
+# TODO: make sure renovate can
+# - detect new major versions
+# - bump the arg based versions
+
 FROM docker.io/gradle:jdk17-focal as lib
 
 WORKDIR /home/gradle

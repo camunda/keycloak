@@ -24,7 +24,7 @@ To start the image, run:
 ```bash
 docker run --name mykeycloak -p 8443:8443 \
         -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
-        docker.io/camunda/keycloak:keycloak-24 \
+        docker.io/camunda/keycloak:24 \
         start --optimized
 ```
 
@@ -32,12 +32,13 @@ Keycloak will start in production mode, using secured HTTPS communication and wi
 
 ### 🏷️ Available Tags on Docker Hub
 
-Check out the available tags for the Camunda Keycloak Docker image on [Docker Hub](https://hub.docker.com/r/camunda/keycloak/tags):
+Explore the available tags for the Camunda Keycloak Docker image on [Docker Hub](https://hub.docker.com/r/camunda/keycloak/tags):
+Since we derive this image from the __base image__ of Keycloak, you can find the base image tags at [quay.io/keycloak/keycloak](https://quay.io/repository/keycloak/keycloak?tab=tags&tag=latest).
 
-- `:keycloak-<version>-2023-03-04-004`: Tag with a specific date and incremental number. We recommend to **use this tag for production**, as it remains immutable. 🏷️
-- `:keycloak-<version>-latest`: Points to the latest build of a specific Keycloak version.
-- `:latest`: Points to the latest stable build of the most recent Keycloak version.
-
+- `:<base image version>-2023-03-04-004`: This tag is associated with a specific date and incremental number. It is recommended for **production use** due to its **immutable nature**. 🏷️
+- `:<base image version>`: Refers to the latest build of a particular Keycloak version (e.g., `24.0.1-0`).
+- `:<major keycloak version>`: Indicates the latest build of the specified major Keycloak version (e.g., `24`).
+- `:latest`: Corresponds to the latest stable build of the most recent Keycloak version.
 
 ## IAM Roles for Service Accounts (IRSA) Support
 
@@ -65,7 +66,7 @@ Don't forget to set the `serviceAccountName` of the deployment/statefulset to th
 Navigate to the `keycloak-24` directory and execute the following command:
 
 ```bash
-docker build . -t docker.io/camunda/keycloak:keycloak-24
+docker build . -t docker.io/camunda/keycloak:24
 ```
 
 This Dockerfile includes the necessary dependencies and configurations for AWS Advanced JDBC Wrapper.
