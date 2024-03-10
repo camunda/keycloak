@@ -4,6 +4,8 @@ Welcome to the development reference for Keycloak by Camunda! This document prov
 
 ## Setting up a New Version of Keycloak
 
+# TODO: update versioning part
+
 When adding a new version of Keycloak, follow these steps:
 
 1. **Create a Directory:**
@@ -34,3 +36,16 @@ When adding a new version of Keycloak, follow these steps:
    - It is recommended to use the complete tagged version for production. For development purposes, the tags `keycloak-<major_version>-latest` and `latest` are available.
 
 Following these steps ensures a smooth integration of new Keycloak versions, consistent testing across the development environment, and easy access to the latest version. Happy coding!
+
+
+# TODO: update semantic model
+# TODO: make extraction of the keycloak number done in pipeline
+
+camunda/keycloak:24                             // mutuable - triggered by keycloak
+camunda/keycloak:24.0.1-1                       // mutuable - trigger by camunda
+camunda/keycloak:24.0.1-1-${ timestamp/date }   // immutable
+
+triggering push to the registry:
+- via release? <== keycloak-23-${ timestamp/date }
+
+# TODO: renovate should alert us on a new alert of kc but not in the repos

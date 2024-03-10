@@ -34,65 +34,16 @@ Keycloak will start in production mode, using secured HTTPS communication and wi
 
 Check out the available tags for the Camunda Keycloak Docker image on [Docker Hub](https://hub.docker.com/r/camunda/keycloak/tags):
 
-- `:latest`: Points to the latest stable build of the most recent Keycloak version.
-- `:keycloak-<version>-latest`: Points to the latest build of a specific Keycloak version.
 - `:keycloak-<version>-2023-03-04-004`: Tag with a specific date and incremental number. We recommend to **use this tag for production**, as it remains immutable. 🏷️
+- `:keycloak-<version>-latest`: Points to the latest build of a specific Keycloak version.
+- `:latest`: Points to the latest stable build of the most recent Keycloak version.
 
-### Exposing the Container to a Different Port
-
-If you want to expose the container using a different port, use the following command:
-
-```bash
-docker run --name mykeycloak -p 3000:8443 \
-        -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
-        docker.io/camunda/keycloak:keycloak-24 \
-        start --optimized --hostname-port=3000
-```
-
-Now you can access the server at [https://localhost:3000](https://localhost:3000).
-
-### Trying Keycloak in Development Mode
-
-For development or testing purposes, use the development mode:
-
-```bash
-docker run --name mykeycloak -p 8080:8080 \
-        -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
-        docker.io/camunda/keycloak:keycloak-24 \
-        start-dev
-```
-
-Avoid using this mode in production environments due to insecure defaults.
-
-### Importing A Realm On Startup
-
-If you have a realm to import, use the following command:
-
-```bash
-docker run --name keycloak_unoptimized -p 8080:8080 \
-        -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
-        -v /path/to/realm/data:/opt/keycloak/data/import \
-        docker.io/camunda/keycloak:keycloak-24 \
-        start-dev --import-realm
-```
-
-### Specifying Different Memory Settings
-
-To specify different memory settings, use the following command:
-
-```bash
-docker run --name mykeycloak -p 8080:8080 \
-        -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
-        -e JAVA_OPTS_KC_HEAP="-XX:MaxHeapFreeRatio=30 -XX:MaxRAMPercentage=65" \
-        docker.io/camunda/keycloak:keycloak-24 \
-        start-dev
-```
 
 ## IAM Roles for Service Accounts (IRSA) Support
 
 For Keycloak versions 21+, you can use the AWS Advanced JDBC Wrapper to support IRSA. Check the [Keycloak documentation](https://www.keycloak.org/server/containers) for details.
 
-## Kubernetes Configuration
+### Kubernetes Configuration
 
 For Kubernetes, configure the following environment variables:
 
@@ -109,7 +60,7 @@ For Kubernetes, configure the following environment variables:
 
 Don't forget to set the `serviceAccountName` of the deployment/statefulset to the created service account with the IRSA annotation.
 
-### Building the Image
+## Building the Image
 
 Navigate to the `keycloak-24` directory and execute the following command:
 
@@ -119,7 +70,11 @@ docker build . -t docker.io/camunda/keycloak:keycloak-24
 
 This Dockerfile includes the necessary dependencies and configurations for AWS Advanced JDBC Wrapper.
 
-Feel free to explore the [Camunda Documentation](https://docs.camunda.io/docs/self-managed/platform-deployment/helm-kubernetes/platforms/amazon-eks/irsa/) for additional details.
+## Reference
+
+- [Keycloak Documentation](https://www.keycloak.org/documentation).
+- [Camunda Documentation: Keycloak on Amazon EKS with IRSA](https://docs.camunda.io/docs/self-managed/platform-deployment/helm-kubernetes/platforms/amazon-eks/irsa/).
+- [Keycloak Documentation: Memory and CPU sizing](https://www.keycloak.org/high-availability/concepts-memory-and-cpu-sizing).
 
 ## Contributions
 

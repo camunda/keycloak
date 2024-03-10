@@ -34,7 +34,7 @@ jobs:
         run: |
           : # List folders matching the pattern keycloak-*
           : # Export the list as an output in JSON format
-          matrix_json=$(printf "%s\n" keycloak-*/ | grep -v 'keycloak-latest/' | sed 's/\/$//' | jq -R -s -c 'split("\n")[:-1]')
+          matrix_json=$(printf "%s\n" keycloak-*/ | sed 's/\/$//' | sed 's/keycloak-//' | jq -R -s -c 'split("\n")[:-1]')
           echo "matrix_keycloak_versions=${matrix_json}" >> "$GITHUB_OUTPUT"
           echo "matrix_keycloak_versions=${matrix_json}"
 
@@ -72,13 +72,6 @@ jobs:
             secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
             secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
 
-      - name: Compute keycloak version
-        id: compute-keycloak-version
-        run: |
-          keycloak_version_number=$(echo "${{ matrix.keycloak_version }}" | sed 's/keycloak-//')
-          echo "keycloak_version_number=${keycloak_version_number}" >> "$GITHUB_OUTPUT"
-          echo "keycloak_version_number=${keycloak_version_number}"
-
       - name: Build image using Camunda docker build
         id: build-image-step
         uses: camunda/infra-global-github-actions/build-docker-image@main
@@ -91,7 +84,7 @@ jobs:
           build_context: "./${{ matrix.keycloak_version }}/"
           build_platforms: linux/amd64,linux/arm64
           extra_tags: | # the ci- prefix ensures a build context, this image is treated as "temporary"
-            type=sha,enable=true,priority=1000,prefix=ci-${{ steps.compute-keycloak-version.outputs.keycloak_version_number }}-sha-,suffix=,format=short
+            type=sha,enable=true,priority=1000,prefix=ci-${{ matrix.keycloak_version }}-sha-,suffix=,format=short
 
       - name: Compute target built image fully qualified name from metadata
         id: compute-image-name-step
@@ -145,12 +138,12 @@ jobs:
           yarn-enabled: false
           python-version: "3.12"
 
-      - name: Set Keycloak Version
-        id: set-keycloak-version
+      - name: Set Keycloak Image Name
+        id: set-keycloak-image-name
         run: |
-          keycloak_image_version="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
-          echo "keycloak_image_version=${keycloak_image_version}" >> "$GITHUB_ENV"
-          echo "keycloak_image_version=${keycloak_image_version}"
+          keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+          echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
+          echo "keycloak_image_name=${keycloak_image_name}"
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
@@ -173,7 +166,7 @@ jobs:
 
       - name: KeyCloak Show-Config
         run: |
-          docker run "${{ env.keycloak_image_version }}" show-config >> docker.log
+          docker run "${{ env.keycloak_image_name }}" show-config >> docker.log
           echo "config=$(< docker.log tr '\n' ' ')" >> "$GITHUB_ENV"
 
       - name: Assert Config
@@ -236,12 +229,12 @@ jobs:
           python-version: "3.12"
           python-cache: "pip"
 
-      - name: Set Keycloak Version
-        id: set-keycloak-version
+      - name: Set Keycloak Image Name
+        id: set-keycloak-image-name
         run: |
-          keycloak_image_version="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
-          echo "keycloak_image_version=${keycloak_image_version}" >> "$GITHUB_ENV"
-          echo "keycloak_image_version=${keycloak_image_version}"
+          keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+          echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
+          echo "keycloak_image_name=${keycloak_image_name}"
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
@@ -309,8 +302,8 @@ jobs:
           echo "postgres_database=$postgres_database"
 
           : # get the postgres version to test
-          keycloak_version_number="$(echo '${{ matrix.keycloak_version }}' | sed 's/keycloak-//')"
-          postgres_version="$(curl -s "https://raw.githubusercontent.com/keycloak/keycloak/release/${keycloak_version_number}.0/pom.xml" | awk -F'[><]' '/<postgresql.version>/{print $3}')"
+          keycloak_version_git="$(echo '${{ matrix.keycloak_version }}' | sed -E 's/^([0-9]+)\.?(.*)$/\1.0/g')" # make sure to have a major.0 format
+          postgres_version="$(curl -s "https://raw.githubusercontent.com/keycloak/keycloak/release/${keycloak_version_git}/pom.xml" | awk -F'[><]' '/<postgresql.version>/{print $3}')"
           echo "postgres_version=${postgres_version}" >> "$GITHUB_ENV"
           echo "postgres_version=${postgres_version}"
 
@@ -379,7 +372,7 @@ jobs:
           COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
           COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ env.compose_keycloak_depends_on }}"
           COMPOSE_KEYCLOAK_VOLUME_1: "${{ env.compose_keycloak_volume_1 || '/dev/null:/dummynull1' }}"
-          COMPOSE_KEYCLOAK_IMAGE: "${{ env.keycloak_image_version }}"
+          COMPOSE_KEYCLOAK_IMAGE: "${{ env.keycloak_image_name }}"
 
           # AWS specific variables to forward, see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables
           AWS_STS_REGIONAL_ENDPOINTS: "${{ env.AWS_STS_REGIONAL_ENDPOINTS }}"
@@ -396,7 +389,6 @@ jobs:
       - name: Test Environment
         run: python3 ./.github/scripts/integration/main.py
 
-        # TODO: check if tear down is always executed (make sure it will be cleaned up)
       - name: Tear down Aurora PG (aws only)
         if: startsWith(matrix.runner_desc.runner, 'aws') && always()
         run: ./.helpers/actions/delete-aurora-pg-db.sh
@@ -438,22 +430,22 @@ jobs:
         username: "${{ steps.secrets.outputs.MACHINE_USR }}"
         password: "${{ steps.secrets.outputs.MACHINE_PWD }}"
 
-    - name: Set Keycloak Version
-      id: set-keycloak-version
+    - name: Set Keycloak Image Name
+      id: set-keycloak-image-name
       run: |
-        keycloak_image_version="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
-        echo "keycloak_image_version=${keycloak_image_version}" >> "$GITHUB_ENV"
-        echo "keycloak_image_version=${keycloak_image_version}"
+        keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+        echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
+        echo "keycloak_image_name=${keycloak_image_name}"
 
     - name: Pull the image
       run: |
-        docker pull "${{ env.keycloak_image_version }}"
+        docker pull "${{ env.keycloak_image_name }}"
 
     - name: Scan Docker image 🐳
       uses: snyk/actions/docker@master
       continue-on-error: true
       with:
-        image: "${{ env.keycloak_image_version }}"
+        image: "${{ env.keycloak_image_name }}"
         args: --file="./${{ matrix.keycloak_version }}/Dockerfile" --severity-threshold=high --sarif-file-output=snyk.sarif
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -519,9 +511,9 @@ jobs:
       - name: Set Keycloak Version
         id: set-keycloak-version
         run: |
-          keycloak_image_version="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
-          echo "keycloak_image_version=${keycloak_image_version}" >> "$GITHUB_ENV"
-          echo "keycloak_image_version=${keycloak_image_version}"
+          keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+          echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
+          echo "keycloak_image_name=${keycloak_image_name}"
 
           dockerhub_target_name="${{ vars.CONTAINER_REGISTRY }}/${{ vars.CONTAINER_IMAGE_NAME }}"
           echo "dockerhub_target_name=${dockerhub_target_name}" >> "$GITHUB_ENV"
@@ -529,39 +521,18 @@ jobs:
 
       - name: Pull built image
         run: |
-          docker pull "${{ env.keycloak_image_version }}"
+          docker pull "${{ env.keycloak_image_name }}"
 
       - name: Retag and push the image
         run: |
-          docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}"
-          docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}-latest"
-          docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}-${{github.ref_name}}"
+          docker buildx imagetools create -t "${{ env.keycloak_image_name }}" "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}"
+          docker buildx imagetools create -t "${{ env.keycloak_image_name }}" "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}-latest"
+          docker buildx imagetools create -t "${{ env.keycloak_image_name }}" "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}-${{ github.ref_name }}"
 
-          if [ "$(readlink keycloak-latest)" = "${{ matrix.keycloak_version }}" ]; then
-            docker tag "${{ env.keycloak_image_version }}" "${{ env.dockerhub_target_name }}:latest"
+          if [ "$(python3 ./.github/scripts/utils/find_latest_keycloak.py ./)" = "${{ matrix.keycloak_version }}" ]; then
+            docker buildx imagetools create -t "${{ env.keycloak_image_name }}" "${{ env.dockerhub_target_name }}:latest"
           fi
 
       - name: Push the image
         run: |
           docker push "${{ env.dockerhub_target_name }}" --all-tags
-
-  release:
-    runs-on: ubuntu-22.04
-    if: startsWith(github.ref, 'refs/tags')
-    needs:
-      - publish-image
-      - list-keycloak-versions
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build Changelog
-        id: github_release
-        uses: mikepenz/release-changelog-builder-action@v4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Release
-        uses: mikepenz/action-gh-release@v0.2.0-a03 #softprops/action-gh-release
-        with:
-          body: ${{steps.github_release.outputs.changelog}}

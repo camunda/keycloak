@@ -1,5 +1,6 @@
 # quay.io is the new repository of keycloak (https://lists.jboss.org/archives/list/keycloak-user@lists.jboss.org/message/7CRWKAAYI5WJTUXUZR6K73XV7P4TLZZ2/)
-ARG BASE_IMAGE_NAME="quay.io/keycloak/keycloak:23.0"
+ARG BASE_IMAGE_NAME="quay.io/keycloak/keycloak:23.0.7-0"
+# List of all available images with associated sha: https://quay.io/repository/keycloak/keycloak?tab=tags
 ARG BASE_IMAGE_SHA_AMD64="sha256:461bdabba2bd2de667b19b0c1831754cb0f1c6c1d1c85cd35ccfa65335078962"
 ARG BASE_IMAGE_SHA_ARM64="sha256:0b4a46b51fe9f9b7227c958bb4240ed8b06bf2f028e93a099014ecbae84c068a"
 
@@ -71,6 +72,8 @@ LABEL maintainer="Camunda" \
       io.openshift.tags="bpmn,identity,keycloak,camunda" \
       io.openshift.min-memory="1Gi" \
       io.openshift.min-cpu="1"
+
+      # cpu and ram allocation reference: https://www.keycloak.org/high-availability/concepts-memory-and-cpu-sizing
 
       # the following labels are generated at buildtime - see https://github.com/docker/metadata-action
       # org.opencontainers.image.title
