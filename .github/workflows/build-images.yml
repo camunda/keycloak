@@ -18,9 +18,9 @@ jobs:
     name: pre-commit
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
-      - uses: pre-commit/action@v3.0.0
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
+      - uses: actions/setup-python@3542bca2639a428e1796aaa6a2ffef0c0f575566 # v3
+      - uses: pre-commit/action@646c83fcd040023954eafda54b4db0192ce70507 # v3.0.0
 
   list-keycloak-versions:
     runs-on: ubuntu-22.04
@@ -28,7 +28,7 @@ jobs:
       matrix_keycloak_versions: ${{ steps.set-matrix.outputs.matrix_keycloak_versions }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: List Keycloak Versions from repository's folders
         id: set-matrix
@@ -59,10 +59,10 @@ jobs:
         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@main
+        uses: camunda/infra-global-github-actions/common-tooling@dc512d537a85370ce21611945935abe849e926a8 # main
         with:
           java-enabled: false
           yarn-enabled: false
@@ -82,7 +82,7 @@ jobs:
 
       - name: Build image using Camunda docker build
         id: build-image-step
-        uses: camunda/infra-global-github-actions/build-docker-image@main
+        uses: camunda/infra-global-github-actions/build-docker-image@dc512d537a85370ce21611945935abe849e926a8 # main
         with:
           registry_host: ${{ vars.CONTAINER_REGISTRY_CI }}
           registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -105,7 +105,7 @@ jobs:
           echo "$full_image_name"
 
       ## Write for matrix outputs workaround
-      - uses: cloudposse/github-action-matrix-outputs-write@v1
+      - uses: cloudposse/github-action-matrix-outputs-write@ed06cf3a6bf23b8dce36d1cf0d63123885bb8375 # v1
         id: out
         with:
           matrix-step-name: ${{ github.job }}
@@ -116,9 +116,9 @@ jobs:
   ## Read matrix outputs
   read-build-image-output:
     runs-on: ubuntu-22.04
-    needs: [build-image]
+    needs: [ build-image ]
     steps:
-      - uses: cloudposse/github-action-matrix-outputs-read@v1
+      - uses: cloudposse/github-action-matrix-outputs-read@33cac12fa9282a7230a418d859b93fdbc4f27b5a # v1
         id: read
         with:
           matrix-step-name: build-image
@@ -137,10 +137,10 @@ jobs:
         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@main
+        uses: camunda/infra-global-github-actions/common-tooling@dc512d537a85370ce21611945935abe849e926a8 # main
         with:
           java-enabled: false
           yarn-enabled: false
@@ -166,7 +166,7 @@ jobs:
             secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
 
       - name: Login to the registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3
         with:
           registry: ${{ vars.CONTAINER_REGISTRY_CI }}
           username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -211,7 +211,7 @@ jobs:
             keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require"
             keycloak_db_port: "5432"
 
-          - runner: "gcp-core-2-default"   # GCloud SQL is not tested yet as we don't have a dedicated db, fallback on integrated db
+          - runner: "gcp-core-2-default" # GCloud SQL is not tested yet as we don't have a dedicated db, fallback on integrated db
             postgres_replicas: 1
             keycloak_jdbc_protocol: "postgresql"
             keycloak_db_driver: "org.postgresql.Driver"
@@ -227,10 +227,10 @@ jobs:
       - read-build-image-output
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@main
+        uses: camunda/infra-global-github-actions/common-tooling@dc512d537a85370ce21611945935abe849e926a8 # main
         with:
           java-enabled: false
           yarn-enabled: false
@@ -326,7 +326,7 @@ jobs:
           echo "test_db_url=${test_db_url}"
 
       - name: Login to the registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3
         with:
           registry: ${{ vars.CONTAINER_REGISTRY_CI }}
           username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -358,7 +358,6 @@ jobs:
           PGPASSWORD="$(aws rds generate-db-auth-token --hostname ${{ env.postgres_host }} --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
           export PGPASSWORD
           psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
-
 
       - name: Start Test Environment
         uses: ./.github/actions/compose
@@ -419,51 +418,51 @@ jobs:
       - list-keycloak-versions
       - read-build-image-output
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
-    - name: Import secrets
-      uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
-      id: secrets
-      with:
-        url: ${{ secrets.VAULT_ADDR }}
-        method: approle
-        roleId: ${{ secrets.VAULT_ROLE_ID }}
-        secretId: ${{ secrets.VAULT_SECRET_ID }}
-        secrets: |
-          secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
-          secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
+      - name: Import secrets
+        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        id: secrets
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
+            secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
 
-    - name: Login to the registry
-      uses: docker/login-action@v3
-      with:
-        registry: "${{ vars.CONTAINER_REGISTRY_CI }}"
-        username: "${{ steps.secrets.outputs.MACHINE_USR }}"
-        password: "${{ steps.secrets.outputs.MACHINE_PWD }}"
+      - name: Login to the registry
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3
+        with:
+          registry: "${{ vars.CONTAINER_REGISTRY_CI }}"
+          username: "${{ steps.secrets.outputs.MACHINE_USR }}"
+          password: "${{ steps.secrets.outputs.MACHINE_PWD }}"
 
-    - name: Set Keycloak Image Name
-      id: set-keycloak-image-name
-      uses: ./.github/actions/set-keycloak-image-name
-      with:
-        keycloak_version: ${{ matrix.keycloak_version }}
-        needs_build_image_output: ${{ needs.read-build-image-output.outputs.result }}
+      - name: Set Keycloak Image Name
+        id: set-keycloak-image-name
+        uses: ./.github/actions/set-keycloak-image-name
+        with:
+          keycloak_version: ${{ matrix.keycloak_version }}
+          needs_build_image_output: ${{ needs.read-build-image-output.outputs.result }}
 
-    - name: Pull the image
-      run: |
-        docker pull "${{ env.keycloak_image_name }}"
+      - name: Pull the image
+        run: |
+          docker pull "${{ env.keycloak_image_name }}"
 
-    - name: Scan Docker image 🐳
-      uses: snyk/actions/docker@master
-      continue-on-error: true
-      with:
-        image: "${{ env.keycloak_image_name }}"
-        args: --file="./${{ matrix.keycloak_version }}/Dockerfile" --severity-threshold=high --sarif-file-output=snyk.sarif
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: Scan Docker image 🐳
+        uses: snyk/actions/docker@8349f9043a8b7f0f3ee8885bf28f0b388d2446e8 # master
+        continue-on-error: true
+        with:
+          image: "${{ env.keycloak_image_name }}"
+          args: --file="./${{ matrix.keycloak_version }}/Dockerfile" --severity-threshold=high --sarif-file-output=snyk.sarif
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-    - name: Upload Snyk report as sarif 📦
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: snyk.sarif
+      - name: Upload Snyk report as sarif 📦
+        uses: github/codeql-action/upload-sarif@8a470fddafa5cbb6266ee11b37ef4d8aae19c571 # v3
+        with:
+          sarif_file: snyk.sarif
 
   publish-image:
     runs-on: ubuntu-22.04
@@ -482,10 +481,10 @@ jobs:
       - scan
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@main
+        uses: camunda/infra-global-github-actions/common-tooling@dc512d537a85370ce21611945935abe849e926a8 # main
         with:
           java-enabled: false
           yarn-enabled: false
@@ -507,14 +506,14 @@ jobs:
             secret/data/products/infrastructure-experience/ci/common DOCKERHUB_PASSWORD;
 
       - name: Login to the registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3
         with:
           registry: "${{ vars.CONTAINER_REGISTRY_CI }}"
           username: "${{ steps.secrets.outputs.MACHINE_USR }}"
           password: "${{ steps.secrets.outputs.MACHINE_PWD }}"
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3
         with:
           registry: "${{ vars.CONTAINER_REGISTRY }}"
           username: "${{ steps.secrets.outputs.DOCKERHUB_USER }}"
