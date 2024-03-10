@@ -412,6 +412,8 @@ jobs:
 
   scan:
     runs-on: ubuntu-22.04
+    # TODO: re-enable when repo is public
+    if: false
     strategy:
       fail-fast: false # don't propate failing jobs
       matrix:
@@ -481,7 +483,8 @@ jobs:
       - read-build-image-output
       - list-keycloak-versions
       - test-postgres-integ
-      - scan
+      # TODO: re-enable when repo is public
+      # - scan
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
