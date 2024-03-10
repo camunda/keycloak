@@ -13,6 +13,7 @@ runs:
   steps:
     - name: Set Keycloak Image Name
       id: set-keycloak-image-name
+      shell: bash
       run: |
         keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[inputs.keycloak_version] }}"
         echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
