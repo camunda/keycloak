@@ -7,7 +7,8 @@ on:
     branches:
       - "**"
     tags:
-      - "*-*-*-*"
+      - "keycloak-*-*-*-*-*" # `keycloak-23-yyyy-mm-dd-xxx`: only keycloak 23
+      - "*-*-*-*" # `yyyy-mm-dd-xxx`: all keycloak versions
   pull_request_target:
   schedule:
     - cron: '0 3 * * *'
