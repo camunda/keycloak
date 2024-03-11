@@ -1,0 +1,6 @@
+# This file is watched by renovate to alert us of new major version of keycloak.
+# It is its only purpose.
+
+# When renovate alerts about a new version of keycloak, please follow the `DEVELOPER.md` new release procedure.
+
+FROM quay.io/keycloak/keycloak:24

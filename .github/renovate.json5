@@ -1,19 +1,33 @@
 {
-  extends: [
+  "extends": [
     "config:recommended",
     "docker:enableMajor",
     ":dependencyDashboard",
-    ":semanticCommits",
+    ":semanticCommits"
   ],
-  automerge: false,
-  customManagers: [
+  "automerge": false,
+  "packageRules": [
     {
-      customType: "regex",
-      fileMatch: ["build.gradle$"],
-      matchStrings: [
-        "renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.* (?<currentValue>.*)\\s",
-      ],
-      versioningTemplate: "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
+      "matchDepTypes": ["docker"],
+      "matchFileNames": ["^keycloak-.*\\/Dockerfile"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     },
+    {
+      "matchDepTypes": ["docker"],
+      "matchFileNames": ["^.watch-latest/Dockerfile"],
+      "matchUpdateTypes": ["major"],
+      "enabled": true
+    }
   ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["build.gradle$"],
+      "matchStrings": [
+        "renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.* (?<currentValue>.*)\\s"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
+    }
+  ]
 }
