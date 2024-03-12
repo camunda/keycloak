@@ -1,23 +1,38 @@
 {
   "extends": [
     "config:recommended",
-    "docker:enableMajor",
     ":dependencyDashboard",
-    ":semanticCommits"
+    ":semanticCommits",
+    ":docker"
   ],
   "automerge": false,
   "packageRules": [
     {
-      "matchDepTypes": ["docker"],
-      "matchFileNames": ["^keycloak-.*\\/Dockerfile"],
+      "matchManagers": ["dockerfile"],
+      "groupName": "new major keycloak available",
+      "groupSlug": "new-major-keycloak",
+      "matchDatasources": ["docker"],
+      "matchFileNames": [".watch-latest/Dockerfile"],
       "matchUpdateTypes": ["major"],
-      "enabled": false
+      "enabled": true,
+      "addLabels": ["dependencies", "docker"]
     },
     {
-      "matchDepTypes": ["docker"],
-      "matchFileNames": ["^.watch-latest/Dockerfile"],
+      "matchManagers": ["dockerfile"],
+      "groupName": "all non-major keycloak",
+      "groupSlug": "all-non-major-keycloak",
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["keycloak-*/Dockerfile"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
+      "enabled": true,
+      "addLabels": ["dependencies", "docker"]
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["keycloak-*/Dockerfile"],
       "matchUpdateTypes": ["major"],
-      "enabled": true
+      "enabled": false
     }
   ],
   "customManagers": [

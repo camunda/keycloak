@@ -1,8 +1,8 @@
 # quay.io is the new repository of keycloak (https://lists.jboss.org/archives/list/keycloak-user@lists.jboss.org/message/7CRWKAAYI5WJTUXUZR6K73XV7P4TLZZ2/)
 ARG BASE_IMAGE_NAME="quay.io/keycloak/keycloak:24.0.1-0"
 # List of all available images with associated sha: https://quay.io/repository/keycloak/keycloak?tab=tags
-ARG BASE_IMAGE_SHA_AMD64="sha256:050b5430f5a2f417ef41dd5ccdda70f900761bb757d08a17dd6957796e61acc9"
-ARG BASE_IMAGE_SHA_ARM64="sha256:be4ff90d66bd1cdfe79610a90eae2b187dff9926e5c1a99200eaf62b41433600"
+# Note: use the global image digest to make this image platform agnostic (see: https://github.com/camunda/zeebe/pull/14186)
+ARG BASE_IMAGE_DIGEST="sha256:8e38bc8a4e0606e38a37401422dfbf414e2b73797952dfe94c9b56e2f9207897"
 
 FROM docker.io/gradle:jdk17-focal as lib
 
@@ -12,23 +12,9 @@ COPY build.gradle /home/gradle
 
 RUN gradle copyDependencies
 
-# Building prod image amd64
-FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_SHA_AMD64} as prod-amd64
-
-# leave unset to use the default value at the top of the file
-ARG BASE_IMAGE_SHA_AMD64
-ARG BASE_SHA="${BASE_IMAGE_SHA_AMD64}"
-
-# Building prod image arm64
-FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_SHA_ARM64} as prod-arm64
-
-# leave unset to use the default value at the top of the file
-ARG BASE_IMAGE_SHA_ARM64
-ARG BASE_SHA="${BASE_IMAGE_SHA_ARM64}"
-
 # Building builder image
 # hadolint ignore=DL3006
-FROM ${BASE_IMAGE_NAME} as builder
+FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST} as builder
 
 # Enable health and metrics support
 ENV KC_HEALTH_ENABLED=true
@@ -44,14 +30,12 @@ WORKDIR /opt/keycloak
 RUN /opt/keycloak/bin/kc.sh build
 
 ##### FINAL Keycloak IMAGE #####
-# The value of TARGETARCH is provided by the build command from docker and based on that value, prod-amd64 or
-# prod-arm64 will be built as defined above
 # hadolint ignore=DL3006
-FROM prod-${TARGETARCH}
+FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST}
 
 # leave the values below unset to use the default value at the top of the file
 ARG BASE_IMAGE_NAME
-ARG BASE_SHA
+ARG BASE_IMAGE_DIGEST
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
@@ -67,7 +51,7 @@ LABEL maintainer="Camunda" \
       org.opencontainers.image.documentation="https://hub.docker.com/camunda/keycloak/" \
       org.opencontainers.image.licenses="Apache License 2.0" \
       org.opencontainers.image.base.name="docker.io/library/${BASE_IMAGE_NAME}" \
-      org.opencontainers.image.base.digest="${BASE_SHA}" \
+      org.opencontainers.image.base.digest="${BASE_IMAGE_DIGEST}" \
       io.openshift.tags="bpmn,identity,keycloak,camunda" \
       io.openshift.min-memory="1Gi" \
       io.openshift.min-cpu="1"
