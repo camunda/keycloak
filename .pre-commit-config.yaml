@@ -34,4 +34,12 @@ repos:
       - id: conventional-pre-commit
         stages: [commit-msg]
         args: ["--strict" , "--force-scope"]
+
+  - repo: local
+    hooks:
+      - id: update-readme-version
+        name: update-readme-version
+        language: python
+        always_run: true
+        entry: python .pre-commit-hooks/update_readme_version.py
 ...
