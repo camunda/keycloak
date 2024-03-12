@@ -1,13 +1,10 @@
 # quay.io is the new repository of keycloak (https://lists.jboss.org/archives/list/keycloak-user@lists.jboss.org/message/7CRWKAAYI5WJTUXUZR6K73XV7P4TLZZ2/)
 ARG BASE_IMAGE_NAME="quay.io/keycloak/keycloak:23.0.7-0"
-# Note: For multi-arch architectures, Renovate does not currently handle digest updates correctly.
-# Manually update digests with each version bump until Renovate supports this feature.
 # List of all available images with associated sha: https://quay.io/repository/keycloak/keycloak?tab=tags
-ARG BASE_IMAGE_SHA_AMD64="sha256:461bdabba2bd2de667b19b0c1831754cb0f1c6c1d1c85cd35ccfa65335078962"
-ARG BASE_IMAGE_SHA_ARM64="sha256:0b4a46b51fe9f9b7227c958bb4240ed8b06bf2f028e93a099014ecbae84c068a"
+# Note: use the global image digest to make this image platform agnostic (see: https://github.com/camunda/zeebe/pull/14186)
+ARG BASE_IMAGE_DIGEST="sha256:14e99d6f5dd0516a5bdc82537b732cb85469ecdb15ad7fe5f11ff67521544db8"
 
-
-FROM docker.io/gradle:jdk17-focal as lib
+FROM docker.io/gradle:jdk17-focal@sha256:17e0c6bec6cb2c7f4240315d7a957c6b9058a5c137c2f8b37760ac327111ce87 as lib
 
 WORKDIR /home/gradle
 
@@ -15,23 +12,9 @@ COPY build.gradle /home/gradle
 
 RUN gradle copyDependencies
 
-# Building prod image amd64
-FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_SHA_AMD64} as prod-amd64
-
-# leave unset to use the default value at the top of the file
-ARG BASE_IMAGE_SHA_AMD64
-ARG BASE_SHA="${BASE_IMAGE_SHA_AMD64}"
-
-# Building prod image arm64
-FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_SHA_ARM64} as prod-arm64
-
-# leave unset to use the default value at the top of the file
-ARG BASE_IMAGE_SHA_ARM64
-ARG BASE_SHA="${BASE_IMAGE_SHA_ARM64}"
-
 # Building builder image
 # hadolint ignore=DL3006
-FROM ${BASE_IMAGE_NAME} as builder
+FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST} as builder
 
 # Enable health and metrics support
 ENV KC_HEALTH_ENABLED=true
@@ -47,14 +30,12 @@ WORKDIR /opt/keycloak
 RUN /opt/keycloak/bin/kc.sh build
 
 ##### FINAL Keycloak IMAGE #####
-# The value of TARGETARCH is provided by the build command from docker and based on that value, prod-amd64 or
-# prod-arm64 will be built as defined above
 # hadolint ignore=DL3006
-FROM prod-${TARGETARCH}
+FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST}
 
 # leave the values below unset to use the default value at the top of the file
 ARG BASE_IMAGE_NAME
-ARG BASE_SHA
+ARG BASE_IMAGE_DIGEST
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
@@ -70,7 +51,7 @@ LABEL maintainer="Camunda" \
       org.opencontainers.image.documentation="https://hub.docker.com/camunda/keycloak/" \
       org.opencontainers.image.licenses="Apache License 2.0" \
       org.opencontainers.image.base.name="docker.io/library/${BASE_IMAGE_NAME}" \
-      org.opencontainers.image.base.digest="${BASE_SHA}" \
+      org.opencontainers.image.base.digest="${BASE_IMAGE_DIGEST}" \
       io.openshift.tags="bpmn,identity,keycloak,camunda" \
       io.openshift.min-memory="1Gi" \
       io.openshift.min-cpu="1"

@@ -4,7 +4,7 @@ ARG BASE_IMAGE_NAME="quay.io/keycloak/keycloak:24.0.1-0"
 # Note: use the global image digest to make this image platform agnostic (see: https://github.com/camunda/zeebe/pull/14186)
 ARG BASE_IMAGE_DIGEST="sha256:8e38bc8a4e0606e38a37401422dfbf414e2b73797952dfe94c9b56e2f9207897"
 
-FROM docker.io/gradle:jdk17-focal as lib
+FROM docker.io/gradle:jdk17-focal@sha256:17e0c6bec6cb2c7f4240315d7a957c6b9058a5c137c2f8b37760ac327111ce87 as lib
 
 WORKDIR /home/gradle
 
