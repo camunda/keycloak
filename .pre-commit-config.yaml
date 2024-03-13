@@ -39,9 +39,9 @@ repos:
     hooks:
       - id: update-readme-version
         name: update-readme-version
-        language: python
+        language: script
         always_run: true
-        entry: python .pre-commit-hooks/update_readme_version.py
+        entry: .pre-commit-hooks/update_readme_version.sh
         types: [text]
         stages: [commit, push, manual]
 ...
