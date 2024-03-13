@@ -9,7 +9,6 @@ on:
     tags:
       - "keycloak-[0-9]+-[0-9]+-[0-9]+-[0-9]+-[0-9]+" # `keycloak-23-yyyy-mm-dd-xxx`: only keycloak 23
       - "[0-9]+-[0-9]+-[0-9]+-[0-9]+" # `yyyy-mm-dd-xxx`: all keycloak versions
-  pull_request:
   schedule:
     - cron: '0 3 * * *'
   workflow_dispatch:
