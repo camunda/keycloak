@@ -335,16 +335,31 @@ jobs:
           PGUSER: ${{ env.postgres_superuser }}
           PGUSER_IRSA: ${{ env.postgres_user }}
 
-      - name: Ensure Aurora PG connectivity before tests (aws only)
+      - name: Generate a db auth token using aws for simple psql db connection test (aws only)
         if: startsWith(matrix.runner_desc.runner, 'aws')
         shell: bash
         run: |
-          : # perform a simple psql connection to the aws db before testing the irsa integration
+          : # We generate a db auth token using the aws cli because IRSA access in Keycloak might not be easy to debug.
+          : # This token will be used in the "Test psql db connection" step, and then it will be reset for the Keycloak integration test.
           python3 -m pip install awscli
 
-          PGPASSWORD="$(aws rds generate-db-auth-token --hostname ${{ env.postgres_host }} --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
-          export PGPASSWORD
-          psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
+          : # The aws command uses the environment variables provided by the runner
+          echo "postgres_password=$(aws rds generate-db-auth-token --hostname ${{ env.postgres_host }} --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})" >> "$GITHUB_ENV"
+
+      - name: Test psql db connection
+        shell: bash
+        run: |
+          : # Perform a simple psql connection test to ensure the database can be reached.
+          : # The psql command provides clear and simple error messages compared to jdbc, which is why we perform this step.
+          PGPASSWORD=${{ env.postgres_password }} psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
+
+      - name: Reset postgres_password for IRSA connection  (aws only)
+        if: startsWith(matrix.runner_desc.runner, 'aws')
+        shell: bash
+        run: |
+          : # For AWS IRSA connection, we don't use password-based authentication.
+          : # Since a password was generated in the previous steps, we need to ensure it is empty.
+          echo "postgres_password=" >> "$GITHUB_ENV"
 
       - name: Start Test Environment
         uses: ./.github/actions/compose

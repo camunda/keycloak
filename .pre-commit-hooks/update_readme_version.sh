@@ -7,6 +7,8 @@ current_version=$(grep -o "docker.io/camunda/keycloak:[0-9]\+" README.md | head 
 if [ "${current_version}" != "${latest_version}" ]; then
     # Replace the string in the file
     echo "$(pwd)"
+    echo "$(ls)"
+    echo "$(tree)"
     sed -i '' -E "s@docker.io/camunda/keycloak:[0-9]+@docker.io/camunda/keycloak:${latest_version}@g" README.md
     echo "The docker image version in the README.md has been updated from docker.io/camunda/keycloak:${current_version} to docker.io/camunda/keycloak:${latest_version}" >&2
     exit 1
