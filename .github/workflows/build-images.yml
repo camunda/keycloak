@@ -353,7 +353,9 @@ jobs:
         run: |
           : # Perform a simple psql connection test to ensure the database can be reached.
           : # The psql command provides clear and simple error messages compared to jdbc, which is why we perform this step.
-          PGPASSWORD=${{ env.postgres_password }} psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
+          PGPASSWORD="${{ env.postgres_password }}"
+          export PGPASSWORD
+          psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
 
       - name: Reset postgres_password for IRSA connection  (aws only)
         if: startsWith(matrix.runner_desc.runner, 'aws')
