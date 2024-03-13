@@ -2,6 +2,19 @@
 
 Welcome to the development reference for Keycloak by Camunda! This document provides guidance on setting up a basic testing environment, running unit tests, and testing changes locally.
 
+## Building the Image (Development Only)
+
+Building a local image is for development purposes only.
+In production, the pipeline will handle this and build a multi-architecture image using Docker Buildx.
+
+Navigate to the `keycloak-<version>` (e.g. `keycloak-24`) directory and execute the following command:
+
+```bash
+docker build . -t docker.io/camunda/keycloak:24
+```
+
+This Dockerfile includes the necessary dependencies and configurations for AWS Advanced JDBC Wrapper.
+
 ## Setting up a New Version of Keycloak
 
 

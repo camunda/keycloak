@@ -35,7 +35,7 @@ Keycloak will start in production mode, using secured HTTPS communication and wi
 Explore the available tags for the Camunda Keycloak Docker image on [Docker Hub](https://hub.docker.com/r/camunda/keycloak/tags):
 Since we derive this image from the __base image__ of Keycloak, you can find the base image tags at [quay.io/keycloak/keycloak](https://quay.io/repository/keycloak/keycloak?tab=tags&tag=latest).
 
-- `:<base image version>-2023-03-04-004`: This tag is associated with a specific date and incremental number. It is recommended for **production use** due to its **immutable nature**. 🏷️
+- `:<base image version>-<yyyy-mm-dd>-<iteration>`: This tag is associated with a specific date and incremental number (e.g., `24-2024-03-04-004`). It is recommended for **production use** due to its **immutable nature**. 🏷️
 - `:<base image version>`: Refers to the latest build of a particular Keycloak version (e.g., `24.0.1-0`).
 - `:<major keycloak version>`: Indicates the latest build of the specified major Keycloak version (e.g., `24`).
 - `:latest`: Corresponds to the latest stable build of the most recent Keycloak version.
@@ -59,17 +59,7 @@ For Kubernetes, configure the following environment variables:
   value: false
 ```
 
-Don't forget to set the `serviceAccountName` of the deployment/statefulset to the created service account with the IRSA annotation.
-
-## Building the Image
-
-Navigate to the `keycloak-24` directory and execute the following command:
-
-```bash
-docker build . -t docker.io/camunda/keycloak:24
-```
-
-This Dockerfile includes the necessary dependencies and configurations for AWS Advanced JDBC Wrapper.
+Don't forget to set the `serviceAccountName` of the deployment/statefulset to point to the created service account with the IRSA annotation.
 
 ## Reference
 
