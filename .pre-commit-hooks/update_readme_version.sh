@@ -2,6 +2,9 @@
 
 latest_version="$(./.github/scripts/utils/find_latest_keycloak.sh)"
 
+echo "$latest_version"
+ls -d "$(pwd)"/keycloak-*
+
 case "$(uname)" in
     Darwin*) sed () { command sed -i '' "$@"; } ;;
     *)       sed () { command sed -i "$@"; } ;;
