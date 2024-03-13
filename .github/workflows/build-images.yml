@@ -344,7 +344,8 @@ jobs:
           python3 -m pip install awscli
 
           : # The aws command uses the environment variables provided by the runner
-          echo "postgres_password=$(aws rds generate-db-auth-token --hostname ${{ env.postgres_host }} --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})" >> "$GITHUB_ENV"
+          AWS_PG_PASSWORD="$(aws rds generate-db-auth-token --hostname ${{ env.postgres_host }} --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
+          echo "postgres_password=${AWS_PG_PASSWORD}" >> "$GITHUB_ENV"
 
       - name: Test psql db connection (for external db only)
         if: ${{ matrix.runner_desc.postgres_replicas == 0 }}
