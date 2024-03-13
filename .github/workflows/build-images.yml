@@ -346,7 +346,8 @@ jobs:
           : # The aws command uses the environment variables provided by the runner
           echo "postgres_password=$(aws rds generate-db-auth-token --hostname ${{ env.postgres_host }} --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})" >> "$GITHUB_ENV"
 
-      - name: Test psql db connection
+      - name: Test psql db connection (for external db only)
+        if: ${{ matrix.runner_desc.postgres_replicas == 0 }}
         shell: bash
         run: |
           : # Perform a simple psql connection test to ensure the database can be reached.
