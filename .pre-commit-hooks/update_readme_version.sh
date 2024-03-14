@@ -9,7 +9,7 @@ esac
 
 # Check if the version in the README.md file is different from the latest version
 current_version=$(grep -o "docker.io/camunda/keycloak:[0-9]\+" README.md | head -n 1 | cut -d ":" -f 2)
-if [ "${current_version}" != "${latest_version}" ]; then
+if [[ "${current_version}" != "${latest_version}" ]]; then
     sed_universal -E "s@docker.io/camunda/keycloak:[0-9]+@docker.io/camunda/keycloak:${latest_version}@g" README.md
 
     echo "The docker image version in the README.md has been updated from docker.io/camunda/keycloak:${current_version} to docker.io/camunda/keycloak:${latest_version}" >&2
