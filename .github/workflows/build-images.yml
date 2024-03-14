@@ -414,66 +414,6 @@ jobs:
           PGPASSWORD: ${{ env.postgres_superuser_password }}
           PGUSER: ${{ env.postgres_superuser }}
 
-  scan:
-    runs-on: ubuntu-22.04
-    # TODO: re-enable when repo is public
-    if: false
-    strategy:
-      fail-fast: false # don't propagate failing jobs
-      matrix:
-        keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
-    needs:
-      - list-keycloak-versions
-      - read-build-image-output
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
-
-      - name: Import secrets
-        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
-        id: secrets
-        with:
-          url: ${{ secrets.VAULT_ADDR }}
-          method: approle
-          roleId: ${{ secrets.VAULT_ROLE_ID }}
-          secretId: ${{ secrets.VAULT_SECRET_ID }}
-          exportEnv: false
-          secrets: |
-            secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
-            secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
-
-      - name: Login to the registry
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3
-        with:
-          registry: "${{ vars.CONTAINER_REGISTRY_CI }}"
-          username: "${{ steps.secrets.outputs.MACHINE_USR }}"
-          password: "${{ steps.secrets.outputs.MACHINE_PWD }}"
-
-      - name: Set Keycloak Image Name
-        id: set-keycloak-image-name
-        shell: bash
-        run: |
-          keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
-          echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
-          echo "keycloak_image_name=${keycloak_image_name}"
-
-      - name: Pull the image
-        run: |
-          docker pull "${{ env.keycloak_image_name }}"
-
-      - name: Scan Docker image 🐳
-        uses: snyk/actions/docker@8349f9043a8b7f0f3ee8885bf28f0b388d2446e8 # master
-        continue-on-error: true
-        with:
-          image: "${{ env.keycloak_image_name }}"
-          args: --file="./${{ matrix.keycloak_version }}/Dockerfile" --severity-threshold=high --sarif-file-output=snyk.sarif
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      - name: Upload Snyk report as sarif 📦
-        uses: github/codeql-action/upload-sarif@8a470fddafa5cbb6266ee11b37ef4d8aae19c571 # v3
-        with:
-          sarif_file: snyk.sarif
-
   publish-image:
     runs-on: ubuntu-22.04
     # to release all versions of keycloak, tag it using the date (e.g.: `2024-03-10-001`)
@@ -487,8 +427,6 @@ jobs:
       - read-build-image-output
       - list-keycloak-versions
       - test-postgres-integ
-      # TODO: re-enable when repo is public
-      # - scan
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
