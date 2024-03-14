@@ -41,6 +41,7 @@ repos:
         name: update-readme-version
         language: script
         always_run: true
+        pass_filenames: false # ensure that we don't run the command multiple times
         entry: .pre-commit-hooks/update_readme_version.sh
         types: [text]
         stages: [commit, push, manual]

@@ -42,7 +42,7 @@ Since we derive this image from the __base image__ of Keycloak, you can find the
 
 ## IAM Roles for Service Accounts (IRSA) Support
 
-For Keycloak versions 21+, you can use the AWS Advanced JDBC Wrapper to support IRSA. Check the [Keycloak documentation](https://www.keycloak.org/server/containers) for details.
+Since Keycloak version 21 and onwards, you can utilize the AWS Advanced JDBC Wrapper included in this image to enable IRSA (IAM Role for Service Accounts). Refer to the [Keycloak documentation](https://www.keycloak.org/server/containers) for more information.
 
 ### Kubernetes Configuration
 
