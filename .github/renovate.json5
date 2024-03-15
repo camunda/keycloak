@@ -1,18 +1,48 @@
 {
-  extends: [
+  "extends": [
     "config:recommended",
-    "docker:enableMajor",
     ":dependencyDashboard",
-    ":semanticCommits"
+    ":semanticCommits",
+    ":docker"
   ],
-  automerge: false,
-  regexManagers: [
+  "automerge": false,
+  "packageRules": [
     {
-      fileMatch: ["build.gradle$"],
-      matchStrings: [
+      "matchManagers": ["dockerfile"],
+      "groupName": "new major keycloak available",
+      "groupSlug": "new-major-keycloak",
+      "matchDatasources": ["docker"],
+      "matchFileNames": [".watch-latest/Dockerfile"],
+      "matchUpdateTypes": ["major"],
+      "enabled": true,
+      "addLabels": ["dependencies", "docker"]
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "groupName": "all non-major keycloak",
+      "groupSlug": "all-non-major-keycloak",
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["keycloak-*/Dockerfile"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
+      "enabled": true,
+      "addLabels": ["dependencies", "docker"]
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["keycloak-*/Dockerfile"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["build.gradle$"],
+      "matchStrings": [
         "renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.* (?<currentValue>.*)\\s"
       ],
-      versioningTemplate: "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
     }
   ]
 }

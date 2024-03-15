@@ -6,30 +6,43 @@ volumes:
 
 services:
   postgres:
-      image: postgres
+      image: ${COMPOSE_POSTGRES_IMAGE:-postgres}
       volumes:
         - postgres_data:/var/lib/postgresql/data
       environment:
-        POSTGRES_DB: keycloak
-        POSTGRES_USER: keycloak
-        POSTGRES_PASSWORD: password
+        POSTGRES_DB: "${POSTGRES_DB:-keycloak}"
+        POSTGRES_USER: "${POSTGRES_USER:-keycloak}"
+        POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
       healthcheck:
         test: ["CMD-SHELL", "PGPASSWORD=$${POSTGRES_PASSWORD} psql --username=$${POSTGRES_USER} --host=localhost --dbname=$${POSTGRES_DB} --command='\\q'"]
         interval: 30s
         timeout: 5s
         retries: 3
+      deploy:
+        replicas: ${COMPOSE_POSTGRES_DEPLOY_REPLICAS:-1}
+
   keycloak:
-      image: langleu/keycloak:latest
-      build: .
-      command: start-dev
+      image: ${COMPOSE_KEYCLOAK_IMAGE:-camunda/keycloak:latest}
+      build: ./keycloak-latest
+      command: "start-dev --log-level=${KEYCLOAK_LOG_LEVEL:-INFO}"
       environment:
-        KEYCLOAK_ADMIN: admin
-        KEYCLOAK_ADMIN_PASSWORD: admin
-        KC_DB_USERNAME: keycloak
-        KC_DB_PASSWORD: password
-        KC_DB_DRIVER: software.amazon.jdbc.Driver
-        KC_TRANSACTION_XA_ENABLED: false
-        KC_DB_URL: jdbc:aws-wrapper:postgresql://postgres:5432/keycloak
+        KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN:-admin}"
+        KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-admin}"
+
+        # Configure the database according to the external db configuration if needed
+        KC_DB_USERNAME: "${KC_DB_USERNAME:-keycloak}"
+        KC_DB_PASSWORD: "${KC_DB_PASSWORD:-password}"
+        KC_DB_DRIVER: "${KC_DB_DRIVER:-software.amazon.jdbc.Driver}"
+        KC_TRANSACTION_XA_ENABLED: "${KC_TRANSACTION_XA_ENABLED:-false}"
+        KC_DB_URL: "${KC_DB_URL:-jdbc:aws-wrapper:postgresql://postgres:5432/keycloak}"
+
+        # AWS specifics variables
+        AWS_STS_REGIONAL_ENDPOINTS: "${AWS_STS_REGIONAL_ENDPOINTS:-}"
+        AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION:-}"
+        AWS_REGION: "${AWS_REGION:-}"
+        AWS_ROLE_ARN: "${AWS_ROLE_ARN:-}"
+        AWS_WEB_IDENTITY_TOKEN_FILE: "${AWS_WEB_IDENTITY_TOKEN_FILE:-}"
+
       healthcheck:
         test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1
         interval: 15s
@@ -38,6 +51,9 @@ services:
       ports:
         - 8080:8080
       depends_on:
-        - postgres
+        - "${COMPOSE_KEYCLOAK_DEPENDS_ON:-postgres}"
+      volumes:
+        - "${COMPOSE_KEYCLOAK_VOLUME_1:-/dev/null:/mynull1}" # can be used to inject irsa token
+
 
 # /kcadm.sh get clients --realm master --server http://localhost:8080 --user admin --password admin

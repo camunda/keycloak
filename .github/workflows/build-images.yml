@@ -1,0 +1,502 @@
+---
+# desc: build container images, perform static tests then publish
+name: build-images
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "keycloak-[0-9]+-[0-9]+-[0-9]+-[0-9]+-[0-9]+" # `keycloak-23-yyyy-mm-dd-xxx`: only keycloak 23
+      - "[0-9]+-[0-9]+-[0-9]+-[0-9]+" # `yyyy-mm-dd-xxx`: all keycloak versions
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  list-keycloak-versions:
+    runs-on: ubuntu-22.04
+    outputs:
+      matrix_keycloak_versions: ${{ steps.set-matrix.outputs.matrix_keycloak_versions }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: List Keycloak Versions from repository's folders
+        id: set-matrix
+        run: |
+          : # if we release a specified version of keycloak, the matrix should only contain it
+          if [[ $GITHUB_REF =~ ^refs/tags/keycloak-([0-9]+)- ]]; then
+            keycloak_version=${BASH_REMATCH[1]}
+            matrix_json="[\"${keycloak_version}\"]"
+          else
+            : # List folders matching the pattern keycloak-*
+            : # Export the list as an output in JSON format
+            matrix_json=$(printf "%s\n" keycloak-*/ | sed 's/\/$//' | sed 's/keycloak-//' | jq -R -s -c 'split("\n")[:-1]')
+          fi
+
+          echo "matrix_keycloak_versions=${matrix_json}" >> "$GITHUB_OUTPUT"
+          echo "matrix_keycloak_versions=${matrix_json}"
+
+  build-image:
+    runs-on: ubuntu-22.04
+    outputs:
+      full_image_name: ${{ steps.compute-image-name-step.outputs.full_image_name }}
+    needs:
+      - list-keycloak-versions
+    strategy:
+      fail-fast: false # don't propagate failing jobs
+      matrix:
+        keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: Install if required common software tooling
+        uses: camunda/infra-global-github-actions/common-tooling@dc512d537a85370ce21611945935abe849e926a8 # main
+        with:
+          java-enabled: false
+          yarn-enabled: false
+          python-version: "3.12"
+
+      - name: Import secrets
+        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        id: secrets
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          exportEnv: false
+          secrets: |
+            secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
+            secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
+
+      - name: Build image using Camunda docker build
+        id: build-image-step
+        uses: camunda/infra-global-github-actions/build-docker-image@dc512d537a85370ce21611945935abe849e926a8 # main
+        with:
+          registry_host: ${{ vars.CONTAINER_REGISTRY_CI }}
+          registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
+          registry_password: ${{ steps.secrets.outputs.MACHINE_PWD }}
+          force_push: true
+          image_name: ${{ vars.CONTAINER_IMAGE_NAME_CI }}
+          build_context: "./keycloak-${{ matrix.keycloak_version }}/"
+          build_platforms: linux/amd64,linux/arm64
+          extra_tags: | # the ci- prefix ensures a build context, this image is treated as "temporary"
+            type=sha,enable=true,priority=1000,prefix=ci-${{ matrix.keycloak_version }}-sha-,suffix=,format=short
+
+      - name: Compute target built image fully qualified name from metadata
+        id: compute-image-name-step
+        run: |
+          image_metadata='${{ steps.build-image-step.outputs.image_metadata }}'
+          image_name=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."image.name"' | tr ',' '\n' | head -n 1 | tr -d ' ')
+          digest=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."containerimage.digest"')
+          full_image_name="${image_name}@${digest}"
+          echo "full_image_name=${full_image_name}" >> "$GITHUB_OUTPUT"
+          echo "$full_image_name"
+
+      ## Write for matrix outputs workaround
+      - uses: cloudposse/github-action-matrix-outputs-write@ed06cf3a6bf23b8dce36d1cf0d63123885bb8375 # v1
+        id: out
+        with:
+          matrix-step-name: ${{ github.job }}
+          matrix-key: ${{ matrix.keycloak_version }}
+          outputs: |-
+            full_image_name: ${{ steps.compute-image-name-step.outputs.full_image_name }}
+
+  ## Read matrix outputs
+  read-build-image-output:
+    runs-on: ubuntu-22.04
+    needs: [ build-image ]
+    steps:
+      - uses: cloudposse/github-action-matrix-outputs-read@33cac12fa9282a7230a418d859b93fdbc4f27b5a # v1
+        id: read
+        with:
+          matrix-step-name: build-image
+    outputs:
+      result: "${{ steps.read.outputs.result }}"
+
+  test-base-image:
+    runs-on: ubuntu-22.04
+    needs:
+      - list-keycloak-versions
+      - build-image
+      - read-build-image-output
+    strategy:
+      fail-fast: false # don't propagate failing jobs
+      matrix:
+        keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: Install if required common software tooling
+        uses: camunda/infra-global-github-actions/common-tooling@dc512d537a85370ce21611945935abe849e926a8 # main
+        with:
+          java-enabled: false
+          yarn-enabled: false
+          python-version: "3.12"
+
+      - name: Set Keycloak Image Name
+        id: set-keycloak-image-name
+        shell: bash
+        run: |
+          keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+          echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
+          echo "keycloak_image_name=${keycloak_image_name}"
+
+      - name: Import secrets
+        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        id: secrets
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          exportEnv: false
+          secrets: |
+            secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
+            secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
+
+      - name: Login to the registry
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3
+        with:
+          registry: ${{ vars.CONTAINER_REGISTRY_CI }}
+          username: ${{ steps.secrets.outputs.MACHINE_USR }}
+          password: ${{ steps.secrets.outputs.MACHINE_PWD }}
+
+      - name: KeyCloak Show-Config
+        run: |
+          docker run "${{ env.keycloak_image_name }}" show-config >> docker.log
+          echo "config=$(< docker.log tr '\n' ' ')" >> "$GITHUB_ENV"
+
+      - name: Assert Config
+        env:
+          CONFIG: ${{ env.config }}
+        run: python3 ./.github/scripts/build-check/main.py
+
+  test-postgres-integ:
+    strategy:
+      fail-fast: false # don't propagate failing jobs
+      matrix:
+        runner_desc:
+          - runner: "ubuntu-22.04"
+            postgres_replicas: 1
+            keycloak_jdbc_protocol: "postgresql"
+            keycloak_db_driver: "org.postgresql.Driver"
+            keycloak_db_host_template: "postgres"
+            keycloak_db_jdbc_query: ""
+            keycloak_db_port: "5432"
+
+          - runner: "aws-core-2-default"
+            postgres_replicas: 0
+            keycloak_jdbc_protocol: "aws-wrapper:postgresql"
+            keycloak_db_driver: "software.amazon.jdbc.Driver"
+            keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com"
+            keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require"
+            keycloak_db_port: "5432"
+
+          - runner: "aws-arm-core-2-default"
+            postgres_replicas: 0
+            keycloak_jdbc_protocol: "aws-wrapper:postgresql"
+            keycloak_db_driver: "software.amazon.jdbc.Driver"
+            keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com"
+            keycloak_db_jdbc_query: "?wrapperPlugins=iam&ssl=true&sslmode=require"
+            keycloak_db_port: "5432"
+
+          # Add the gcp runner when GCloud SQL is available
+          # GCloud SQL is not tested yet as we don't have a dedicated db
+
+        keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
+    runs-on: ${{ matrix.runner_desc.runner }}
+    needs:
+      - list-keycloak-versions
+      - build-image
+      - read-build-image-output
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: Install if required common software tooling
+        uses: camunda/infra-global-github-actions/common-tooling@dc512d537a85370ce21611945935abe849e926a8 # main
+        with:
+          java-enabled: false
+          yarn-enabled: false
+          python-version: "3.12"
+          python-cache: "pip"
+
+      - name: Set Keycloak Image Name
+        id: set-keycloak-image-name
+        shell: bash
+        run: |
+          keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+          echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
+          echo "keycloak_image_name=${keycloak_image_name}"
+
+      - name: Import secrets
+        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        id: secrets
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          exportEnv: true
+          secrets: |
+            secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
+            secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
+
+            secret/data/products/infrastructure-experience/ci/common AURORA_POSTGRESQL_PASSWORD | postgres_superuser_password;
+            secret/data/products/infrastructure-experience/ci/common AURORA_POSTGRESQL_USERNAME | postgres_superuser;
+
+      - name: Compute AWS variables
+        if: startsWith(matrix.runner_desc.runner, 'aws')
+        run: |
+          : # aws aurora superuser is only used for bootstrapping a standard user that will auth using irsa
+          echo "postgres_user=keycloak-irsa" >> "$GITHUB_ENV"
+          echo "postgres_user=${postgres_user}"
+          echo "postgres_password=" >> "$GITHUB_ENV"
+
+          echo "compose_keycloak_volume_1=$AWS_WEB_IDENTITY_TOKEN_FILE:$AWS_WEB_IDENTITY_TOKEN_FILE" >> "$GITHUB_ENV"
+
+          : # export AWS variables
+          echo "AWS_STS_REGIONAL_ENDPOINTS=$AWS_STS_REGIONAL_ENDPOINTS" >> "$GITHUB_ENV"
+          echo "AWS_STS_REGIONAL_ENDPOINTS=${AWS_STS_REGIONAL_ENDPOINTS}"
+          echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION" >> "$GITHUB_ENV"
+          echo "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
+          echo "AWS_REGION=$AWS_REGION" >> "$GITHUB_ENV"
+          echo "AWS_REGION=${AWS_REGION}"
+          echo "AWS_ROLE_ARN=$AWS_ROLE_ARN" >> "$GITHUB_ENV"
+          echo "AWS_ROLE_ARN=${AWS_ROLE_ARN}"
+          echo "AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE" >> "$GITHUB_ENV"
+          echo "AWS_WEB_IDENTITY_TOKEN_FILE=${AWS_WEB_IDENTITY_TOKEN_FILE}"
+
+      - name: Compute Ubuntu variables
+        if: startsWith(matrix.runner_desc.runner, 'ubuntu')
+        run: |
+          : # we use plain values that will be used by the postgres container
+          echo "postgres_user=keycloak" >> "$GITHUB_ENV"
+          echo "postgres_password=password" >> "$GITHUB_ENV"
+          echo "postgres_user=${postgres_user}"
+
+      - name: Declare test recipe variables
+        shell: bash
+        run: |
+
+          if (( "${{ matrix.runner_desc.postgres_replicas }}" < 1 )); then
+            echo "compose_keycloak_depends_on=" >> "$GITHUB_ENV"
+          else
+            echo "compose_keycloak_depends_on=postgres" >> "$GITHUB_ENV"
+          fi
+
+          : # ensure uniqueness of the db name
+          uuid="$(cat /proc/sys/kernel/random/uuid)"
+          postgres_database="infex-keycloak-db-${uuid}-${{ github.sha }}"
+          echo "postgres_database=${postgres_database}" >> "$GITHUB_ENV"
+          echo "postgres_database=$postgres_database"
+
+          : # get the postgres version to test
+          keycloak_version_git="$(echo '${{ matrix.keycloak_version }}' | sed -E 's/^([0-9]+)\.?(.*)$/\1.0/g')" # make sure to have a major.0 format
+          postgres_version="$(curl -s "https://raw.githubusercontent.com/keycloak/keycloak/release/${keycloak_version_git}/pom.xml" | awk -F'[><]' '/<postgresql.version>/{print $3}')"
+          echo "postgres_version=${postgres_version}" >> "$GITHUB_ENV"
+          echo "postgres_version=${postgres_version}"
+
+          : # apply template on the address
+          postgres_host=$(echo "${{ matrix.runner_desc.keycloak_db_host_template }}" | sed "s/{{ postgres_version }}/${postgres_version}/g")
+          echo "postgres_host=${postgres_host}" >> "$GITHUB_ENV"
+          echo "postgres_host=${postgres_host}"
+
+          : # compute the keycloak db url
+          test_db_url="jdbc:${{ matrix.runner_desc.keycloak_jdbc_protocol }}://${postgres_host}:${{ matrix.runner_desc.keycloak_db_port }}/${postgres_database}${{ matrix.runner_desc.keycloak_db_jdbc_query }}"
+          echo "test_db_url=${test_db_url}" >> "$GITHUB_ENV"
+          echo "test_db_url=${test_db_url}"
+
+      - name: Login to the registry
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3
+        with:
+          registry: ${{ vars.CONTAINER_REGISTRY_CI }}
+          username: ${{ steps.secrets.outputs.MACHINE_USR }}
+          password: ${{ steps.secrets.outputs.MACHINE_PWD }}
+
+      # The self-hosted runner doesn't provide a postgres client and the prerequisites for make,
+      # so we need to install them manually
+      - name: Install required packages
+        run: sudo apt-get update && sudo apt-get install -y build-essential postgresql-client
+
+      - name: Tear up Aurora PG (aws only)
+        if: startsWith(matrix.runner_desc.runner, 'aws')
+        run: ./.helpers/actions/create_aurora_pg_db.sh
+        env:
+          PGDATABASE: "${{ env.postgres_database }}"
+          PGHOST: ${{ env.postgres_host }}
+          PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
+          PGPASSWORD: ${{ env.postgres_superuser_password }}
+          PGUSER: ${{ env.postgres_superuser }}
+          PGUSER_IRSA: ${{ env.postgres_user }}
+
+      - name: Generate a db auth token using aws for simple psql db connection test (aws only)
+        if: startsWith(matrix.runner_desc.runner, 'aws')
+        shell: bash
+        run: |
+          : # We generate a db auth token using the aws cli because IRSA access in Keycloak might not be easy to debug.
+          : # This token will be used in the "Test psql db connection" step, and then it will be reset for the Keycloak integration test.
+          python3 -m pip install awscli
+
+          : # The aws command uses the environment variables provided by the runner
+          AWS_PG_PASSWORD="$(aws rds generate-db-auth-token --hostname ${{ env.postgres_host }} --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
+          echo "postgres_password=${AWS_PG_PASSWORD}" >> "$GITHUB_ENV"
+
+      - name: Test psql db connection (for external db only)
+        if: ${{ matrix.runner_desc.postgres_replicas == 0 }}
+        shell: bash
+        run: |
+          : # Perform a simple psql connection test to ensure the database can be reached.
+          : # The psql command provides clear and simple error messages compared to jdbc, which is why we perform this step.
+          PGPASSWORD="${{ env.postgres_password }}"
+          export PGPASSWORD
+          psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
+
+      - name: Reset postgres_password for IRSA connection  (aws only)
+        if: startsWith(matrix.runner_desc.runner, 'aws')
+        shell: bash
+        run: |
+          : # For AWS IRSA connection, we don't use password-based authentication.
+          : # Since a password was generated in the previous steps, we need to ensure it is empty.
+          echo "postgres_password=" >> "$GITHUB_ENV"
+
+      - name: Start Test Environment
+        uses: ./.github/actions/compose
+        with:
+          compose_file: ${{ github.workspace }}/docker-compose.yml
+          project_name: keycloak
+        env:
+
+          POSTGRES_DB: "${{ env.postgres_database }}"
+          POSTGRES_USER: "${{ env.postgres_user }}"
+          POSTGRES_PASSWORD: "${{ env.postgres_password }}"
+
+          KC_DB_USERNAME: "${{ env.postgres_user }}"
+          KC_DB_PASSWORD: "${{ env.postgres_password }}"
+          KC_DB_DRIVER: "${{ matrix.runner_desc.keycloak_db_driver }}"
+          KC_DB_URL: "${{ env.test_db_url }}"
+
+          KEYCLOAK_LOG_LEVEL: "INFO,software.amazon.jdbc:FINEST"
+
+          COMPOSE_POSTGRES_IMAGE: "postgres:${{ env.postgres_version }}"
+          COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
+          COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ env.compose_keycloak_depends_on }}"
+          COMPOSE_KEYCLOAK_VOLUME_1: "${{ env.compose_keycloak_volume_1 || '/dev/null:/dummynull1' }}"
+          COMPOSE_KEYCLOAK_IMAGE: "${{ env.keycloak_image_name }}"
+
+          # AWS specific variables to forward, see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables
+          AWS_STS_REGIONAL_ENDPOINTS: "${{ env.AWS_STS_REGIONAL_ENDPOINTS }}"
+          AWS_DEFAULT_REGION: "${{ env.AWS_DEFAULT_REGION }}"
+          AWS_REGION: "${{ env.AWS_REGION }}"
+          AWS_ROLE_ARN: "${{ env.AWS_ROLE_ARN }}"
+          AWS_WEB_IDENTITY_TOKEN_FILE: "${{ env.AWS_WEB_IDENTITY_TOKEN_FILE }}"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ./.github/scripts/integration/requirements.txt
+
+      - name: Test Environment
+        run: python3 ./.github/scripts/integration/main.py
+
+      - name: Tear down Aurora PG (aws only)
+        if: startsWith(matrix.runner_desc.runner, 'aws') && always()
+        run: ./.helpers/actions/delete_aurora_pg_db.sh
+        env:
+          PGDATABASE: "${{ env.postgres_database }}"
+          PGHOST: ${{ env.postgres_host }}
+          PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
+          PGPASSWORD: ${{ env.postgres_superuser_password }}
+          PGUSER: ${{ env.postgres_superuser }}
+
+  publish-image:
+    runs-on: ubuntu-22.04
+    # to release all versions of keycloak, tag it using the date (e.g.: `2024-03-10-001`)
+    # to release only one version keycloak, tag it using the date prefixed by the version of keycloak (e.g.: `keycloak-23-2024-03-10-001`)
+    if: startsWith(github.ref, 'refs/tags')
+    strategy:
+      fail-fast: false # don't propagate failing jobs
+      matrix:
+        keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
+    needs:
+      - read-build-image-output
+      - list-keycloak-versions
+      - test-postgres-integ
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: Install if required common software tooling
+        uses: camunda/infra-global-github-actions/common-tooling@dc512d537a85370ce21611945935abe849e926a8 # main
+        with:
+          java-enabled: false
+          yarn-enabled: false
+          buildx-install: true
+
+      - name: Import secrets
+        uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
+        id: secrets
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          exportEnv: false
+          secrets: |
+            secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
+            secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
+
+            secret/data/products/infrastructure-experience/ci/common DOCKERHUB_USER;
+            secret/data/products/infrastructure-experience/ci/common DOCKERHUB_PASSWORD;
+
+      - name: Login to the registry
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3
+        with:
+          registry: "${{ vars.CONTAINER_REGISTRY_CI }}"
+          username: "${{ steps.secrets.outputs.MACHINE_USR }}"
+          password: "${{ steps.secrets.outputs.MACHINE_PWD }}"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3
+        with:
+          registry: "${{ vars.CONTAINER_REGISTRY }}"
+          username: "${{ steps.secrets.outputs.DOCKERHUB_USER }}"
+          password: "${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}"
+
+      - name: Set Keycloak Version
+        id: set-keycloak-version
+        run: |
+          keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+          echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
+          echo "keycloak_image_name=${keycloak_image_name}"
+
+          dockerhub_target_name="${{ vars.CONTAINER_REGISTRY }}/${{ vars.CONTAINER_IMAGE_NAME }}"
+          echo "dockerhub_target_name=${dockerhub_target_name}" >> "$GITHUB_ENV"
+          echo "dockerhub_target_name=${dockerhub_target_name}"
+
+      - name: Pull built image
+        run: |
+          docker pull "${{ env.keycloak_image_name }}"
+
+      - name: Retag and push the image
+        shell: bash
+        run: |
+          : # extract the base image tag to use it as base tag
+          base_image_tag=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile | awk -F'[:=]' '{print $NF}' | tr -d '"' || echo "Error: Image tag $1 not found in Dockerfile" && exit 1) && echo "$base_image_tag"
+          echo "base_image_tag=${base_image_tag}"
+
+          : # remove keycloak- prefix
+          suffix_version=$(echo '${{ github.ref_name }}' | sed 's/keycloak-[0-9]*-//')
+
+          docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}" "${{ env.keycloak_image_name }}"
+          docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${base_image_tag}" "${{ env.keycloak_image_name }}"
+          docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${base_image_tag}-${suffix_version}" "${{ env.keycloak_image_name }}"
+
+          if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${{ matrix.keycloak_version }}" ]; then
+            docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:latest" "${{ env.keycloak_image_name }}"
+          fi
