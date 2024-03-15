@@ -6,7 +6,7 @@ volumes:
 
 services:
   postgres:
-      image: ${COMPOSE_POSTGRES_IMAGE:-postgres}
+      image: ${COMPOSE_POSTGRES_IMAGE:-public.ecr.aws/docker/library/postgres:latest}
       volumes:
         - postgres_data:/var/lib/postgresql/data
       environment:

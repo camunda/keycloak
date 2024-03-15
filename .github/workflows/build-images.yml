@@ -383,7 +383,7 @@ jobs:
 
           KEYCLOAK_LOG_LEVEL: "INFO,software.amazon.jdbc:FINEST"
 
-          COMPOSE_POSTGRES_IMAGE: "postgres:${{ env.postgres_version }}"
+          COMPOSE_POSTGRES_IMAGE: "public.ecr.aws/docker/library/postgres:${{ env.postgres_version }}"
           COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"
           COMPOSE_KEYCLOAK_DEPENDS_ON: "${{ env.compose_keycloak_depends_on }}"
           COMPOSE_KEYCLOAK_VOLUME_1: "${{ env.compose_keycloak_volume_1 || '/dev/null:/dummynull1' }}"
