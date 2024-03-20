@@ -1,8 +1,7 @@
-# quay.io is the new repository of keycloak (https://lists.jboss.org/archives/list/keycloak-user@lists.jboss.org/message/7CRWKAAYI5WJTUXUZR6K73XV7P4TLZZ2/)
-ARG BASE_IMAGE_NAME="quay.io/keycloak/keycloak:23.0.7-0"
-# List of all available images with associated sha: https://quay.io/repository/keycloak/keycloak?tab=tags
+ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:23.0.7-debian-12-r3"
+# List of all available images with associated sha: https://hub.docker.com/r/bitnami/keycloak/tags
 # Note: use the global image digest to make this image platform agnostic (see: https://github.com/camunda/zeebe/pull/14186)
-ARG BASE_IMAGE_DIGEST="sha256:14e99d6f5dd0516a5bdc82537b732cb85469ecdb15ad7fe5f11ff67521544db8"
+ARG BASE_IMAGE_DIGEST="sha256:da98221b37684927724e275cf0dfa5de6d70bd4b6c96b9183fcbe526f53693f7"
 
 FROM docker.io/gradle:jdk17-focal@sha256:17e0c6bec6cb2c7f4240315d7a957c6b9058a5c137c2f8b37760ac327111ce87 as lib
 
@@ -16,23 +15,16 @@ RUN gradle copyDependencies
 # hadolint ignore=DL3006
 FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST} as builder
 
-# Enable health and metrics support
-ENV KC_HEALTH_ENABLED=true
-ENV KC_METRICS_ENABLED=true
+COPY --from=lib /home/gradle/lib /opt/bitnami/keycloak/providers
 
-# Configure a database vendor
-ENV KC_DB=postgres
+WORKDIR /opt/bitnami/keycloak
 
-COPY --from=lib /home/gradle/lib /opt/keycloak/providers
+RUN /opt/bitnami/keycloak/bin/kc.sh build
 
-WORKDIR /opt/keycloak
-
-RUN /opt/keycloak/bin/kc.sh build
 
 ##### FINAL Keycloak IMAGE #####
 # hadolint ignore=DL3006
 FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST}
-
 # leave the values below unset to use the default value at the top of the file
 ARG BASE_IMAGE_NAME
 ARG BASE_IMAGE_DIGEST
@@ -42,17 +34,17 @@ ARG BASE_IMAGE_DIGEST
 # OCP: https://docs.openshift.com/container-platform/4.10/openshift_images/create-images.html#defining-image-metadata
 LABEL maintainer="Camunda" \
       name="camunda/keycloak" \
-      summary="Keycloak with AWS wrapper" \
-      io.k8s.description="Keycloak with AWS wrapper." \
+      summary="Keycloak bitnami with AWS wrapper" \
+      io.k8s.description="Keycloak bitnami with AWS wrapper." \
       io.k8s.display-name="keycloak" \
-      description="Keycloak with AWS wrapper." \
+      description="Keycloak bitnami with AWS wrapper." \
       org.opencontainers.image.authors="Camunda" \
       org.opencontainers.image.vendor="Camunda" \
       org.opencontainers.image.documentation="https://hub.docker.com/camunda/keycloak/" \
       org.opencontainers.image.licenses="Apache License 2.0" \
       org.opencontainers.image.base.name="docker.io/library/${BASE_IMAGE_NAME}" \
       org.opencontainers.image.base.digest="${BASE_IMAGE_DIGEST}" \
-      io.openshift.tags="bpmn,identity,keycloak,camunda" \
+      io.openshift.tags="bpmn,identity,keycloak,camunda,bitnami" \
       io.openshift.min-memory="1Gi" \
       io.openshift.min-cpu="1"
 
@@ -67,15 +59,18 @@ LABEL maintainer="Camunda" \
       # org.opencontainers.image.source
       # org.opencontainers.image.version
 
-# Enable health and metrics support
-ENV KC_HEALTH_ENABLED=true
-ENV KC_METRICS_ENABLED=true
+# Copy the previously built aws jdbc drivers
+COPY --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
 
-# Configure a database vendor
-ENV KC_DB=postgres
+# switch back to root to modify scripts
+USER 0
 
-COPY --from=builder /opt/keycloak/ /opt/keycloak/
+# Patch the image scripts to support custom JDBC driver until https://github.com/bitnami/charts/issues/18808#issuecomment-1866638783 is resolved
+# hadolint ignore=SC2016
+RUN sed -i '/KEYCLOAK_JDBC_PARAMS$/a\    KEYCLOAK_JDBC_DRIVER' /opt/bitnami/scripts/keycloak-env.sh && \
+    sed -i '/^export KEYCLOAK_JDBC_PARAMS="${KEYCLOAK_JDBC_PARAMS:-}"/a \
+KEYCLOAK_JDBC_DRIVER="${KEYCLOAK_JDBC_DRIVER:-postgresql}"\nexport KEYCLOAK_JDBC_DRIVER="${KEYCLOAK_JDBC_DRIVER:-}"' /opt/bitnami/scripts/keycloak-env.sh && \
+    sed -i 's/"jdbc:postgresql:/\"jdbc:${KEYCLOAK_JDBC_DRIVER}:/g' /opt/bitnami/scripts/libkeycloak.sh
 
-ENV KC_DB=postgres
-
-ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
+# Switch back to unprivileged user
+USER 1001

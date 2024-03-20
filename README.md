@@ -24,7 +24,7 @@ To start the image, run:
 ```bash
 docker run --name mykeycloak -p 8443:8443 \
         -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
-        docker.io/camunda/keycloak:24 \
+        docker.io/camunda/keycloak:23 \
         start --optimized
 ```
 
@@ -33,7 +33,7 @@ Keycloak will start in production mode, using secured HTTPS communication and wi
 ### 🏷️ Available Tags on Docker Hub
 
 Explore the available tags for the Camunda Keycloak Docker image on [Docker Hub](https://hub.docker.com/r/camunda/keycloak/tags):
-Since we derive this image from the __base image__ of Keycloak, you can find the base image tags at [quay.io/keycloak/keycloak](https://quay.io/repository/keycloak/keycloak?tab=tags&tag=latest).
+Since we derive this image from the __base image__ of Bitnamo Keycloak, you can find the base image tags at [hub.docker.com/bitnami/keycloak](https://hub.docker.com/r/bitnami/keycloak/tags).
 
 - `:<base image version>-<yyyy-mm-dd>-<iteration>`: This tag is associated with a specific date and incremental number (e.g., `24-2024-03-04-004`). It is recommended for **production use** due to its **immutable nature**. 🏷️
 - `:<base image version>`: Refers to the latest build of a particular Keycloak version (e.g., `24.0.1-0`).
@@ -49,14 +49,23 @@ Since Keycloak version 21 and onwards, you can utilize the AWS Advanced JDBC Wra
 For Kubernetes, configure the following environment variables:
 
 ```yaml
-- name: KC_DB_DRIVER
-  value: software.amazon.jdbc.Driver
-- name: KC_DB_URL
-  value: jdbc:aws-wrapper:postgresql://[DB_HOST]:[DB_PORT]/[DB_NAME]?wrapperPlugins=iam
-- name: KC_DB_USERNAME
+- name: KEYCLOAK_EXTRA_ARGS
+  value: "--db-driver=software.amazon.jdbc.Driver --transaction-xa-enabled=false --log-level=INFO,software.amazon.jdbc:INFO"
+- name: KEYCLOAK_JDBC_PARAMS
+  value: "wrapperPlugins=iam"
+- name: KEYCLOAK_DATABASE_USER
   value: db-user-name
-- name: KC_TRANSACTION_XA_ENABLED
-  value: false
+- name: KEYCLOAK_DATABASE_NAME
+  value: db-name
+- name: KEYCLOAK_DATABASE_HOST
+  value: db-host
+- name: KEYCLOAK_DATABASE_PORT
+  value: 5432
+
+- name: KEYCLOAK_ENABLE_STATISTICS
+  value: "true"
+- name: KEYCLOAK_ENABLE_HEALTH_ENDPOINTS
+  value: "true"
 ```
 
 Don't forget to set the `serviceAccountName` of the deployment/statefulset to point to the created service account with the IRSA annotation.
