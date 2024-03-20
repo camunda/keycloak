@@ -8,6 +8,10 @@ inputs:
   project_name:
     description: "Project name to allow running the same file multiple times"
     required: true
+  healthy_timeout:
+    description: "How long to wait until we consider the compose to be unhealthy"
+    required: false
+    default: "300"
 runs:
   using: composite
   steps:
@@ -26,5 +30,5 @@ runs:
         ${{ github.action_path }}/healthy.sh
       env:
         FILE: ${{ inputs.compose_file }}
-        TIMEOUT: "300"
+        TIMEOUT: ${{ inputs.healthy_timeout }}
         COMPOSE_FLAGS: "--project-name ${{ inputs.project_name }}"
