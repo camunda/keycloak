@@ -55,7 +55,7 @@ For Kubernetes with IRSA, configure the following environment variables:
 - name: KEYCLOAK_EXTRA_ARGS
   value: "--db-driver=software.amazon.jdbc.Driver --transaction-xa-enabled=false --log-level=INFO,software.amazon.jdbc:INFO"
 - name: KEYCLOAK_JDBC_PARAMS
-  value: "wrapperPlugins=iam"
+  value: "?wrapperPlugins=iam"
 - name: KEYCLOAK_DATABASE_USER
   value: db-user-name
 - name: KEYCLOAK_DATABASE_NAME
