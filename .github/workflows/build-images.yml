@@ -375,6 +375,7 @@ jobs:
         with:
           compose_file: ${{ github.workspace }}/docker-compose.yml
           project_name: keycloak
+          healthy_timeout: 600 # arm can be really slow
         env:
 
           POSTGRES_DB: "${{ env.postgres_database }}"
