@@ -5,7 +5,7 @@
 [![Docker image](https://img.shields.io/badge/docker.io%2Fcamunda%2Fkeycloak-e4f0fb?logo=docker&label=docker%20amd64,arm64)](https://hub.docker.com/r/camunda/keycloak)
 [![Licence](https://img.shields.io/github/license/camunda/keycloak)](https://github.com/camunda/keycloak/blob/master/LICENSE)
 
-This Docker image provides a generic Keycloak setup. It also includes an optional AWS wrapper, allowing for the use of AWS Identity and Access Management (IAM) Roles for Service Accounts (IRSA) for database authentication.
+This Docker image provides a generic Keycloak setup based on [bitnami/keycloak](https://hub.docker.com/r/bitnami/keycloak). It also includes an optional AWS wrapper, allowing for the use of AWS Identity and Access Management (IAM) Roles for Service Accounts (IRSA) for database authentication.
 
 ## Getting Started
 
@@ -24,8 +24,7 @@ To start the image, run:
 ```bash
 docker run --name mykeycloak -p 8443:8443 \
         -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
-        docker.io/camunda/keycloak:23 \
-        start --optimized
+        docker.io/camunda/keycloak:23
 ```
 
 Keycloak will start in production mode, using secured HTTPS communication and will be available at [https://localhost:8443](https://localhost:8443).
@@ -33,12 +32,16 @@ Keycloak will start in production mode, using secured HTTPS communication and wi
 ### 🏷️ Available Tags on Docker Hub
 
 Explore the available tags for the Camunda Keycloak Docker image on [Docker Hub](https://hub.docker.com/r/camunda/keycloak/tags):
-Since we derive this image from the __base image__ of Bitnamo Keycloak, you can find the base image tags at [hub.docker.com/bitnami/keycloak](https://hub.docker.com/r/bitnami/keycloak/tags).
+Since we derive this image from the __base image__ of Bitnami Keycloak, you can find the base image tags at [hub.docker.com/bitnami/keycloak](https://hub.docker.com/r/bitnami/keycloak/tags).
 
 - `:<base image version>-<yyyy-mm-dd>-<iteration>`: This tag is associated with a specific date and incremental number (e.g., `24-2024-03-04-004`). It is recommended for **production use** due to its **immutable nature**. 🏷️
 - `:<base image version>`: Refers to the latest build of a particular Keycloak version (e.g., `24.0.1-0`).
 - `:<major keycloak version>`: Indicates the latest build of the specified major Keycloak version (e.g., `24`).
 - `:latest`: Corresponds to the latest stable build of the most recent Keycloak version.
+
+## Configuration
+
+Bitnami Keycloak container image configuration is available at [hub.docker.com/bitnami/keycloak](https://hub.docker.com/r/bitnami/keycloak).
 
 ## IAM Roles for Service Accounts (IRSA) Support
 
@@ -46,13 +49,13 @@ Since Keycloak version 21 and onwards, you can utilize the AWS Advanced JDBC Wra
 
 ### Kubernetes Configuration
 
-For Kubernetes, configure the following environment variables:
+For Kubernetes with IRSA, configure the following environment variables:
 
 ```yaml
 - name: KEYCLOAK_EXTRA_ARGS
   value: "--db-driver=software.amazon.jdbc.Driver --transaction-xa-enabled=false --log-level=INFO,software.amazon.jdbc:INFO"
 - name: KEYCLOAK_JDBC_PARAMS
-  value: "wrapperPlugins=iam"
+  value: "?wrapperPlugins=iam"
 - name: KEYCLOAK_DATABASE_USER
   value: db-user-name
 - name: KEYCLOAK_DATABASE_NAME
