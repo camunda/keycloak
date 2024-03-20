@@ -72,6 +72,16 @@ jobs:
             secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
             secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
 
+            secret/data/products/infrastructure-experience/ci/common DOCKERHUB_USER;
+            secret/data/products/infrastructure-experience/ci/common DOCKERHUB_PASSWORD;
+
+      - name: Login to the dockerhub registry # prevents pull limit rate
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3
+        with:
+          registry: "${{ vars.CONTAINER_REGISTRY }}"
+          username: "${{ steps.secrets.outputs.DOCKERHUB_USER }}"
+          password: "${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}"
+
       - name: Build image using Camunda docker build
         id: build-image-step
         uses: camunda/infra-global-github-actions/build-docker-image@2e3f3018839b8eb99b0dca9a65a9df32dbad2a08 # main
