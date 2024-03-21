@@ -76,6 +76,7 @@ Don't forget to set the `serviceAccountName` of the deployment/statefulset to po
 ## Reference
 
 - [Keycloak Documentation](https://www.keycloak.org/documentation).
+- [Keycloak Documentation: Keycloak on Amazon EKS with IRSA](https://www.keycloak.org/server/db#preparing-keycloak-for-amazon-aurora-postgresql).
 - [Camunda Documentation: Keycloak on Amazon EKS with IRSA](https://docs.camunda.io/docs/self-managed/platform-deployment/helm-kubernetes/platforms/amazon-eks/irsa/).
 - [Keycloak Documentation: Memory and CPU sizing](https://www.keycloak.org/high-availability/concepts-memory-and-cpu-sizing).
 
