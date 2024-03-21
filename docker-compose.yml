@@ -23,7 +23,6 @@ services:
 
   keycloak:
       image: ${COMPOSE_KEYCLOAK_IMAGE:-camunda/keycloak:latest}
-      build: ./keycloak-latest
       environment:
         KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN:-admin}"
         KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-admin}"
