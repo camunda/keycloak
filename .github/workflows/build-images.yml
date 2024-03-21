@@ -92,7 +92,7 @@ jobs:
           echo "aws_jdbc_wrapper_version=${aws_jdbc_wrapper_version}" >> "$GITHUB_ENV"
           echo "aws_jdbc_wrapper_version=${aws_jdbc_wrapper_version}"
 
-          aws_sdk_version="$(../.github/scripts/utils/get_awssdk_jar_version.sh "$aws_jdbc_wrapper_version")"
+          aws_sdk_version="$(.github/scripts/utils/get_awssdk_jar_version.sh "$aws_jdbc_wrapper_version")"
           echo "aws_sdk_version=${aws_sdk_version}" >> "$GITHUB_ENV"
           echo "aws_sdk_version=${aws_sdk_version}"
 
