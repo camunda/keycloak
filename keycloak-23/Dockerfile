@@ -19,7 +19,8 @@ USER 0
 
 # download aws-jdbc-wrapper from the official keycloak release
 RUN curl -L "https://github.com/awslabs/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" -o "/opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" && \
-    chown 0666 "/opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar"
+    chown keycloak "/opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar"
+
 
 # Patch the image scripts to support custom JDBC driver until https://github.com/bitnami/charts/issues/18808#issuecomment-1866638783 is resolved
 # hadolint ignore=SC2016
@@ -62,3 +63,6 @@ LABEL maintainer="Camunda" \
 
 # Switch back to unprivileged user
 USER 1001
+
+# Rebuild as we added a provided
+RUN /opt/bitnami/keycloak/bin/kc.sh build
