@@ -82,6 +82,16 @@ jobs:
           username: "${{ steps.secrets.outputs.DOCKERHUB_USER }}"
           password: "${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}"
 
+      - name: Compute build image variables
+        id: compute-build-image-name-step
+        run: |
+          keycloak_full_version=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile | awk -F'[:=]' '{print $NF}' | tr -d '"' | awk -F'[:/-]' '{print $1}' || echo "Error: Image tag $1 not found in Dockerfile" && exit 1)
+          echo "keycloak_full_version=${keycloak_full_version}"
+
+          aws_jdbc_wrapper="$(.github/scripts/utils/get_aws_jdbc_wrapper_version.sh "$keycloak_full_version" || echo "Error: Cannot get aws jdbc wrapper version for keycloak $keycloak_full_version" && exit 1)"
+          echo "aws_jdbc_wrapper=${aws_jdbc_wrapper}" >> "$GITHUB_ENV"
+          echo "aws_jdbc_wrapper=${aws_jdbc_wrapper}"
+
       - name: Build image using Camunda docker build
         id: build-image-step
         uses: camunda/infra-global-github-actions/build-docker-image@2e3f3018839b8eb99b0dca9a65a9df32dbad2a08 # main
@@ -93,6 +103,7 @@ jobs:
           image_name: ${{ vars.CONTAINER_IMAGE_NAME_CI }}
           build_context: "./keycloak-${{ matrix.keycloak_version }}/"
           build_platforms: linux/amd64,linux/arm64
+          build_args: "AWS_JDBC_WRAPPER_VERSION=${{ env.aws_jdbc_wrapper }}"
           extra_tags: | # the ci- prefix ensures a build context, this image is treated as "temporary"
             type=sha,enable=true,priority=1000,prefix=ci-${{ matrix.keycloak_version }}-sha-,suffix=,format=short
 
@@ -496,7 +507,7 @@ jobs:
         shell: bash
         run: |
           : # extract the base image tag to use it as base tag
-          base_image_tag=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile | awk -F'[:=]' '{print $NF}' | tr -d '"' || echo "Error: Image tag $1 not found in Dockerfile" && exit 1) && echo "$base_image_tag"
+          base_image_tag=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile | awk -F'[:=]' '{print $NF}' | tr -d '"' || echo "Error: Image tag $1 not found in Dockerfile" && exit 1)
           echo "base_image_tag=${base_image_tag}"
 
           : # remove keycloak- prefix
