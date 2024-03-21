@@ -1,7 +1,7 @@
 ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:23.0.7-debian-12-r3"
 # List of all available images with associated sha: https://hub.docker.com/r/bitnami/keycloak/tags
 # Note: use the global image digest to make this image platform agnostic (see: https://github.com/camunda/zeebe/pull/14186)
-ARG BASE_IMAGE_DIGEST="sha256:da98221b37684927724e275cf0dfa5de6d70bd4b6c96b9183fcbe526f53693f7"
+ARG BASE_IMAGE_DIGEST="sha256:eabfbdd679042f40612388aed560e3e7f809c3d4a04e5755a7cac22c9270e5a5"
 
 FROM docker.io/gradle:jdk17-focal@sha256:17e0c6bec6cb2c7f4240315d7a957c6b9058a5c137c2f8b37760ac327111ce87 as lib
 
