@@ -13,13 +13,16 @@ ARG BASE_IMAGE_DIGEST
 
 # use the .github/scripts/utils/get_aws_wrapper_version.sh keycloak-version script to get the value and pass it at build time
 ARG AWS_JDBC_WRAPPER_VERSION
+# use the .github/scripts/utils/get_awssdk_jar_version.sh
+ARG AWS_SDK_VERSION
 
 # switch back to root to modify scripts
 USER 0
 
 # download aws-jdbc-wrapper from the official keycloak release
 RUN curl -L "https://github.com/awslabs/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" -o "/opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" && \
-    chown keycloak "/opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar"
+    curl -L "https://repo1.maven.org/maven2/software/amazon/awssdk/rds/${AWS_SDK_VERSION}/rds-${AWS_SDK_VERSION}.jar" -o "/opt/bitnami/keycloak/providers/rds-${AWS_SDK_VERSION}.jar" && \
+    chown keycloak "/opt/bitnami/keycloak/providers/*.jar"
 
 
 # Patch the image scripts to support custom JDBC driver until https://github.com/bitnami/charts/issues/18808#issuecomment-1866638783 is resolved
@@ -40,6 +43,7 @@ LABEL maintainer="Camunda" \
       io.k8s.display-name="keycloak" \
       description="Keycloak bitnami with AWS JDBC wrapper." \
       jdbc.aws-jdbc-wrapper.version="${AWS_JDBC_WRAPPER_VERSION}" \
+      aws.sdk.version="${AWS_SDK_VERSION}" \
       org.opencontainers.image.authors="Camunda" \
       org.opencontainers.image.vendor="Camunda" \
       org.opencontainers.image.documentation="https://hub.docker.com/camunda/keycloak/" \

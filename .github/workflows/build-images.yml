@@ -88,9 +88,13 @@ jobs:
           keycloak_full_version=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile | awk -F'[:=]' '{print $NF}' | tr -d '"' | awk -F'[:/-]' '{print $1}' || echo "Error: Image tag $1 not found in Dockerfile" && exit 1) && echo "$keycloak_full_version"
           echo "keycloak_full_version=${keycloak_full_version}"
 
-          aws_jdbc_wrapper="$(.github/scripts/utils/get_aws_jdbc_wrapper_version.sh "$keycloak_full_version" || echo "Error: Cannot get aws jdbc wrapper version for keycloak $keycloak_full_version" && exit 1)" && echo "$aws_jdbc_wrapper"
-          echo "aws_jdbc_wrapper=${aws_jdbc_wrapper}" >> "$GITHUB_ENV"
-          echo "aws_jdbc_wrapper=${aws_jdbc_wrapper}"
+          aws_jdbc_wrapper_version="$(.github/scripts/utils/get_aws_jdbc_wrapper_version.sh "$keycloak_full_version" || echo "Error: Cannot get aws jdbc wrapper version for keycloak $keycloak_full_version" && exit 1)" && echo "$aws_jdbc_wrapper_version"
+          echo "aws_jdbc_wrapper_version=${aws_jdbc_wrapper_version}" >> "$GITHUB_ENV"
+          echo "aws_jdbc_wrapper_version=${aws_jdbc_wrapper_version}"
+
+          aws_sdk_version="$(../.github/scripts/utils/get_awssdk_jar_version.sh "$aws_jdbc_wrapper_version")"
+          echo "aws_sdk_version=${aws_sdk_version}" >> "$GITHUB_ENV"
+          echo "aws_sdk_version=${aws_sdk_version}"
 
       - name: Build image using Camunda docker build
         id: build-image-step
@@ -103,7 +107,9 @@ jobs:
           image_name: ${{ vars.CONTAINER_IMAGE_NAME_CI }}
           build_context: "./keycloak-${{ matrix.keycloak_version }}/"
           build_platforms: linux/amd64,linux/arm64
-          build_args: "AWS_JDBC_WRAPPER_VERSION=${{ env.aws_jdbc_wrapper }}"
+          build_args: |
+            AWS_JDBC_WRAPPER_VERSION=${{ env.aws_jdbc_wrapper }}
+            AWS_SDK_VERSION=${{ env.aws_sdk_version }}
           extra_tags: | # the ci- prefix ensures a build context, this image is treated as "temporary"
             type=sha,enable=true,priority=1000,prefix=ci-${{ matrix.keycloak_version }}-sha-,suffix=,format=short
 
