@@ -214,7 +214,6 @@ jobs:
             keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com"
             keycloak_db_jdbc_query: "wrapperPlugins=iam&ssl=true&sslmode=require"
             keycloak_db_port: "5432"
-            healthy_timeout: 1200 # arm can be really slow
 
           # Add the gcp runner when GCloud SQL is available
           # GCloud SQL is not tested yet as we don't have a dedicated db
@@ -376,7 +375,6 @@ jobs:
         with:
           compose_file: ${{ github.workspace }}/docker-compose.yml
           project_name: keycloak
-          healthy_timeout: ${{ matrix.runner_desc.healthy_timeout || 300 }}
         env:
 
           POSTGRES_DB: "${{ env.postgres_database }}"
