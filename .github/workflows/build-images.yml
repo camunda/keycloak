@@ -108,8 +108,8 @@ jobs:
           build_context: "./keycloak-${{ matrix.keycloak_version }}/"
           build_platforms: linux/amd64,linux/arm64
           build_args: |
-            AWS_JDBC_WRAPPER_VERSION=${{ env.aws_jdbc_wrapper }}
-            AWS_SDK_VERSION=${{ env.aws_sdk_version }}
+            'AWS_JDBC_WRAPPER_VERSION=${{ env.aws_jdbc_wrapper }}'
+            'AWS_SDK_VERSION=${{ env.aws_sdk_version }}'
           extra_tags: | # the ci- prefix ensures a build context, this image is treated as "temporary"
             type=sha,enable=true,priority=1000,prefix=ci-${{ matrix.keycloak_version }}-sha-,suffix=,format=short
 
