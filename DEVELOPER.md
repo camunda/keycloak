@@ -17,10 +17,7 @@ echo "keycloak_full_version=$keycloak_full_version"
 aws_jdbc_wrapper_version="$(../.github/scripts/utils/get_aws_jdbc_wrapper_version.sh $keycloak_full_version)"
 echo "aws_jdbc_wrapper_version=$aws_jdbc_wrapper_version"
 
-aws_sdk_version="$(../.github/scripts/utils/get_awssdk_jar_version.sh $aws_jdbc_wrapper_version)"
-echo "aws_sdk_version=$aws_sdk_version"
-
-docker build . -t "docker.io/camunda/keycloak:$keycloak_full_version" --build-arg "AWS_JDBC_WRAPPER_VERSION=$aws_jdbc_wrapper_version" --build-arg "AWS_SDK_VERSION=$aws_sdk_version"
+docker build . -t "docker.io/camunda/keycloak:$keycloak_full_version" --build-arg "AWS_JDBC_WRAPPER_VERSION=$aws_jdbc_wrapper_version"
 ```
 
 This Dockerfile includes the necessary dependencies and configurations for AWS Advanced JDBC Wrapper.

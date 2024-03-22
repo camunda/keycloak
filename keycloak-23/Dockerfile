@@ -1,7 +1,31 @@
-ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:23.0.7-debian-12-r3"
+ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:23.0.7-debian-12-r4"
 # List of all available images with associated sha: https://hub.docker.com/r/bitnami/keycloak/tags
 # Note: use the global image digest to make this image platform agnostic (see: https://github.com/camunda/zeebe/pull/14186)
-ARG BASE_IMAGE_DIGEST="sha256:eabfbdd679042f40612388aed560e3e7f809c3d4a04e5755a7cac22c9270e5a5"
+ARG BASE_IMAGE_DIGEST="sha256:c4a2bf092d1afeac972d5f66db58e431d3fb53beedde18b7f54e45c37f5d1be5"
+
+# Building builder image
+# hadolint ignore=DL3006
+FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST} as builder
+# use the .github/scripts/utils/get_aws_wrapper_version.sh keycloak-version script to get the value and pass it at build time
+ARG AWS_JDBC_WRAPPER_VERSION
+
+USER 0
+
+# install maven (silence alert about version pinning of maven)
+# hadolint ignore=DL3008
+RUN mkdir /home/keycloak && chown keycloak /home/keycloak && \
+    apt-get update && apt-get install maven -y --no-install-recommends
+
+USER 1001
+
+WORKDIR /home/keycloak
+
+RUN curl "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" -o /home/keycloak/pom.xml && \
+    cat /home/keycloak/pom.xml && mvn install && \
+    cp "/home/keycloak/target/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" /opt/bitnami/keycloak/providers/ && \
+    cp /home/keycloak/.m2/repository/software/amazon/awssdk/*/*/*.jar /opt/bitnami/keycloak/providers/
+
+RUN /opt/bitnami/keycloak/bin/kc.sh build
 
 ##### FINAL Keycloak IMAGE #####
 
@@ -13,27 +37,6 @@ ARG BASE_IMAGE_DIGEST
 
 # use the .github/scripts/utils/get_aws_wrapper_version.sh keycloak-version script to get the value and pass it at build time
 ARG AWS_JDBC_WRAPPER_VERSION
-# use the .github/scripts/utils/get_awssdk_jar_version.sh
-ARG AWS_SDK_VERSION
-
-# switch back to root to modify scripts
-USER 0
-
-# download aws-jdbc-wrapper from the official keycloak release
-RUN curl -L "https://github.com/awslabs/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" -o "/opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" && \
-    curl -L "https://repo1.maven.org/maven2/software/amazon/awssdk/rds/${AWS_SDK_VERSION}/rds-${AWS_SDK_VERSION}.jar" -o "/opt/bitnami/keycloak/providers/rds-${AWS_SDK_VERSION}.jar" && \
-    curl -L "https://repo1.maven.org/maven2/software/amazon/awssdk/auth/${AWS_SDK_VERSION}/auth-${AWS_SDK_VERSION}.jar" -o "/opt/bitnami/keycloak/providers/auth-${AWS_SDK_VERSION}.jar" && \
-    curl -L "https://repo1.maven.org/maven2/software/amazon/awssdk/http-client-spi/${AWS_SDK_VERSION}/http-client-spi-${AWS_SDK_VERSION}.jar" -o "/opt/bitnami/keycloak/providers/http-client-spi-${AWS_SDK_VERSION}.jar" && \
-    chown keycloak "/opt/bitnami/keycloak/providers/rds-${AWS_SDK_VERSION}.jar" "/opt/bitnami/keycloak/providers/auth-${AWS_SDK_VERSION}.jar" "/opt/bitnami/keycloak/providers/http-client-spi-${AWS_SDK_VERSION}.jar" "/opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar"
-
-
-# Patch the image scripts to support custom JDBC driver until https://github.com/bitnami/charts/issues/18808#issuecomment-1866638783 is resolved
-# hadolint ignore=SC2016
-RUN sed -i '/KEYCLOAK_JDBC_PARAMS$/a\    KEYCLOAK_JDBC_DRIVER' /opt/bitnami/scripts/keycloak-env.sh && \
-    sed -i '/^export KEYCLOAK_JDBC_PARAMS="${KEYCLOAK_JDBC_PARAMS:-}"/a \
-KEYCLOAK_JDBC_DRIVER="${KEYCLOAK_JDBC_DRIVER:-postgresql}"\nexport KEYCLOAK_JDBC_DRIVER="${KEYCLOAK_JDBC_DRIVER:-}"' /opt/bitnami/scripts/keycloak-env.sh && \
-    sed -i 's/"jdbc:postgresql:/\"jdbc:${KEYCLOAK_JDBC_DRIVER}:/g' /opt/bitnami/scripts/libkeycloak.sh
-
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
@@ -67,8 +70,8 @@ LABEL maintainer="Camunda" \
       # org.opencontainers.image.source
       # org.opencontainers.image.version
 
-# Switch back to unprivileged user
-USER 1001
+# Copy the previously built aws jdbc drivers
+COPY --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
 
 # Rebuild as we added a provided
 RUN /opt/bitnami/keycloak/bin/kc.sh build

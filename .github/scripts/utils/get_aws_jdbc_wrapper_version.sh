@@ -14,9 +14,10 @@ version_lt() {
     [ "$(get_first_number "$1")" -lt "$(get_first_number "$2")" ]
 }
 
-# Keycloak only started to reference the aws_jdbc_wrapper version starting with v24, defaulting to 24 if version is before that
-if version_lt "$1" "24"; then
-    VERSION="24.0.1"
+# Keycloak only started to reference the aws_jdbc_wrapper version starting with v24, defaulting a fixed version of the jdbc driver,
+# this check also allow bumping minimal aws_jdbc_wrapper version for critical fixes
+if version_lt "$1" "25"; then
+    echo "2.3.5" # fix https://github.com/keycloak/keycloak/issues/27290
 else
     VERSION="$1"
 fi
