@@ -92,10 +92,6 @@ jobs:
           echo "aws_jdbc_wrapper_version=${aws_jdbc_wrapper_version}" >> "$GITHUB_ENV"
           echo "aws_jdbc_wrapper_version=${aws_jdbc_wrapper_version}"
 
-          aws_sdk_version="$(.github/scripts/utils/get_awssdk_jar_version.sh "$aws_jdbc_wrapper_version")"
-          echo "aws_sdk_version=${aws_sdk_version}" >> "$GITHUB_ENV"
-          echo "aws_sdk_version=${aws_sdk_version}"
-
       - name: Build image using Camunda docker build
         id: build-image-step
         uses: camunda/infra-global-github-actions/build-docker-image@2e3f3018839b8eb99b0dca9a65a9df32dbad2a08 # main
@@ -109,7 +105,6 @@ jobs:
           build_platforms: linux/amd64,linux/arm64
           build_args: |
             AWS_JDBC_WRAPPER_VERSION=${{ env.aws_jdbc_wrapper_version }}
-            AWS_SDK_VERSION=${{ env.aws_sdk_version }}
           extra_tags: | # the ci- prefix ensures a build context, this image is treated as "temporary"
             type=sha,enable=true,priority=1000,prefix=ci-${{ matrix.keycloak_version }}-sha-,suffix=,format=short
 
