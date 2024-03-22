@@ -23,18 +23,22 @@ services:
 
   keycloak:
       image: ${COMPOSE_KEYCLOAK_IMAGE:-camunda/keycloak:latest}
-      build: ./keycloak-latest
-      command: "start-dev --log-level=${KEYCLOAK_LOG_LEVEL:-INFO}"
       environment:
         KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN:-admin}"
         KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-admin}"
 
-        # Configure the database according to the external db configuration if needed
-        KC_DB_USERNAME: "${KC_DB_USERNAME:-keycloak}"
-        KC_DB_PASSWORD: "${KC_DB_PASSWORD:-password}"
-        KC_DB_DRIVER: "${KC_DB_DRIVER:-software.amazon.jdbc.Driver}"
-        KC_TRANSACTION_XA_ENABLED: "${KC_TRANSACTION_XA_ENABLED:-false}"
-        KC_DB_URL: "${KC_DB_URL:-jdbc:aws-wrapper:postgresql://postgres:5432/keycloak}"
+        # bitnami specifics
+        KEYCLOAK_DATABASE_HOST: "${KEYCLOAK_DATABASE_HOST:-postgres}"
+        KEYCLOAK_DATABASE_PORT: "${KEYCLOAK_DATABASE_PORT:-5432}"
+        KEYCLOAK_DATABASE_NAME: "${KEYCLOAK_DATABASE_NAME:-keycloak}"
+        KEYCLOAK_DATABASE_USER: "${KEYCLOAK_DATABASE_USER:-keycloak}"
+        KEYCLOAK_DATABASE_PASSWORD: "${KEYCLOAK_DATABASE_PASSWORD:-password}"
+        KEYCLOAK_JDBC_DRIVER: "${KEYCLOAK_JDBC_DRIVER:-aws-wrapper:postgresql}"
+        KEYCLOAK_JDBC_PARAMS: "${KEYCLOAK_JDBC_PARAMS:-}"
+        KEYCLOAK_EXTRA_ARGS: "--db-driver=${KC_DB_DRIVER:-software.amazon.jdbc.Driver} --transaction-xa-enabled=${KC_TRANSACTION_XA_ENABLED:-false} --log-level=${KEYCLOAK_LOG_LEVEL:-INFO}"
+
+        KEYCLOAK_ENABLE_STATISTICS: "${KEYCLOAK_ENABLE_STATISTICS:-true}"
+        KEYCLOAK_ENABLE_HEALTH_ENDPOINTS: "${KEYCLOAK_ENABLE_HEALTH_ENDPOINTS:-true}"
 
         # AWS specifics variables
         AWS_STS_REGIONAL_ENDPOINTS: "${AWS_STS_REGIONAL_ENDPOINTS:-}"
