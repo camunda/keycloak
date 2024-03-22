@@ -38,6 +38,9 @@ ARG BASE_IMAGE_DIGEST
 # use the .github/scripts/utils/get_aws_wrapper_version.sh keycloak-version script to get the value and pass it at build time
 ARG AWS_JDBC_WRAPPER_VERSION
 
+# Copy the previously built aws jdbc drivers
+COPY --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
+
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
 # OCP: https://docs.openshift.com/container-platform/4.10/openshift_images/create-images.html#defining-image-metadata
@@ -69,9 +72,3 @@ LABEL maintainer="Camunda" \
       # org.opencontainers.image.revision
       # org.opencontainers.image.source
       # org.opencontainers.image.version
-
-# Copy the previously built aws jdbc drivers
-COPY --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
-
-# Rebuild as we added a provided
-RUN /opt/bitnami/keycloak/bin/kc.sh build
