@@ -27,7 +27,7 @@ _Nothing referenced yet._
 
 ### Upstream Dependencies: dependencies of this project
 
-- **bitnami/containers**: This project uses the Keycloak image from Bitnami [Bitnami Containers Repository](https://github.com/bitnami/containers).
+- **bitnami/containers**: This project uses the Keycloak image from [Bitnami Containers Repository](https://github.com/bitnami/containers).
 
 ### Downstream Dependencies: things that depend on this project
 
