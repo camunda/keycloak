@@ -56,6 +56,9 @@ For Kubernetes with IRSA, configure the following environment variables:
   value: "--db-driver=software.amazon.jdbc.Driver --transaction-xa-enabled=false --log-level=INFO,software.amazon.jdbc:INFO"
 - name: KEYCLOAK_JDBC_PARAMS
   value: "wrapperPlugins=iam"
+- name: KEYCLOAK_JDBC_DRIVER
+  value: "aws-wrapper:postgresql"
+
 - name: KEYCLOAK_DATABASE_USER
   value: db-user-name
 - name: KEYCLOAK_DATABASE_NAME
@@ -72,6 +75,28 @@ For Kubernetes with IRSA, configure the following environment variables:
 ```
 
 Don't forget to set the `serviceAccountName` of the deployment/statefulset to point to the created service account with the IRSA annotation.
+
+#### Usage with Helm Chart
+
+To use this image in the Helm chart [bitnami/keycloak](https://artifacthub.io/packages/helm/bitnami/keycloak), update the image used and add the necessary extra environment variables:
+
+```yaml
+image: docker.io/camunda/keycloak:23
+extraEnvVars:
+  - name: KEYCLOAK_EXTRA_ARGS
+    value: "--db-driver=software.amazon.jdbc.Driver --transaction-xa-enabled=false --log-level=INFO,software.amazon.jdbc:INFO"
+  - name: KEYCLOAK_JDBC_PARAMS
+    value: "wrapperPlugins=iam"
+  - name: KEYCLOAK_JDBC_DRIVER
+    value: "aws-wrapper:postgresql"
+externalDatabase:
+  host: "aurora.rds.your.domain"
+  port: 5432
+  user: keycloak
+  database: keycloak
+```
+
+Feel free to adjust the values according to your actual configuration.
 
 ## Reference
 
