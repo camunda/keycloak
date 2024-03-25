@@ -53,7 +53,6 @@ LABEL maintainer="Camunda" \
       io.k8s.display-name="keycloak" \
       description="Keycloak bitnami with AWS JDBC wrapper." \
       jdbc.aws-jdbc-wrapper.version="${AWS_JDBC_WRAPPER_VERSION}" \
-      aws.sdk.version="${AWS_SDK_VERSION}" \
       org.opencontainers.image.authors="Camunda" \
       org.opencontainers.image.vendor="Camunda" \
       org.opencontainers.image.documentation="https://hub.docker.com/camunda/keycloak/" \
