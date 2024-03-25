@@ -4,20 +4,35 @@
 # Description: Finds the aws jdbc wrapper version of the Keycloak version from the pom.xml
 # Usage: get_aws_jdbc_wrapper_version.sh <keycloak-version>
 
-# Function to extract the first number from a version string
-get_first_number() {
-    echo "$1" | cut -d '.' -f1
+set -e
+
+display_help() {
+    echo "Script: get_aws_jdbc_wrapper_version.sh"
+    echo "Description: Finds the AWS JDBC wrapper version of the Keycloak version from the pom.xml"
+    echo "Usage: get_aws_jdbc_wrapper_version.sh <keycloak-version>"
 }
 
-# Function to compare version numbers considering only the first number
-version_lt() {
-    [ "$(get_first_number "$1")" -lt "$(get_first_number "$2")" ]
+check_arguments() {
+
+    if [ $# -ne 1 ]; then
+        echo "Error: Incorrect number of arguments."
+        display_help
+        exit 1
+    fi
+}
+
+check_arguments "$@"
+
+# Function to extract the first number from a version string
+get_major_version() {
+    echo "$1" | cut -d '.' -f1
 }
 
 # Keycloak only started to reference the aws_jdbc_wrapper version starting with v24, defaulting a fixed version of the jdbc driver,
 # this check also allow bumping minimal aws_jdbc_wrapper version for critical fixes
-if version_lt "$1" "25"; then
+if [[ "$(get_first_number "$1")" -lt "25" ]] ; then
     echo "2.3.5" # fix https://github.com/keycloak/keycloak/issues/27290
+    exit 0
 else
     VERSION="$1"
 fi
