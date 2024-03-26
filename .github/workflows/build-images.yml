@@ -82,6 +82,16 @@ jobs:
           username: "${{ steps.secrets.outputs.DOCKERHUB_USER }}"
           password: "${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}"
 
+      - name: Compute build image variables
+        id: compute-build-image-name-step
+        run: |
+          keycloak_full_version=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile | awk -F'[:=]' '{print $NF}' | tr -d '"' | awk -F'[:/-]' '{print $1}' || echo "Error: Image tag $1 not found in Dockerfile" && exit 1) && echo "$keycloak_full_version"
+          echo "keycloak_full_version=${keycloak_full_version}"
+
+          aws_jdbc_wrapper_version="$(.github/scripts/utils/get_aws_jdbc_wrapper_version.sh "$keycloak_full_version" || echo "Error: Cannot get aws jdbc wrapper version for keycloak $keycloak_full_version" && exit 1)" && echo "$aws_jdbc_wrapper_version"
+          echo "aws_jdbc_wrapper_version=${aws_jdbc_wrapper_version}" >> "$GITHUB_ENV"
+          echo "aws_jdbc_wrapper_version=${aws_jdbc_wrapper_version}"
+
       - name: Build image using Camunda docker build
         id: build-image-step
         uses: camunda/infra-global-github-actions/build-docker-image@36867af1a61c2e3cc064cbb6e4615e446b815511 # main
@@ -93,6 +103,8 @@ jobs:
           image_name: ${{ vars.CONTAINER_IMAGE_NAME_CI }}
           build_context: "./keycloak-${{ matrix.keycloak_version }}/"
           build_platforms: linux/amd64,linux/arm64
+          build_args: |
+            AWS_JDBC_WRAPPER_VERSION=${{ env.aws_jdbc_wrapper_version }}
           extra_tags: | # the ci- prefix ensures a build context, this image is treated as "temporary"
             type=sha,enable=true,priority=1000,prefix=ci-${{ matrix.keycloak_version }}-sha-,suffix=,format=short
 
@@ -390,7 +402,7 @@ jobs:
           KEYCLOAK_JDBC_PARAMS: "${{ matrix.runner_desc.keycloak_db_jdbc_query }}"
           KC_DB_DRIVER: "${{ matrix.runner_desc.keycloak_db_driver }}"
 
-          KEYCLOAK_LOG_LEVEL: "DEBUG,software.amazon.jdbc:FINEST"
+          KEYCLOAK_LOG_LEVEL: "INFO,software.amazon.jdbc:FINEST"
 
           COMPOSE_POSTGRES_IMAGE: "public.ecr.aws/docker/library/postgres:${{ env.postgres_version }}"
           COMPOSE_POSTGRES_DEPLOY_REPLICAS: "${{ matrix.runner_desc.postgres_replicas }}"

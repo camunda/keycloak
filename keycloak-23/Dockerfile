@@ -1,33 +1,47 @@
-ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:23.0.7-debian-12-r3"
+ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:23.0.7-debian-12-r4"
 # List of all available images with associated sha: https://hub.docker.com/r/bitnami/keycloak/tags
 # Note: use the global image digest to make this image platform agnostic (see: https://github.com/camunda/zeebe/pull/14186)
-ARG BASE_IMAGE_DIGEST="sha256:eabfbdd679042f40612388aed560e3e7f809c3d4a04e5755a7cac22c9270e5a5"
-
-FROM docker.io/gradle:jdk17-focal@sha256:17e0c6bec6cb2c7f4240315d7a957c6b9058a5c137c2f8b37760ac327111ce87 as lib
-
-WORKDIR /home/gradle
-
-COPY build.gradle /home/gradle
-
-RUN gradle copyDependencies
+ARG BASE_IMAGE_DIGEST="sha256:c4a2bf092d1afeac972d5f66db58e431d3fb53beedde18b7f54e45c37f5d1be5"
 
 # Building builder image
 # hadolint ignore=DL3006
 FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST} as builder
+# use the .github/scripts/utils/get_aws_wrapper_version.sh keycloak-version script to get the value and pass it at build time
+ARG AWS_JDBC_WRAPPER_VERSION
 
-COPY --from=lib /home/gradle/lib /opt/bitnami/keycloak/providers
+USER 0
 
-WORKDIR /opt/bitnami/keycloak
+# install maven (silence alert about version pinning of maven)
+# hadolint ignore=DL3008
+RUN mkdir /home/keycloak && chown keycloak /home/keycloak && \
+    apt-get update && apt-get install maven -y --no-install-recommends
+
+USER 1001
+
+WORKDIR /home/keycloak
+
+# download the wrapper from github, then fetch the dependencies from maven
+ADD --chown=1001 "https://github.com/awslabs/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" "/opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar"
+ADD --chown=1001 "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" /home/keycloak/pom.xml
+
+RUN cat /home/keycloak/pom.xml && mvn install && \
+    cp /home/keycloak/.m2/repository/software/amazon/awssdk/*/*/*.jar /opt/bitnami/keycloak/providers/
 
 RUN /opt/bitnami/keycloak/bin/kc.sh build
 
-
 ##### FINAL Keycloak IMAGE #####
+
 # hadolint ignore=DL3006
 FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST}
 # leave the values below unset to use the default value at the top of the file
 ARG BASE_IMAGE_NAME
 ARG BASE_IMAGE_DIGEST
+
+# use the .github/scripts/utils/get_aws_wrapper_version.sh keycloak-version script to get the value and pass it at build time
+ARG AWS_JDBC_WRAPPER_VERSION
+
+# Copy the previously built aws jdbc drivers
+COPY --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
@@ -37,7 +51,8 @@ LABEL maintainer="Camunda" \
       summary="Keycloak bitnami with AWS wrapper" \
       io.k8s.description="Keycloak bitnami with AWS wrapper." \
       io.k8s.display-name="keycloak" \
-      description="Keycloak bitnami with AWS wrapper." \
+      description="Keycloak bitnami with AWS JDBC wrapper." \
+      jdbc.aws-jdbc-wrapper.version="${AWS_JDBC_WRAPPER_VERSION}" \
       org.opencontainers.image.authors="Camunda" \
       org.opencontainers.image.vendor="Camunda" \
       org.opencontainers.image.documentation="https://hub.docker.com/camunda/keycloak/" \
@@ -58,19 +73,3 @@ LABEL maintainer="Camunda" \
       # org.opencontainers.image.revision
       # org.opencontainers.image.source
       # org.opencontainers.image.version
-
-# Copy the previously built aws jdbc drivers
-COPY --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
-
-# switch back to root to modify scripts
-USER 0
-
-# Patch the image scripts to support custom JDBC driver until https://github.com/bitnami/charts/issues/18808#issuecomment-1866638783 is resolved
-# hadolint ignore=SC2016
-RUN sed -i '/KEYCLOAK_JDBC_PARAMS$/a\    KEYCLOAK_JDBC_DRIVER' /opt/bitnami/scripts/keycloak-env.sh && \
-    sed -i '/^export KEYCLOAK_JDBC_PARAMS="${KEYCLOAK_JDBC_PARAMS:-}"/a \
-KEYCLOAK_JDBC_DRIVER="${KEYCLOAK_JDBC_DRIVER:-postgresql}"\nexport KEYCLOAK_JDBC_DRIVER="${KEYCLOAK_JDBC_DRIVER:-}"' /opt/bitnami/scripts/keycloak-env.sh && \
-    sed -i 's/"jdbc:postgresql:/\"jdbc:${KEYCLOAK_JDBC_DRIVER}:/g' /opt/bitnami/scripts/libkeycloak.sh
-
-# Switch back to unprivileged user
-USER 1001

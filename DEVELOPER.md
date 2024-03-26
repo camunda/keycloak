@@ -7,10 +7,17 @@ Welcome to the development reference for Keycloak by Camunda! This document prov
 Building a local image is for development purposes only.
 In production, the pipeline will handle this and build a multi-architecture image using Docker Buildx.
 
-Navigate to the `keycloak-<version>` (e.g. `keycloak-24`) directory and execute the following command:
+Navigate to the `keycloak-<version>` (e.g. `keycloak-24`) directory and execute the following commands:
 
 ```bash
-docker build . -t docker.io/camunda/keycloak:24
+# retrieve the aws jdbc wrapper version from the referenced keycloak version
+keycloak_full_version="$(grep "ARG BASE_IMAGE_NAME=.*$1" ./Dockerfile | awk -F'[:=]' '{print $NF}' | tr -d '"' | awk -F'[:/-]' '{print $1}')"
+echo "keycloak_full_version=$keycloak_full_version"
+
+aws_jdbc_wrapper_version="$(../.github/scripts/utils/get_aws_jdbc_wrapper_version.sh $keycloak_full_version)"
+echo "aws_jdbc_wrapper_version=$aws_jdbc_wrapper_version"
+
+docker build . -t "docker.io/camunda/keycloak:$keycloak_full_version" --build-arg "AWS_JDBC_WRAPPER_VERSION=$aws_jdbc_wrapper_version"
 ```
 
 This Dockerfile includes the necessary dependencies and configurations for AWS Advanced JDBC Wrapper.
@@ -40,7 +47,7 @@ When adding a new version of Keycloak, follow these steps:
 4. **Final Image Tags:**
    - The final image will have the following tags:
      - `camunda/keycloak:24` (mutable - triggered by any change in the base image of Keycloak)
-     - `camunda/keycloak:24.0.1-1` (mutable - triggered by any change not part of the base image of Keycloak, e.g., gradle dependencies)
+     - `camunda/keycloak:24.0.1-1` (mutable - triggered by any change not part of the base image of Keycloak)
      - `camunda/keycloak:24.0.1-1-${date in yyyy-mm-dd-xxx format}` (immutable, recommended for production usage)
 
 Following these steps ensures a smooth integration of new Keycloak versions, consistent testing across the development environment, and easy access to the latest version. Happy coding!
