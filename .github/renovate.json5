@@ -3,6 +3,7 @@
     "config:recommended",
     ":dependencyDashboard",
     ":semanticCommits",
+    ":enablePreCommit",
     ":docker"
   ],
   "automerge": false,
