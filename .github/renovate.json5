@@ -4,7 +4,7 @@
     ":dependencyDashboard",
     ":semanticCommits",
     ":enablePreCommit",
-    ":docker"
+    ":docker",
   ],
   "automerge": false,
   "packageRules": [
@@ -16,7 +16,7 @@
       "matchFileNames": [".watch-latest/Dockerfile"],
       "matchUpdateTypes": ["major"],
       "enabled": true,
-      "addLabels": ["dependencies", "docker", "hold"]
+      "addLabels": ["dependencies", "docker", "hold"],
     },
     {
       "matchManagers": ["dockerfile"],
@@ -26,7 +26,7 @@
       "matchFileNames": ["keycloak-*/Dockerfile"],
       "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(:?-(?<compatibility>.+)(?<build>\\d+)-r(?<revision>\\d+))?$",
       "enabled": true,
-      "addLabels": ["dependencies", "docker"]
+      "addLabels": ["dependencies", "docker"],
     },
     {
       "matchManagers": ["dockerfile"],
@@ -34,6 +34,6 @@
       "matchFileNames": ["keycloak-*/Dockerfile"],
       "matchUpdateTypes": ["major"],
       "enabled": false,
-    }
+    },
   ]
 }
