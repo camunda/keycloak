@@ -16,7 +16,7 @@
       "matchFileNames": [".watch-latest/Dockerfile"],
       "matchUpdateTypes": ["major"],
       "enabled": true,
-      "addLabels": ["dependencies", "docker"]
+      "addLabels": ["dependencies", "docker", "hold"]
     },
     {
       "matchManagers": ["dockerfile"],
