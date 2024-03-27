@@ -34,7 +34,6 @@
       "matchFileNames": ["keycloak-*/Dockerfile"],
       "matchUpdateTypes": ["major"],
       "enabled": false,
-      "addLabels": ["dependencies", "docker"]
     }
   ]
 }
