@@ -11,7 +11,7 @@ _Note: Ensure to keep this document updated with any changes in maintenance proc
     - `README.md`
     - DockerHub [Camunda Keycloak Docker Hub](https://hub.docker.com/repository/docker/camunda/keycloak/general)
     - Official Camunda documentation:
-        - [Amazon EKS IRSA](https://github.com/camunda/camunda-docs/blob/main/docs/self-managed/platform-deployment/helm-kubernetes/platforms/amazon-eks/irsa.md)
+        - [Amazon EKS IRSA](https://github.com/camunda/camunda-docs/blob/main/docs/self-managed/setup/deploy/amazon/amazon-eks/irsa.md)
 
 - Make internal announcements on slack regarding upcoming releases.
     - `#infex-internal`
