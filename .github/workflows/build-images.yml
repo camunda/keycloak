@@ -395,7 +395,6 @@ jobs:
       - name: Start Test Environment
         uses: ./.github/actions/compose
         with:
-          compose_file: ${{ github.workspace }}/docker-compose.yml
           project_name: keycloak
         env:
 

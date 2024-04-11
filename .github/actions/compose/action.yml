@@ -3,8 +3,9 @@ description: |
   Compose Wrapper
 inputs:
   compose_file:
-    description: "Full path to the compose file"
-    required: true
+    description: "Name of the compose file"
+    required: false
+    default: "docker-compose.yml"
   project_name:
     description: "Project name to allow running the same file multiple times"
     required: true
@@ -12,23 +13,30 @@ inputs:
     description: "How long to wait until we consider the compose to be unhealthy"
     required: false
     default: "300"
+  cwd:
+    description: "Current working directory"
+    required: false
+    default: "${{ github.workspace }}"
 runs:
   using: composite
   steps:
     - name: Run ${{ inputs.project_name }} compose
-      uses: hoverkraft-tech/compose-action@178aeba5c9dbeed89ffffbb3e6548ec08e9839cf # v1.5.1
+      uses: hoverkraft-tech/compose-action@802a148945af6399a338c7906c267331b39a71af # v2.0.0
       with:
         compose-file: |
           ${{ inputs.compose_file }}
         compose-flags: "--project-name ${{ inputs.project_name }}"
+        cwd: ${{ inputs.cwd }}
+
     - name: Short sleep to let it startup
       shell: bash
       run: sleep 3
+
     - name: Check if service is healthy
       shell: bash
       run: |
         ${{ github.action_path }}/healthy.sh
       env:
-        FILE: ${{ inputs.compose_file }}
+        FILE: "${{ inputs.cwd }}/${{ inputs.compose_file }}"
         TIMEOUT: ${{ inputs.healthy_timeout }}
         COMPOSE_FLAGS: "--project-name ${{ inputs.project_name }}"
