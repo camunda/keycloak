@@ -20,7 +20,7 @@ jobs:
       matrix_keycloak_versions: ${{ steps.set-matrix.outputs.matrix_keycloak_versions }}
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4
 
       - name: List Keycloak Versions from repository's folders
         id: set-matrix
@@ -50,7 +50,7 @@ jobs:
         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4
 
       - name: Install if required common software tooling
         uses: camunda/infra-global-github-actions/common-tooling@cbd2830373e7e93f1e4e1698ee8731cc10faab64 # main
@@ -151,7 +151,7 @@ jobs:
         keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4
 
       - name: Install if required common software tooling
         uses: camunda/infra-global-github-actions/common-tooling@cbd2830373e7e93f1e4e1698ee8731cc10faab64 # main
@@ -238,7 +238,7 @@ jobs:
       - read-build-image-output
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4
 
       - name: Install if required common software tooling
         uses: camunda/infra-global-github-actions/common-tooling@cbd2830373e7e93f1e4e1698ee8731cc10faab64 # main
@@ -459,7 +459,7 @@ jobs:
       - test-postgres-integ
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4
 
       - name: Install if required common software tooling
         uses: camunda/infra-global-github-actions/common-tooling@cbd2830373e7e93f1e4e1698ee8731cc10faab64 # main
