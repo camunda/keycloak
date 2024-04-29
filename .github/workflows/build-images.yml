@@ -53,7 +53,7 @@ jobs:
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
 
       - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@cbd2830373e7e93f1e4e1698ee8731cc10faab64 # main
+        uses: camunda/infra-global-github-actions/common-tooling@ac49bc15bf204f9d61840deae49a8af0cbc59371 # main
         with:
           java-enabled: false
           yarn-enabled: false
@@ -94,7 +94,7 @@ jobs:
 
       - name: Build image using Camunda docker build
         id: build-image-step
-        uses: camunda/infra-global-github-actions/build-docker-image@cbd2830373e7e93f1e4e1698ee8731cc10faab64 # main
+        uses: camunda/infra-global-github-actions/build-docker-image@ac49bc15bf204f9d61840deae49a8af0cbc59371 # main
         with:
           registry_host: ${{ vars.CONTAINER_REGISTRY_CI }}
           registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -154,7 +154,7 @@ jobs:
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
 
       - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@cbd2830373e7e93f1e4e1698ee8731cc10faab64 # main
+        uses: camunda/infra-global-github-actions/common-tooling@ac49bc15bf204f9d61840deae49a8af0cbc59371 # main
         with:
           java-enabled: false
           yarn-enabled: false
@@ -241,7 +241,7 @@ jobs:
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
 
       - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@cbd2830373e7e93f1e4e1698ee8731cc10faab64 # main
+        uses: camunda/infra-global-github-actions/common-tooling@ac49bc15bf204f9d61840deae49a8af0cbc59371 # main
         with:
           java-enabled: false
           yarn-enabled: false
@@ -462,7 +462,7 @@ jobs:
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
 
       - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@cbd2830373e7e93f1e4e1698ee8731cc10faab64 # main
+        uses: camunda/infra-global-github-actions/common-tooling@ac49bc15bf204f9d61840deae49a8af0cbc59371 # main
         with:
           java-enabled: false
           yarn-enabled: false
