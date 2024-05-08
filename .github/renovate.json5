@@ -1,12 +1,6 @@
 {
-  "extends": [
-    "config:recommended",
-    ":dependencyDashboard",
-    ":semanticCommits",
-    ":enablePreCommit",
-    ":docker",
-  ],
-  "automerge": false,
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["github>camunda/infraex-common-config:default.json5"],
   "packageRules": [
     {
       "matchManagers": ["dockerfile"],
