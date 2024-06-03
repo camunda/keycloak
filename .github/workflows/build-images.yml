@@ -76,7 +76,7 @@ jobs:
             secret/data/products/infrastructure-experience/ci/common DOCKERHUB_PASSWORD;
 
       - name: Login to the dockerhub registry # prevents pull limit rate
-        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3
         with:
           registry: "${{ vars.CONTAINER_REGISTRY }}"
           username: "${{ steps.secrets.outputs.DOCKERHUB_USER }}"
@@ -182,7 +182,7 @@ jobs:
             secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
 
       - name: Login to the registry
-        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3
         with:
           registry: ${{ vars.CONTAINER_REGISTRY_CI }}
           username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -276,14 +276,14 @@ jobs:
             secret/data/products/infrastructure-experience/ci/common DOCKERHUB_PASSWORD;
 
       - name: Login to the dockerhub registry # prevents pull limit rate
-        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3
         with:
           registry: "${{ vars.CONTAINER_REGISTRY }}"
           username: "${{ steps.secrets.outputs.DOCKERHUB_USER }}"
           password: "${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}"
 
       - name: Login to the registry
-        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3
         with:
           registry: ${{ vars.CONTAINER_REGISTRY_CI }}
           username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -485,14 +485,14 @@ jobs:
             secret/data/products/infrastructure-experience/ci/common DOCKERHUB_PASSWORD;
 
       - name: Login to the registry
-        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3
         with:
           registry: "${{ vars.CONTAINER_REGISTRY_CI }}"
           username: "${{ steps.secrets.outputs.MACHINE_USR }}"
           password: "${{ steps.secrets.outputs.MACHINE_PWD }}"
 
       - name: Login to Docker Hub
-        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3
         with:
           registry: "${{ vars.CONTAINER_REGISTRY }}"
           username: "${{ steps.secrets.outputs.DOCKERHUB_USER }}"
