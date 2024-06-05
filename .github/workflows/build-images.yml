@@ -457,6 +457,7 @@ jobs:
       - read-build-image-output
       - list-keycloak-versions
       - test-postgres-integ
+      - test-base-image
     steps:
       - name: Checkout
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
@@ -530,3 +531,22 @@ jobs:
           if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${{ matrix.keycloak_version }}" ]; then
             docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:latest" "${{ env.keycloak_image_name }}"
           fi
+
+  notify-on-failure:
+    runs-on: ubuntu-latest
+    if: always() && needs.publish-image.result == 'failure' || needs.read-build-image-output.result == 'failure' || needs.list-keycloak-versions.result == 'failure' || needs.test-postgres-integ.result == 'failure' || needs.test-base-image.result == 'failure'
+    needs:
+      - publish-image
+      - read-build-image-output
+      - list-keycloak-versions
+      - test-postgres-integ
+      - test-base-image
+    steps:
+      - name: Notify in Slack in case of failure
+        id: slack-notification
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@feature/report-failure-action # TODO: change me to main when available
+        with:
+          vault_addr: ${{ secrets.VAULT_ADDR }}
+          vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
+          vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
