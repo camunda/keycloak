@@ -2,6 +2,21 @@
 
 Welcome to the development reference for Keycloak by Camunda! This document provides guidance on setting up a basic testing environment, running unit tests, and testing changes locally.
 
+## Requirements
+
+To gather all specifics versions of this project, we use:
+- [asdf](https://asdf-vm.com/) version manager (see [installation](https://asdf-vm.com/guide/getting-started.html)).
+- [just](https://github.com/casey/just) as a command runner
+  - install it using asdf: `asdf plugin add just && asdf install just`
+
+Then we will install all the tooling listed in the `.tool-versions` of this root project using just:
+```bash
+just install-tooling
+
+# list available recipes
+just --list
+```
+
 ## Building the Image (Development Only)
 
 Building a local image is for development purposes only.

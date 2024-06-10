@@ -52,12 +52,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
 
-      - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@9c73d559854bd5d1cc7d1ac1982dc526f57c9782 # main
-        with:
-          java-enabled: false
-          yarn-enabled: false
-          python-version: "3.12"
+      - name: Install tooling using asdf
+        uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0
@@ -153,12 +149,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
 
-      - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@9c73d559854bd5d1cc7d1ac1982dc526f57c9782 # main
-        with:
-          java-enabled: false
-          yarn-enabled: false
-          python-version: "3.12"
+      - name: Install tooling using asdf
+        uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
 
       - name: Set Keycloak Image Name
         id: set-keycloak-image-name
@@ -240,13 +232,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
 
-      - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@9c73d559854bd5d1cc7d1ac1982dc526f57c9782 # main
-        with:
-          java-enabled: false
-          yarn-enabled: false
-          python-version: "3.12"
-          python-cache: "pip"
+      - name: Install tooling using asdf
+        uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
 
       - name: Set Keycloak Image Name
         id: set-keycloak-image-name
@@ -465,9 +452,14 @@ jobs:
       - name: Install if required common software tooling
         uses: camunda/infra-global-github-actions/common-tooling@9c73d559854bd5d1cc7d1ac1982dc526f57c9782 # main
         with:
+          node-enabled: false
           java-enabled: false
           yarn-enabled: false
+          python-enabled: false
           buildx-install: true
+
+      - name: Install tooling using asdf
+        uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
 
       - name: Import secrets
         uses: hashicorp/vault-action@d1720f055e0635fd932a1d2a48f87a666a57906c # v3.0.0

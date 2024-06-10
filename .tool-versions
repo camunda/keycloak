@@ -1,0 +1,20 @@
+################################################################################
+#                                                                              #
+# Note: when adding a new tool here, also adjust the Renovate configuration    #
+#       that mirrors some asdf plugin's logic to remove version prefixes like  #
+#       "v".                                                                   #
+#                                                                              #
+#       You have to amend the Renovate config when the asdf plugin takes 1.2.3 #
+#       as the version but the Docker tag/Github tag is actually v1.2.3        #
+#                                                                              #
+################################################################################
+
+# /!\ Please maintain this file sorted alphabetically.
+# check it with
+# diff <(sed '/^#/d; /^$/d' .tool-versions | sort) <(sed '/^#/d; /^$/d' .tool-versions) && echo ".tool-versions is sorted correctly" || echo ".tool-versions is not sorted correctly"
+
+just 1.27.0
+
+pre-commit 3.7.1
+
+python 3.12.4
