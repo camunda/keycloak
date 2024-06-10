@@ -232,6 +232,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
 
+      - name: Install build-essentials for asdf
+        run: sudo apt-get install build-essential -y
+
       - name: Install tooling using asdf
         uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
 
