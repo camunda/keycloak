@@ -364,8 +364,6 @@ jobs:
         run: |
           : # We generate a db auth token using the aws cli because IRSA access in Keycloak might not be easy to debug.
           : # This token will be used in the "Test psql db connection" step, and then it will be reset for the Keycloak integration test.
-          python3 -m pip install awscli
-
           : # The aws command uses the environment variables provided by the runner
           AWS_PG_PASSWORD="$(aws rds generate-db-auth-token --hostname ${{ env.postgres_host }} --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
           echo "postgres_password=${AWS_PG_PASSWORD}" >> "$GITHUB_ENV"
