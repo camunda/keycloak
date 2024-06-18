@@ -235,6 +235,7 @@ jobs:
       - name: Crash this
         run: |
          echo "The runner has received a shutdown signal"
+         echo "bye..."
          exit 1
 
       - name: Install build-essentials for asdf
