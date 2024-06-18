@@ -234,7 +234,7 @@ jobs:
 
       - name: Crash this
         run: |
-         echo "MADE UP ERROR"
+         echo "The runner has received a shutdown signal"
          exit 1
 
       - name: Install build-essentials for asdf
@@ -544,7 +544,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Retrigger job
-        uses: camunda/infra-global-github-actions/rerun-failed-run@main
+        uses: camunda/infra-global-github-actions/rerun-failed-run@feature/retry-workflow-wait
         with:
           error-messages: |
             lost communication with the server
