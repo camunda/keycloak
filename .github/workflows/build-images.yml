@@ -545,7 +545,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Retrigger job
-        uses: camunda/infra-global-github-actions/rerun-failed-run@feature/retry-workflow-wait
+        uses: camunda/infra-global-github-actions/rerun-failed-run@main
         with:
           error-messages: |
             lost communication with the server
