@@ -13,6 +13,7 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch:
 
+
 jobs:
   list-keycloak-versions:
     runs-on: ubuntu-22.04
@@ -90,7 +91,7 @@ jobs:
 
       - name: Build image using Camunda docker build
         id: build-image-step
-        uses: camunda/infra-global-github-actions/build-docker-image@f2aa4095fafc086b3fa9665b29880b28e0c6efb7 # main
+        uses: camunda/infra-global-github-actions/build-docker-image@086da32d281e9346263452e8d86729b4eb435af1 # main
         with:
           registry_host: ${{ vars.CONTAINER_REGISTRY_CI }}
           registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -218,7 +219,6 @@ jobs:
             keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com"
             keycloak_db_jdbc_query: "wrapperPlugins=iam&ssl=true&sslmode=require"
             keycloak_db_port: "5432"
-
           # Add the gcp runner when GCloud SQL is available
           # GCloud SQL is not tested yet as we don't have a dedicated db
 
@@ -232,20 +232,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
 
-      - name: The runner has received a shutdown signal
-        run: |
-         echo "The runner has received a shutdown signal"
-         echo "bye..."
-         exit 1
-
       - name: Install build-essentials for asdf
         run: |
-         sudo apt-get update
+          sudo apt-get update
 
-         sudo apt-get install -y build-essential git libexpat1-dev libssl-dev zlib1g-dev \
-         libncurses5-dev libbz2-dev liblzma-dev \
-         libsqlite3-dev libffi-dev tcl-dev linux-headers-generic libgdbm-dev \
-         libreadline-dev tk tk-dev
+          sudo apt-get install -y build-essential git libexpat1-dev libssl-dev zlib1g-dev \
+          libncurses5-dev libbz2-dev liblzma-dev \
+          libsqlite3-dev libffi-dev tcl-dev linux-headers-generic libgdbm-dev \
+          libreadline-dev tk tk-dev
 
       - name: Install tooling using asdf
         uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
@@ -463,7 +457,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
 
       - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@f2aa4095fafc086b3fa9665b29880b28e0c6efb7 # main
+        uses: camunda/infra-global-github-actions/common-tooling@086da32d281e9346263452e8d86729b4eb435af1 # main
         with:
           node-enabled: false
           java-enabled: false
@@ -545,7 +539,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Retrigger job
-        uses: camunda/infra-global-github-actions/rerun-failed-run@main
+        uses: camunda/infra-global-github-actions/rerun-failed-run@086da32d281e9346263452e8d86729b4eb435af1 # main
         with:
           error-messages: |
             lost communication with the server
@@ -570,7 +564,7 @@ jobs:
       - name: Notify in Slack in case of failure
         id: slack-notification
         if: github.event_name == 'schedule'
-        uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@3ec47eb13ba0deaac22fb7a8e74b271a1bbf23e9 # main
+        uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@4307a7b51fa981235895ab7682d8f34cdb7b6304 # main
         with:
           vault_addr: ${{ secrets.VAULT_ADDR }}
           vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
