@@ -21,7 +21,7 @@ runs:
   using: composite
   steps:
     - name: Run ${{ inputs.project_name }} compose
-      uses: hoverkraft-tech/compose-action@802a148945af6399a338c7906c267331b39a71af # v2.0.0
+      uses: hoverkraft-tech/compose-action@e5813a5909aca4ae36058edae58f6e52b9c971f8 # v2.0.1
       with:
         compose-file: |
           ${{ inputs.compose_file }}
