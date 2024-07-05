@@ -557,7 +557,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Retrigger job
-        # todo: revert
+        # todo: revert when main action is merged
         uses: camunda/infra-global-github-actions/rerun-failed-run@feature/rerun-notify-on-error # main
         with:
           error-messages: |
