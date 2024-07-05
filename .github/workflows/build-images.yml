@@ -572,7 +572,7 @@ jobs:
 
   notify-on-failure:
     runs-on: ubuntu-latest
-    if: failure()
+    if: failure() && (fromJSON(github.run_attempt) >= 3 || inputs.notify_back_error_message != '')
     needs:
       - publish-image
       - read-build-image-output
