@@ -568,7 +568,7 @@ jobs:
           vault-addr: ${{ secrets.VAULT_ADDR }}
           vault-role-id: ${{ secrets.VAULT_ROLE_ID }}
           vault-secret-id: ${{ secrets.VAULT_SECRET_ID }}
-          notify_back_on_error: true
+          notify_back_on_error: "true"
 
   notify-on-failure:
     runs-on: ubuntu-latest
