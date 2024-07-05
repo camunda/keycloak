@@ -12,9 +12,24 @@ on:
   schedule:
     - cron: '0 3 * * *'
   workflow_dispatch:
-
+    inputs:
+      notify_back_error_message:
+        description: \
+          Error message if retry was not successful.
+          This parameter is used for internal call back actions.
+        required: false
+        default: ''
 
 jobs:
+  triage:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Display notify_back_error_message if present
+        if: ${{ inputs.notify_back_error_message != '' }}
+        run: |
+          echo "A previous workflow failed but has attempted to retry: ${{ inputs.notify_back_error_message }}"
+          exit 1
+
   list-keycloak-versions:
     runs-on: ubuntu-22.04
     outputs:
@@ -38,6 +53,7 @@ jobs:
 
           echo "matrix_keycloak_versions=${matrix_json}" >> "$GITHUB_OUTPUT"
           echo "matrix_keycloak_versions=${matrix_json}"
+          exit 1
 
   build-image:
     runs-on: ubuntu-22.04
@@ -535,11 +551,12 @@ jobs:
   rerun-failed-jobs:
     needs:
       - test-postgres-integ
-    if: failure() && fromJSON(github.run_attempt) < 3
+    if: failure() && fromJSON(github.run_attempt) < 3 && inputs.notify_back_error_message == ''
     runs-on: ubuntu-latest
     steps:
       - name: Retrigger job
-        uses: camunda/infra-global-github-actions/rerun-failed-run@086da32d281e9346263452e8d86729b4eb435af1 # main
+        # todo: revert
+        uses: camunda/infra-global-github-actions/rerun-failed-run@feature/rerun-notify-on-error # main
         with:
           error-messages: |
             lost communication with the server
