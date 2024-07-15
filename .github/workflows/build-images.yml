@@ -55,7 +55,6 @@ jobs:
 
           echo "matrix_keycloak_versions=${matrix_json}" >> "$GITHUB_OUTPUT"
           echo "matrix_keycloak_versions=${matrix_json}"
-          exit 1 # TODO: remove
 
   build-image:
     runs-on: ubuntu-22.04
