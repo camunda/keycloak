@@ -533,7 +533,7 @@ jobs:
 
   notify-on-failure:
     runs-on: ubuntu-latest
-    if: failure()
+    if: failure() && github.event_name == 'schedule'
     needs:
       - publish-image
       - read-build-image-output
@@ -543,7 +543,6 @@ jobs:
     steps:
       - name: Notify in Slack in case of failure
         id: slack-notification
-        if: github.event_name == 'schedule'
         uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@44ea6ed8c70214b8ef629c292ae0e84710179633 # main
         with:
           vault_addr: ${{ secrets.VAULT_ADDR }}

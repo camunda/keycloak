@@ -5,7 +5,7 @@
 # Edge case; Self-hosted runners don't support "docker compose" yet even though on v2
 VERSION=$(docker-compose version --short)
 
-if [[ "$VERSION" =~ ^1\.[0-9]+\.[0-9]+ ]]; then
+if [[ "$VERSION" =~ ^1\.[0-9]+\.[0-9]+ || -z "${VERSION}" ]]; then
     # if docker-compose is v1, we're setting it to docker compose, which should be v2
     echo "Deteceted v1, setting to v2"
     DOCKER_COMMAND="docker compose -f ${FILE} ${COMPOSE_FLAGS}"
