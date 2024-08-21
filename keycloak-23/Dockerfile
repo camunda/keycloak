@@ -3,9 +3,12 @@ ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:23.0.7-debian-12-r5"
 # Note: use the global image digest to make this image platform agnostic (see: https://github.com/camunda/zeebe/pull/14186)
 ARG BASE_IMAGE_DIGEST="sha256:9596e39ee28105274379903db57aee298ab9f3292aa96797fda2aeaabcc38326"
 
+# We use the identity image to copy the keycloak theme
+FROM docker.io/camunda/identity:latest@sha256:9c20462da6d384ce7ab7d678a853903a7f5aa94626e1ba046eef45ca922f7da4 AS identity
+
 # Building builder image
 # hadolint ignore=DL3006
-FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST} as builder
+FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST} AS builder
 # use the .github/scripts/utils/get_aws_wrapper_version.sh keycloak-version script to get the value and pass it at build time
 ARG AWS_JDBC_WRAPPER_VERSION
 
@@ -16,13 +19,16 @@ USER 0
 RUN mkdir /home/keycloak && chown keycloak /home/keycloak && \
     apt-get update && apt-get install maven -y --no-install-recommends
 
+COPY --from=identity /app/keycloak-theme/ /opt/bitnami/keycloak/themes/identity
+RUN chown 1001:1000 -R /opt/bitnami/keycloak/themes
+
 USER 1001
 
 WORKDIR /home/keycloak
 
 # download the wrapper from github, then fetch the dependencies from maven
-ADD --chown=1001 "https://github.com/awslabs/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" "/opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar"
-ADD --chown=1001 "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" /home/keycloak/pom.xml
+ADD --chown=1001:1000 --chmod=0644 "https://github.com/awslabs/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" "/opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar"
+ADD --chown=1001:1000 --chmod=0644 "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" /home/keycloak/pom.xml
 
 RUN cat /home/keycloak/pom.xml && mvn install && \
     cp /home/keycloak/.m2/repository/software/amazon/awssdk/*/*/*.jar /opt/bitnami/keycloak/providers/
@@ -42,6 +48,8 @@ ARG AWS_JDBC_WRAPPER_VERSION
 
 # Copy the previously built aws jdbc drivers
 COPY --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
+
+COPY --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
