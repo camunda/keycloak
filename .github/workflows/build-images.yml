@@ -12,10 +12,28 @@ on:
   schedule:
     - cron: '0 3 * * *'
   workflow_dispatch:
+    inputs:
+      notify_back_error_message:
+        description: \
+          Error message if retry was not successful.
+          This parameter is used for internal call back actions.
+        required: false
+        default: ''
 
 jobs:
+  triage:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Display notify_back_error_message if present
+        if: ${{ inputs.notify_back_error_message != '' }}
+        run: |
+          echo "A previous workflow failed but has attempted to retry: ${{ inputs.notify_back_error_message }}"
+          exit 1
+
   list-keycloak-versions:
     runs-on: ubuntu-22.04
+    needs:
+      - triage
     outputs:
       matrix_keycloak_versions: ${{ steps.set-matrix.outputs.matrix_keycloak_versions }}
     steps:
@@ -90,7 +108,7 @@ jobs:
 
       - name: Build image using Camunda docker build
         id: build-image-step
-        uses: camunda/infra-global-github-actions/build-docker-image@a79da8bd8b487354e77339b93e9dfb66d25c1426 # main
+        uses: camunda/infra-global-github-actions/build-docker-image@a6261098b91e48a8db1802a58af5191eb498630c # main
         with:
           registry_host: ${{ vars.CONTAINER_REGISTRY_CI }}
           registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -218,7 +236,6 @@ jobs:
             keycloak_db_host_template: "camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com"
             keycloak_db_jdbc_query: "wrapperPlugins=iam&ssl=true&sslmode=require"
             keycloak_db_port: "5432"
-
           # Add the gcp runner when GCloud SQL is available
           # GCloud SQL is not tested yet as we don't have a dedicated db
 
@@ -234,12 +251,12 @@ jobs:
 
       - name: Install build-essentials for asdf
         run: |
-         sudo apt-get update
+          sudo apt-get update
 
-         sudo apt-get install -y build-essential git libexpat1-dev libssl-dev zlib1g-dev \
-         libncurses5-dev libbz2-dev liblzma-dev \
-         libsqlite3-dev libffi-dev tcl-dev linux-headers-generic libgdbm-dev \
-         libreadline-dev tk tk-dev
+          sudo apt-get install -y build-essential git libexpat1-dev libssl-dev zlib1g-dev \
+          libncurses5-dev libbz2-dev liblzma-dev \
+          libsqlite3-dev libffi-dev tcl-dev linux-headers-generic libgdbm-dev \
+          libreadline-dev tk tk-dev
 
       - name: Install tooling using asdf
         uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
@@ -457,7 +474,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
 
       - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@a79da8bd8b487354e77339b93e9dfb66d25c1426 # main
+        uses: camunda/infra-global-github-actions/common-tooling@a6261098b91e48a8db1802a58af5191eb498630c # main
         with:
           node-enabled: false
           java-enabled: false
@@ -531,19 +548,40 @@ jobs:
             docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:latest" "${{ env.keycloak_image_name }}"
           fi
 
+  # Rerun failed jobs running on self-hosted runners in case of network issues or node preemption
+  rerun-failed-jobs:
+    needs:
+      - test-postgres-integ
+    if: failure() && fromJSON(github.run_attempt) < 3 && inputs.notify_back_error_message == ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retrigger job
+        uses: camunda/infra-global-github-actions/rerun-failed-run@a6261098b91e48a8db1802a58af5191eb498630c # main
+        with:
+          error-messages: |
+            lost communication with the server
+            The runner has received a shutdown signal
+          run-id: ${{ github.run_id }}
+          repository: ${{ github.repository }}
+          vault-addr: ${{ secrets.VAULT_ADDR }}
+          vault-role-id: ${{ secrets.VAULT_ROLE_ID }}
+          vault-secret-id: ${{ secrets.VAULT_SECRET_ID }}
+          notify-back-on-error: "true"
+
   notify-on-failure:
     runs-on: ubuntu-latest
-    if: failure() && github.event_name == 'schedule'
+    if: failure() && (fromJSON(github.run_attempt) >= 3 || inputs.notify_back_error_message != '') && github.event_name == 'schedule'
     needs:
       - publish-image
       - read-build-image-output
       - list-keycloak-versions
       - test-postgres-integ
       - test-base-image
+      - rerun-failed-jobs
     steps:
       - name: Notify in Slack in case of failure
         id: slack-notification
-        uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@9f882f141dbc50b9c9bf5a5f794b971ab09e073c # main
+        uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@48c7c5a309a544bb425ef0a7887d5bec80f5a6a5 # main
         with:
           vault_addr: ${{ secrets.VAULT_ADDR }}
           vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
