@@ -31,7 +31,7 @@ ADD --chown=1001:1000 --chmod=0644 "https://github.com/awslabs/aws-advanced-jdbc
 ADD --chown=1001:1000 --chmod=0644 "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" /home/keycloak/pom.xml
 
 RUN cat /home/keycloak/pom.xml && mvn install && \
-    cp /home/keycloak/.m2/repository/software/amazon/awssdk/*/*/*.jar /opt/bitnami/keycloak/providers/
+    cp /home/keycloak/.m2/repository/software/amazon/*/*/*/*.jar /opt/bitnami/keycloak/providers/
 
 RUN /opt/bitnami/keycloak/bin/kc.sh build
 
