@@ -30,12 +30,14 @@ WORKDIR /home/keycloak
 ADD --chown=1001:1000 --chmod=0644 "https://github.com/awslabs/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" "/opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar"
 ADD --chown=1001:1000 --chmod=0644 "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" /home/keycloak/pom.xml
 
+# Install the custom providers
 RUN cat /home/keycloak/pom.xml && mvn install && \
-    cp /home/keycloak/.m2/repository/software/amazon/*/*/*/*.jar /opt/bitnami/keycloak/providers/
+    cp /home/keycloak/.m2/repository/software/amazon/*/*/*/*.jar /opt/bitnami/keycloak/providers/ && \
+    ls -alh /opt/bitnami/keycloak/providers/
 
 RUN /opt/bitnami/keycloak/bin/kc.sh build
 
-##### FINAL Keycloak IMAGE #####
+##### FINAL Keycloak IMAGE # ####
 
 # hadolint ignore=DL3006
 FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST}
@@ -47,9 +49,10 @@ ARG BASE_IMAGE_DIGEST
 ARG AWS_JDBC_WRAPPER_VERSION
 
 # Copy the previously built aws jdbc drivers
-COPY --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
+COPY --chown=1001:1000 --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
 
-COPY --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
+COPY --chown=1001:1000 --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
+
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
