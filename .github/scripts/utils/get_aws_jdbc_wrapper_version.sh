@@ -36,7 +36,7 @@ get_major_version() {
 # Keycloak only started to reference the aws_jdbc_wrapper version starting with v24, defaulting a fixed version of the jdbc driver,
 # this check also allow bumping minimal aws_jdbc_wrapper version for critical fixes
 if [[ "$(get_major_version "$keycloak_version")" -lt "26" ]] ; then
-    echo "2.3.5" # fix https://github.com/keycloak/keycloak/issues/27290
+    echo "2.3.9" # fix https://github.com/keycloak/keycloak/issues/27290
     exit 0
 fi
 
