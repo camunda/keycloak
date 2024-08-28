@@ -2,4 +2,4 @@
 # It is its only purpose.
 
 # Note: When renovate alerts about a new version of keycloak, please follow the `DEVELOPER.md` new release procedure.
-FROM docker.io/bitnami/keycloak:24
+FROM docker.io/bitnami/keycloak:25
