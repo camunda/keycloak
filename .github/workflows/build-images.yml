@@ -405,6 +405,8 @@ jobs:
 
       - name: Start Test Environment
         uses: ./.github/actions/compose
+        # TODO: revert this skip test once https://github.com/camunda/team-infrastructure-experience/issues/352 is fixed
+        if: ${{ !(matrix.runner_desc.keycloak_jdbc_driver == 'aws-wrapper:postgresql' && matrix.keycloak_version == 25) }}
         with:
           project_name: keycloak
         env:
@@ -443,6 +445,8 @@ jobs:
           pip install -r ./.github/scripts/integration/requirements.txt
 
       - name: Test Environment
+        # TODO: revert this skip test once https://github.com/camunda/team-infrastructure-experience/issues/352 is fixed
+        if: ${{ !(matrix.runner_desc.keycloak_jdbc_driver == 'aws-wrapper:postgresql' && matrix.keycloak_version == 25) }}
         run: python3 ./.github/scripts/integration/main.py
 
       - name: Tear down Aurora PG (aws only)
@@ -544,7 +548,9 @@ jobs:
           docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${base_image_tag}" "${{ env.keycloak_image_name }}"
           docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${base_image_tag}-${suffix_version}" "${{ env.keycloak_image_name }}"
 
-          if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${{ matrix.keycloak_version }}" ]; then
+          : # TODO: revert this once KC 25 is fixed for wrapper (https://github.com/camunda/team-infrastructure-experience/issues/352)
+          : # if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${{ matrix.keycloak_version }}" ]; then
+          if [ "24" = "${{ matrix.keycloak_version }}" ]; then
             docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:latest" "${{ env.keycloak_image_name }}"
           fi
 
