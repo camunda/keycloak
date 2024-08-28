@@ -62,6 +62,7 @@ When adding a new version of Keycloak, follow these steps:
 4. **Final Image Tags:**
    - The final image will have the following tags:
      - `camunda/keycloak:24` (mutable - triggered by any change in the base image of Keycloak)
+     - `camunda/keycloak:24.0.1` (mutable - triggered by any change part of the base image of Keycloak)
      - `camunda/keycloak:24.0.1-1` (mutable - triggered by any change not part of the base image of Keycloak)
      - `camunda/keycloak:24.0.1-1-${date in yyyy-mm-dd-xxx format}` (immutable, recommended for production usage)
 
