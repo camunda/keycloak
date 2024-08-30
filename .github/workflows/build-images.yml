@@ -108,7 +108,7 @@ jobs:
 
       - name: Build image using Camunda docker build
         id: build-image-step
-        uses: camunda/infra-global-github-actions/build-docker-image@9d551d98109ae0fed168affe67579cd6a36b2028 # main
+        uses: camunda/infra-global-github-actions/build-docker-image@a6261098b91e48a8db1802a58af5191eb498630c # main
         with:
           registry_host: ${{ vars.CONTAINER_REGISTRY_CI }}
           registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -405,8 +405,6 @@ jobs:
 
       - name: Start Test Environment
         uses: ./.github/actions/compose
-        # TODO: revert this skip test once https://github.com/camunda/team-infrastructure-experience/issues/352 is fixed
-        if: ${{ !(matrix.runner_desc.keycloak_jdbc_driver == 'aws-wrapper:postgresql' && matrix.keycloak_version == 25) }}
         with:
           project_name: keycloak
         env:
@@ -445,8 +443,6 @@ jobs:
           pip install -r ./.github/scripts/integration/requirements.txt
 
       - name: Test Environment
-        # TODO: revert this skip test once https://github.com/camunda/team-infrastructure-experience/issues/352 is fixed
-        if: ${{ !(matrix.runner_desc.keycloak_jdbc_driver == 'aws-wrapper:postgresql' && matrix.keycloak_version == 25) }}
         run: python3 ./.github/scripts/integration/main.py
 
       - name: Tear down Aurora PG (aws only)
@@ -478,7 +474,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
 
       - name: Install if required common software tooling
-        uses: camunda/infra-global-github-actions/common-tooling@9d551d98109ae0fed168affe67579cd6a36b2028 # main
+        uses: camunda/infra-global-github-actions/common-tooling@a6261098b91e48a8db1802a58af5191eb498630c # main
         with:
           node-enabled: false
           java-enabled: false
@@ -541,20 +537,14 @@ jobs:
           base_image_tag=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile | awk -F'[:=]' '{print $NF}' | tr -d '"' || echo "Error: Image tag $1 not found in Dockerfile" && exit 1) && echo "$base_image_tag"
           echo "base_image_tag=${base_image_tag}"
 
-          : # version of keycloak (e.g.: 23.0.1)
-          semver_tag=$(echo "${base_image_tag}"  | awk -F'-' '{print $1}')
-
           : # remove keycloak- prefix
           suffix_version=$(echo '${{ github.ref_name }}' | sed 's/keycloak-[0-9]*-//')
 
           docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}" "${{ env.keycloak_image_name }}"
           docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${base_image_tag}" "${{ env.keycloak_image_name }}"
-          docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${semver_tag}" "${{ env.keycloak_image_name }}"
           docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${base_image_tag}-${suffix_version}" "${{ env.keycloak_image_name }}"
 
-          : # TODO: revert this once KC 25 is fixed for wrapper (https://github.com/camunda/team-infrastructure-experience/issues/352)
-          : # if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${{ matrix.keycloak_version }}" ]; then
-          if [ "24" = "${{ matrix.keycloak_version }}" ]; then
+          if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${{ matrix.keycloak_version }}" ]; then
             docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:latest" "${{ env.keycloak_image_name }}"
           fi
 
@@ -566,7 +556,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Retrigger job
-        uses: camunda/infra-global-github-actions/rerun-failed-run@9d551d98109ae0fed168affe67579cd6a36b2028 # main
+        uses: camunda/infra-global-github-actions/rerun-failed-run@a6261098b91e48a8db1802a58af5191eb498630c # main
         with:
           error-messages: |
             lost communication with the server
