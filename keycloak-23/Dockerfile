@@ -27,11 +27,22 @@ USER 1001
 WORKDIR /home/keycloak
 
 # download the wrapper from github, then fetch the dependencies from maven
-ADD --chown=1001:1000 --chmod=0644 "https://github.com/awslabs/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" "/opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar"
-ADD --chown=1001:1000 --chmod=0644 "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" /home/keycloak/pom.xml
+# Install the custom providers
+# download the wrapper from github, then fetch the dependencies from maven
+RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" \
+    -o /home/keycloak/pom.xml \
+    && chown 1001:1000 /home/keycloak/pom.xml \
+    && chmod 0644 /home/keycloak/pom.xml && \
 
-RUN cat /home/keycloak/pom.xml && mvn install && \
-    cp /home/keycloak/.m2/repository/software/amazon/awssdk/*/*/*.jar /opt/bitnami/keycloak/providers/
+    cat /home/keycloak/pom.xml && mvn install && \
+    cp /home/keycloak/.m2/repository/software/amazon/*/*/*/*.jar /opt/bitnami/keycloak/providers/ && \
+
+    curl -fL "https://github.com/aws/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" \
+    -o /opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar \
+    && chown 1001:1000 /opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar \
+    && chmod 0644 /opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar && \
+
+    ls -alh /opt/bitnami/keycloak/providers/
 
 RUN /opt/bitnami/keycloak/bin/kc.sh build
 
