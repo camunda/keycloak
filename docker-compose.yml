@@ -1,63 +1,65 @@
+---
 version: '3'
 
 volumes:
-  postgres_data:
-      driver: local
+    postgres_data:
+        driver: local
 
 services:
-  postgres:
-      image: ${COMPOSE_POSTGRES_IMAGE:-docker.io/postgres:latest}
-      volumes:
-        - postgres_data:/var/lib/postgresql/data
-      environment:
-        POSTGRES_DB: "${POSTGRES_DB:-keycloak}"
-        POSTGRES_USER: "${POSTGRES_USER:-keycloak}"
-        POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
-      healthcheck:
-        test: ["CMD-SHELL", "PGPASSWORD=$${POSTGRES_PASSWORD} psql --username=$${POSTGRES_USER} --host=localhost --dbname=$${POSTGRES_DB} --command='\\q'"]
-        interval: 30s
-        timeout: 5s
-        retries: 3
-      deploy:
-        replicas: ${COMPOSE_POSTGRES_DEPLOY_REPLICAS:-1}
+    postgres:
+        image: ${COMPOSE_POSTGRES_IMAGE:-docker.io/postgres:latest}
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        environment:
+            POSTGRES_DB: ${POSTGRES_DB:-keycloak}
+            POSTGRES_USER: ${POSTGRES_USER:-keycloak}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+        healthcheck:
+            test: [CMD-SHELL, "PGPASSWORD=$${POSTGRES_PASSWORD} psql --username=$${POSTGRES_USER} --host=localhost --dbname=$${POSTGRES_DB} --command='\\\
+                      q'"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+        deploy:
+            replicas: ${COMPOSE_POSTGRES_DEPLOY_REPLICAS:-1}
 
-  keycloak:
-      image: ${COMPOSE_KEYCLOAK_IMAGE:-camunda/keycloak:latest}
-      environment:
-        KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN:-admin}"
-        KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-admin}"
+    keycloak:
+        image: ${COMPOSE_KEYCLOAK_IMAGE:-camunda/keycloak:latest}
+        environment:
+            KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+            KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
 
         # bitnami specifics
-        KEYCLOAK_DATABASE_HOST: "${KEYCLOAK_DATABASE_HOST:-postgres}"
-        KEYCLOAK_DATABASE_PORT: "${KEYCLOAK_DATABASE_PORT:-5432}"
-        KEYCLOAK_DATABASE_NAME: "${KEYCLOAK_DATABASE_NAME:-keycloak}"
-        KEYCLOAK_DATABASE_USER: "${KEYCLOAK_DATABASE_USER:-keycloak}"
-        KEYCLOAK_DATABASE_PASSWORD: "${KEYCLOAK_DATABASE_PASSWORD:-password}"
-        KEYCLOAK_JDBC_DRIVER: "${KEYCLOAK_JDBC_DRIVER:-aws-wrapper:postgresql}"
-        KEYCLOAK_JDBC_PARAMS: "${KEYCLOAK_JDBC_PARAMS:-}"
-        KEYCLOAK_EXTRA_ARGS: "--db-driver=${KC_DB_DRIVER:-software.amazon.jdbc.Driver} --transaction-xa-enabled=${KC_TRANSACTION_XA_ENABLED:-false} --log-level=${KEYCLOAK_LOG_LEVEL:-INFO}"
+            KEYCLOAK_DATABASE_HOST: ${KEYCLOAK_DATABASE_HOST:-postgres}
+            KEYCLOAK_DATABASE_PORT: ${KEYCLOAK_DATABASE_PORT:-5432}
+            KEYCLOAK_DATABASE_NAME: ${KEYCLOAK_DATABASE_NAME:-keycloak}
+            KEYCLOAK_DATABASE_USER: ${KEYCLOAK_DATABASE_USER:-keycloak}
+            KEYCLOAK_DATABASE_PASSWORD: ${KEYCLOAK_DATABASE_PASSWORD:-password}
+            KEYCLOAK_JDBC_DRIVER: ${KEYCLOAK_JDBC_DRIVER:-aws-wrapper:postgresql}
+            KEYCLOAK_JDBC_PARAMS: ${KEYCLOAK_JDBC_PARAMS:-}
+            KEYCLOAK_EXTRA_ARGS: --db-driver=${KC_DB_DRIVER:-software.amazon.jdbc.Driver} --transaction-xa-enabled=${KC_TRANSACTION_XA_ENABLED:-false} --log-level=${KEYCLOAK_LOG_LEVEL:-INFO}
 
-        KEYCLOAK_ENABLE_STATISTICS: "${KEYCLOAK_ENABLE_STATISTICS:-true}"
-        KEYCLOAK_ENABLE_HEALTH_ENDPOINTS: "${KEYCLOAK_ENABLE_HEALTH_ENDPOINTS:-true}"
+            KEYCLOAK_ENABLE_STATISTICS: ${KEYCLOAK_ENABLE_STATISTICS:-true}
+            KEYCLOAK_ENABLE_HEALTH_ENDPOINTS: ${KEYCLOAK_ENABLE_HEALTH_ENDPOINTS:-true}
 
         # AWS specifics variables
-        AWS_STS_REGIONAL_ENDPOINTS: "${AWS_STS_REGIONAL_ENDPOINTS:-}"
-        AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION:-}"
-        AWS_REGION: "${AWS_REGION:-}"
-        AWS_ROLE_ARN: "${AWS_ROLE_ARN:-}"
-        AWS_WEB_IDENTITY_TOKEN_FILE: "${AWS_WEB_IDENTITY_TOKEN_FILE:-}"
+            AWS_STS_REGIONAL_ENDPOINTS: ${AWS_STS_REGIONAL_ENDPOINTS:-}
+            AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-}
+            AWS_REGION: ${AWS_REGION:-}
+            AWS_ROLE_ARN: ${AWS_ROLE_ARN:-}
+            AWS_WEB_IDENTITY_TOKEN_FILE: ${AWS_WEB_IDENTITY_TOKEN_FILE:-}
 
-      healthcheck:
-        test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1
-        interval: 15s
-        timeout: 5s
-        retries: 5
-      ports:
-        - 8080:8080
-      depends_on:
-        - "${COMPOSE_KEYCLOAK_DEPENDS_ON:-postgres}"
-      volumes:
-        - "${COMPOSE_KEYCLOAK_VOLUME_1:-/dev/null:/mynull1}" # can be used to inject irsa token
+        healthcheck:
+            test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1
+            interval: 15s
+            timeout: 5s
+            retries: 5
+        ports:
+            - 8080:8080
+        depends_on:
+            - ${COMPOSE_KEYCLOAK_DEPENDS_ON:-postgres}
+        volumes:
+            - ${COMPOSE_KEYCLOAK_VOLUME_1:-/dev/null:/mynull1} # can be used to inject irsa token
 
 
 # /kcadm.sh get clients --realm master --server http://localhost:8080 --user admin --password admin
