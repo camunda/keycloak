@@ -1,19 +1,14 @@
 ---
-# desc: lint sanity check
 name: lint
 
 on:
-  push:
-  workflow_dispatch:
+    workflow_dispatch:
+    pull_request:
+    push:
+        branches: [main]
 
 jobs:
-  lint:
-    name: pre-commit
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
-
-      - name: Install tooling using asdf
-        uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
-
-      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
+    lint:
+        uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@feature/auto-update-renovate-doc
+              # TODO: pin the version on main
+        secrets: inherit
