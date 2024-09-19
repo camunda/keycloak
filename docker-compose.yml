@@ -37,7 +37,7 @@ services:
             KEYCLOAK_DATABASE_PASSWORD: ${KEYCLOAK_DATABASE_PASSWORD:-password}
             KEYCLOAK_JDBC_DRIVER: ${KEYCLOAK_JDBC_DRIVER:-aws-wrapper:postgresql}
             KEYCLOAK_JDBC_PARAMS: ${KEYCLOAK_JDBC_PARAMS:-}
-            KEYCLOAK_EXTRA_ARGS: |
+            KEYCLOAK_EXTRA_ARGS: >-
                 --db-driver=${KC_DB_DRIVER:-software.amazon.jdbc.Driver}
                 --transaction-xa-enabled=${KC_TRANSACTION_XA_ENABLED:-false}
                 --log-level=${KEYCLOAK_LOG_LEVEL:-INFO}
