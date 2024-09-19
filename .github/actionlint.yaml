@@ -1,6 +1,6 @@
 ---
 self-hosted-runner:
-  # Labels of self-hosted runner in array of string
+    # Labels of self-hosted runner in array of string
     labels:
         - aws-arm-core-2-default
         - aws-core-2-default

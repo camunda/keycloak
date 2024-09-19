@@ -97,10 +97,19 @@ jobs:
             - name: Compute build image variables
               id: compute-build-image-name-step
               run: |
-                  keycloak_full_version=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile | awk -F'[:=]' '{print $NF}' | tr -d '"' | awk -F'[:/-]' '{print $1}' || echo "Error: Image tag $1 not found in Dockerfile" && exit 1) && echo "$keycloak_full_version"
+                  keycloak_full_version=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile \
+                      | awk -F'[:=]' '{print $NF}' \
+                      | tr -d '"' \
+                      | awk -F'[:/-]' '{print $1}' \
+                      || { echo "Error: Image tag $1 not found in Dockerfile"; exit 1; })
+
                   echo "keycloak_full_version=${keycloak_full_version}"
 
-                  aws_jdbc_wrapper_version="$(.github/scripts/utils/get_aws_jdbc_wrapper_version.sh "$keycloak_full_version" || echo "Error: Cannot get aws jdbc wrapper version for keycloak $keycloak_full_version" && exit 1)" && echo "$aws_jdbc_wrapper_version"
+                  aws_jdbc_wrapper_version=$(
+                    .github/scripts/utils/get_aws_jdbc_wrapper_version.sh "$keycloak_full_version" \
+                    || { echo "Error: Cannot get aws jdbc wrapper version for keycloak $keycloak_full_version"; exit 1; }
+                  )
+
                   echo "aws_jdbc_wrapper_version=${aws_jdbc_wrapper_version}" >> "$GITHUB_ENV"
                   echo "aws_jdbc_wrapper_version=${aws_jdbc_wrapper_version}"
 
@@ -234,8 +243,8 @@ jobs:
                       keycloak_db_host_template: camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com
                       keycloak_db_jdbc_query: wrapperPlugins=iam&ssl=true&sslmode=require
                       keycloak_db_port: '5432'
-          # Add the gcp runner when GCloud SQL is available
-          # GCloud SQL is not tested yet as we don't have a dedicated db
+                      # Add the gcp runner when GCloud SQL is available
+                      # GCloud SQL is not tested yet as we don't have a dedicated db
 
                 keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
         runs-on: ${{ matrix.runner_desc.runner }}
@@ -342,12 +351,15 @@ jobs:
                   : # ensure uniqueness of the db name
                   uuid="$(cat /proc/sys/kernel/random/uuid)"
                   postgres_database="infex-keycloak-db-${uuid}-${{ github.sha }}"
-                  echo "postgres_database=${postgres_database}" >> "$GITHUB_ENV"
-                  echo "postgres_database=$postgres_database"
+                  echo "postgres_database=${postgres_database}" | tee -a "$GITHUB_ENV"
 
                   : # get the postgres version to test
                   keycloak_version_git="$(echo '${{ matrix.keycloak_version }}' | sed -E 's/^([0-9]+)\.?(.*)$/\1.0/g')" # make sure to have a major.0 format
-                  postgres_version="$(curl -s "https://raw.githubusercontent.com/keycloak/keycloak/release/${keycloak_version_git}/pom.xml" | awk -F'[><]' '/<postgresql.version>/{print $3}')"
+                  postgres_version=$(
+                    curl -s "https://raw.githubusercontent.com/keycloak/keycloak/release/${keycloak_version_git}/pom.xml" \
+                    | awk -F'[><]' '/<postgresql.version>/{print $3}'
+                  )
+
                   echo "postgres_version=${postgres_version}" >> "$GITHUB_ENV"
                   echo "postgres_version=${postgres_version}"
 
@@ -379,7 +391,9 @@ jobs:
                   : # We generate a db auth token using the aws cli because IRSA access in Keycloak might not be easy to debug.
                   : # This token will be used in the "Test psql db connection" step, and then it will be reset for the Keycloak integration test.
                   : # The aws command uses the environment variables provided by the runner
-                  AWS_PG_PASSWORD="$(aws rds generate-db-auth-token --hostname ${{ env.postgres_host }} --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
+                  AWS_PG_PASSWORD="$(aws rds generate-db-auth-token --hostname ${{ env.postgres_host }} \
+                     --port ${{ matrix.runner_desc.keycloak_db_port }} --region ${{ env.AWS_REGION }} --username ${{ env.postgres_user }})"
+
                   echo "postgres_password=${AWS_PG_PASSWORD}" >> "$GITHUB_ENV"
 
             - name: Test psql db connection (for external db only)
@@ -387,10 +401,12 @@ jobs:
               shell: bash
               run: |
                   : # Perform a simple psql connection test to ensure the database can be reached.
-                  : # The psql command provides clear and simple error messages compared to jdbc, which is why we perform this step.
+                  : # The psql command provides clear and simple error messages compared to jdbc,
+                  : # which is why we perform this step.
                   PGPASSWORD="${{ env.postgres_password }}"
                   export PGPASSWORD
-                  psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
+                  psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" \
+                    "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
 
             - name: Reset postgres_password for IRSA connection  (aws only)
               if: startsWith(matrix.runner_desc.runner, 'aws')
@@ -427,7 +443,8 @@ jobs:
                   COMPOSE_KEYCLOAK_VOLUME_1: ${{ env.compose_keycloak_volume_1 || '/dev/null:/dummynull1' }}
                   COMPOSE_KEYCLOAK_IMAGE: ${{ env.keycloak_image_name }}
 
-          # AWS specific variables to forward, see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables
+                  # AWS specific variables to forward,
+                  # see https://confluence.camunda.com/pages/viewpage.action?pageId=178590693#IAMRolesforServiceAccountsTesting(IRSA)-EnvironmentVariables
                   AWS_STS_REGIONAL_ENDPOINTS: ${{ env.AWS_STS_REGIONAL_ENDPOINTS }}
                   AWS_DEFAULT_REGION: ${{ env.AWS_DEFAULT_REGION }}
                   AWS_REGION: ${{ env.AWS_REGION }}
@@ -454,8 +471,8 @@ jobs:
 
     publish-image:
         runs-on: ubuntu-22.04
-    # to release all versions of keycloak, tag it using the date (e.g.: `2024-03-10-001`)
-    # to release only one version keycloak, tag it using the date prefixed by the version of keycloak (e.g.: `keycloak-23-2024-03-10-001`)
+        # to release all versions of keycloak, tag it using the date (e.g.: `2024-03-10-001`)
+        # to release only one version keycloak, tag it using the date prefixed by the version of keycloak (e.g.: `keycloak-23-2024-03-10-001`)
         if: startsWith(github.ref, 'refs/tags')
         strategy:
             fail-fast: false # don't propagate failing jobs
@@ -531,7 +548,11 @@ jobs:
               shell: bash
               run: |
                   : # extract the base image tag to use it as base tag
-                  base_image_tag=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile | awk -F'[:=]' '{print $NF}' | tr -d '"' || echo "Error: Image tag $1 not found in Dockerfile" && exit 1) && echo "$base_image_tag"
+                  base_image_tag=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile \
+                  | awk -F'[:=]' '{print $NF}' \
+                  | tr -d '"' \
+                  || { echo "Error: Image tag $1 not found in Dockerfile"; exit 1; })
+
                   echo "base_image_tag=${base_image_tag}"
 
                   : # version of keycloak (e.g.: 23.0.1)
