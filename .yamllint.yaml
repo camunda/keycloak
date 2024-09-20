@@ -1,0 +1,17 @@
+---
+extends: default
+
+rules:
+    document-start:
+        level: error
+    comments:
+        level: error
+        min-spaces-from-content: 1
+    comments-indentation:
+        level: error
+    line-length:
+        max: 175
+    truthy:
+        # prevent false positives on Github Actions workflow files with `on`,
+        # see https://github.com/adrienverge/yamllint/issues/158
+        check-keys: false

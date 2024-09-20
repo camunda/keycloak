@@ -1,42 +1,43 @@
+---
 name: Compose
 description: |
-  Compose Wrapper
+    Compose Wrapper
 inputs:
-  compose_file:
-    description: "Name of the compose file"
-    required: false
-    default: "docker-compose.yml"
-  project_name:
-    description: "Project name to allow running the same file multiple times"
-    required: true
-  healthy_timeout:
-    description: "How long to wait until we consider the compose to be unhealthy"
-    required: false
-    default: "300"
-  cwd:
-    description: "Current working directory"
-    required: false
-    default: "${{ github.workspace }}"
+    compose_file:
+        description: Name of the compose file
+        required: false
+        default: docker-compose.yml
+    project_name:
+        description: Project name to allow running the same file multiple times
+        required: true
+    healthy_timeout:
+        description: How long to wait until we consider the compose to be unhealthy
+        required: false
+        default: '300'
+    cwd:
+        description: Current working directory
+        required: false
+        default: ${{ github.workspace }}
 runs:
-  using: composite
-  steps:
-    - name: Run ${{ inputs.project_name }} compose
-      uses: hoverkraft-tech/compose-action@e5813a5909aca4ae36058edae58f6e52b9c971f8 # v2.0.1
-      with:
-        compose-file: |
-          ${{ inputs.compose_file }}
-        compose-flags: "--project-name ${{ inputs.project_name }}"
-        cwd: ${{ inputs.cwd }}
+    using: composite
+    steps:
+        - name: Run ${{ inputs.project_name }} compose
+          uses: hoverkraft-tech/compose-action@e5813a5909aca4ae36058edae58f6e52b9c971f8 # v2.0.1
+          with:
+              compose-file: |
+                  ${{ inputs.compose_file }}
+              compose-flags: --project-name ${{ inputs.project_name }}
+              cwd: ${{ inputs.cwd }}
 
-    - name: Short sleep to let it startup
-      shell: bash
-      run: sleep 3
+        - name: Short sleep to let it startup
+          shell: bash
+          run: sleep 3
 
-    - name: Check if service is healthy
-      shell: bash
-      run: |
-        ${{ github.action_path }}/healthy.sh
-      env:
-        FILE: "${{ inputs.cwd }}/${{ inputs.compose_file }}"
-        TIMEOUT: ${{ inputs.healthy_timeout }}
-        COMPOSE_FLAGS: "--project-name ${{ inputs.project_name }}"
+        - name: Check if service is healthy
+          shell: bash
+          run: |
+              ${{ github.action_path }}/healthy.sh
+          env:
+              FILE: ${{ inputs.cwd }}/${{ inputs.compose_file }}
+              TIMEOUT: ${{ inputs.healthy_timeout }}
+              COMPOSE_FLAGS: --project-name ${{ inputs.project_name }}
