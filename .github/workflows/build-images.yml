@@ -20,7 +20,7 @@ on:
 
 jobs:
     triage:
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-24.04
         steps:
             - name: Display notify_back_error_message if present
               if: ${{ inputs.notify_back_error_message != '' }}
@@ -29,7 +29,7 @@ jobs:
                   exit 1
 
     list-keycloak-versions:
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-24.04
         needs:
             - triage
         outputs:
@@ -55,7 +55,7 @@ jobs:
                   echo "matrix_keycloak_versions=${matrix_json}"
 
     build-image:
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-24.04
         outputs:
             full_image_name: ${{ steps.compute-image-name-step.outputs.full_image_name }}
         needs:
@@ -150,7 +150,7 @@ jobs:
 
   ## Read matrix outputs
     read-build-image-output:
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-24.04
         needs: [build-image]
         steps:
             - uses: cloudposse/github-action-matrix-outputs-read@33cac12fa9282a7230a418d859b93fdbc4f27b5a # v1
@@ -161,7 +161,7 @@ jobs:
             result: ${{ steps.read.outputs.result }}
 
     test-base-image:
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-24.04
         needs:
             - list-keycloak-versions
             - build-image
@@ -468,7 +468,7 @@ jobs:
                   PGUSER: ${{ env.postgres_superuser }}
 
     publish-image:
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-24.04
         # to release all versions of keycloak, tag it using the date (e.g.: `2024-03-10-001`)
         # to release only one version keycloak, tag it using the date prefixed by the version of keycloak (e.g.: `keycloak-23-2024-03-10-001`)
         if: startsWith(github.ref, 'refs/tags')
