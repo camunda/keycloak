@@ -34,7 +34,6 @@ jobs:
             - name: Create an error
               run: |
                   echo "test"
-                  echo "test"
                   echo "lost communication with the server"
                   exit 1
 
