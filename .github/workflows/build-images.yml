@@ -33,6 +33,7 @@ jobs:
         steps:
             - name: Create an error
               run: |
+                  echo "test"
                   echo "lost communication with the server"
                   exit 1
 
@@ -40,6 +41,7 @@ jobs:
         runs-on: ubuntu-24.04
         needs:
             - triage
+            - on-purpose-error
         outputs:
             matrix_keycloak_versions: ${{ steps.set-matrix.outputs.matrix_keycloak_versions }}
         steps:
