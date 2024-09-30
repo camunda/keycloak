@@ -28,6 +28,14 @@ jobs:
                   echo "A previous workflow failed but has attempted to retry: ${{ inputs.notify_back_error_message }}"
                   exit 1
 
+    on-purpose-error:
+        runs-on: ubuntu-24.04
+        steps:
+            - name: Create an error
+              run: |
+                  echo "lost communication with the server"
+                  exit 1
+
     list-keycloak-versions:
         runs-on: ubuntu-24.04
         needs:
@@ -571,12 +579,12 @@ jobs:
   # Rerun failed jobs running on self-hosted runners in case of network issues or node preemption
     rerun-failed-jobs:
         needs:
-            - test-postgres-integ
+            - on-purpose-error
         if: failure() && fromJSON(github.run_attempt) < 3 && inputs.notify_back_error_message == ''
         runs-on: ubuntu-latest
         steps:
             - name: Retrigger job
-              uses: camunda/infra-global-github-actions/rerun-failed-run@279d811fedce4dedc973f74f7e520513fc01ca29 # main
+              uses: camunda/infra-global-github-actions/rerun-failed-run@feature/move-to-official-gh-token
               with:
                   error-messages: |
                       lost communication with the server
