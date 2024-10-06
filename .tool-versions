@@ -17,6 +17,6 @@ awscli 2.18.0
 
 just 1.36.0
 
-pre-commit 3.8.0
+pre-commit 4.0.0
 
 python 3.12.7
