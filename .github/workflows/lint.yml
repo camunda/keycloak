@@ -9,5 +9,5 @@ on:
 
 jobs:
     lint:
-        uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@7e7ae626961c7766d7612620374b7c4944f420db # 1.2.3
+        uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@1b6af8e7117e4e9bdf777911b7a724879b59fcfe # 1.2.4
         secrets: inherit
