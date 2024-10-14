@@ -29,10 +29,7 @@ Navigate to the `keycloak-<version>` (e.g. `keycloak-24`) directory and execute 
 keycloak_full_version="$(grep "ARG BASE_IMAGE_NAME=.*$1" ./Dockerfile | awk -F'[:=]' '{print $NF}' | tr -d '"' | awk -F'[:/-]' '{print $1}')"
 echo "keycloak_full_version=$keycloak_full_version"
 
-aws_jdbc_wrapper_version="$(../.github/scripts/utils/get_aws_jdbc_wrapper_version.sh $keycloak_full_version)"
-echo "aws_jdbc_wrapper_version=$aws_jdbc_wrapper_version"
-
-docker build . -t "docker.io/camunda/keycloak:$keycloak_full_version" --build-arg "AWS_JDBC_WRAPPER_VERSION=$aws_jdbc_wrapper_version"
+docker build . -t "docker.io/camunda/keycloak:$keycloak_full_version""
 ```
 
 This Dockerfile includes the necessary dependencies and configurations for AWS Advanced JDBC Wrapper.

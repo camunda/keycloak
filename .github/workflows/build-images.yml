@@ -105,14 +105,6 @@ jobs:
 
                   echo "keycloak_full_version=${keycloak_full_version}"
 
-                  aws_jdbc_wrapper_version=$(
-                    .github/scripts/utils/get_aws_jdbc_wrapper_version.sh "$keycloak_full_version" \
-                    || { echo "Error: Cannot get aws jdbc wrapper version for keycloak $keycloak_full_version"; exit 1; }
-                  )
-
-                  echo "aws_jdbc_wrapper_version=${aws_jdbc_wrapper_version}" >> "$GITHUB_ENV"
-                  echo "aws_jdbc_wrapper_version=${aws_jdbc_wrapper_version}"
-
             - name: Build image using Camunda docker build
               id: build-image-step
               uses: camunda/infra-global-github-actions/build-docker-image@adc932a586d745b8a147a7f52117e683d5c59b54 # main
@@ -124,8 +116,6 @@ jobs:
                   image_name: ${{ vars.CONTAINER_IMAGE_NAME_CI }}
                   build_context: ./keycloak-${{ matrix.keycloak_version }}/
                   build_platforms: linux/amd64,linux/arm64
-                  build_args: |
-                      AWS_JDBC_WRAPPER_VERSION=${{ env.aws_jdbc_wrapper_version }}
                   extra_tags: | # the ci- prefix ensures a build context, this image is treated as "temporary"
                       type=sha,enable=true,priority=1000,prefix=ci-${{ matrix.keycloak_version }}-sha-,suffix=,format=short
 

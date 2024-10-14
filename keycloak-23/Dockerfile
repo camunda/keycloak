@@ -9,8 +9,9 @@ FROM docker.io/camunda/identity:latest@sha256:19ed5c6a1e2fde366092b5339023c86e66
 # Building builder image
 # hadolint ignore=DL3006
 FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST} AS builder
-# use the .github/scripts/utils/get_aws_wrapper_version.sh keycloak-version script to get the value and pass it at build time
-ARG AWS_JDBC_WRAPPER_VERSION
+
+# renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
+ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 
 USER 0
 
@@ -54,8 +55,8 @@ FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST}
 ARG BASE_IMAGE_NAME
 ARG BASE_IMAGE_DIGEST
 
-# use the .github/scripts/utils/get_aws_wrapper_version.sh keycloak-version script to get the value and pass it at build time
-ARG AWS_JDBC_WRAPPER_VERSION
+# renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
+ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 
 # Copy the previously built aws jdbc drivers
 COPY --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/

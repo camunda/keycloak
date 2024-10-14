@@ -26,7 +26,7 @@ To start the image, run:
 ```bash
 docker run --name mykeycloak -p 8443:8443 \
         -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
-        docker.io/camunda/keycloak:25
+        docker.io/camunda/keycloak:26
 ```
 
 Keycloak will start in production mode, using secured HTTPS communication and will be available at [https://localhost:8443](https://localhost:8443).
@@ -83,7 +83,7 @@ Don't forget to set the `serviceAccountName` of the deployment/statefulset to po
 To use this image in the Helm chart [bitnami/keycloak](https://artifacthub.io/packages/helm/bitnami/keycloak), update the image used and add the necessary extra environment variables:
 
 ```yaml
-image: docker.io/camunda/keycloak:25
+image: docker.io/camunda/keycloak:26
 extraEnvVars:
   - name: KEYCLOAK_EXTRA_ARGS
     value: "--db-driver=software.amazon.jdbc.Driver --transaction-xa-enabled=false --log-level=INFO,software.amazon.jdbc:INFO"

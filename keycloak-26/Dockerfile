@@ -1,7 +1,7 @@
-ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:24.0.5-debian-12-r8"
+ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:26.0.0-debian-12-r1"
 # List of all available images with associated sha: https://hub.docker.com/r/bitnami/keycloak/tags
 # Note: use the global image digest to make this image platform agnostic (see: https://github.com/camunda/zeebe/pull/14186)
-ARG BASE_IMAGE_DIGEST="sha256:4751a8e76af19343068f141c5d2adbba9e4e7d7476874f89cdb0cd61c922e277"
+ARG BASE_IMAGE_DIGEST="sha256:6aadcb7f1af5f463ccd8acaed341bead98d0c968532cd99f950512c74345818b"
 
 # We use the identity image to copy the keycloak theme
 FROM docker.io/camunda/identity:latest@sha256:19ed5c6a1e2fde366092b5339023c86e66797f497f8efcac61c4de1ac254134b AS identity
@@ -27,7 +27,6 @@ USER 1001
 
 WORKDIR /home/keycloak
 
-# download the wrapper from github, then fetch the dependencies from maven
 # Install the custom providers
 # download the wrapper from github, then fetch the dependencies from maven
 RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" \
@@ -45,9 +44,10 @@ RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-j
 
     ls -alh /opt/bitnami/keycloak/providers/
 
+
 RUN /opt/bitnami/keycloak/bin/kc.sh build
 
-##### FINAL Keycloak IMAGE #####
+##### FINAL Keycloak IMAGE # ####
 
 # hadolint ignore=DL3006
 FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST}
@@ -59,9 +59,10 @@ ARG BASE_IMAGE_DIGEST
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 
 # Copy the previously built aws jdbc drivers
-COPY --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
+COPY --chown=1001:1000 --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
 
-COPY --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
+COPY --chown=1001:1000 --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
+
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
