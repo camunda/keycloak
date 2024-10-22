@@ -31,7 +31,7 @@ _Nothing referenced yet._
 
 ### Downstream Dependencies: things that depend on this project
 
-- **Distribution Team**: Utilizes this project in various aspects, including the [Camunda Platform Helm Chart](https://github.com/camunda/camunda-platform-helm/blob/main/charts/camunda-platform-latest/values-latest.yaml).
+- **Distribution Team**: Utilizes this project in various aspects, including the [Camunda Platform Helm Chart](https://github.com/camunda/camunda-platform-helm/blob/main/charts/camunda-platform-8.6/values-latest.yaml).
 
 ## Actions
 
