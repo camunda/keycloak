@@ -53,12 +53,6 @@ repos:
             types: [text]
             stages: [commit, push, manual]
 
-    - repo: https://github.com/tcort/markdown-link-check
-      rev: v3.13.6 # use tags until renovate supports sha: https://github.com/renovatebot/renovate/issues/22567
-      hooks:
-          - id: markdown-link-check
-            args: [-q, -c .github/markdown-links.json]
-
     - repo: https://github.com/adrienverge/yamllint
       rev: v1.35.1
       hooks:
