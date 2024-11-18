@@ -28,7 +28,7 @@ repos:
           - id: actionlint-docker
 
     - repo: https://github.com/renovatebot/pre-commit-hooks
-      rev: 39.9.2
+      rev: 39.19.1
       hooks:
           - id: renovate-config-validator
             args: [--strict]
@@ -52,12 +52,6 @@ repos:
             entry: .pre-commit-hooks/update_readme_version.sh
             types: [text]
             stages: [commit, push, manual]
-
-    - repo: https://github.com/tcort/markdown-link-check
-      rev: v3.12.2 # use tags until renovate supports sha: https://github.com/renovatebot/renovate/issues/22567
-      hooks:
-          - id: markdown-link-check
-            args: [-q, -c .github/markdown-links.json]
 
     - repo: https://github.com/adrienverge/yamllint
       rev: v1.35.1

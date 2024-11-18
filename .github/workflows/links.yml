@@ -1,0 +1,53 @@
+---
+name: Check external links
+
+on:
+    push:
+    workflow_dispatch:
+    schedule:
+        - cron: 0 3 1 * *
+    pull_request:
+        paths:
+            - .github/workflows/links.yml
+
+jobs:
+    lint:
+        name: links-check
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+            - name: Get Current Timestamp
+              id: timestamp
+              run: echo "TIMESTAMP=$(date +%s)" >> "$GITHUB_ENV"
+
+            - name: Restore lychee cache
+              uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4
+              with:
+                  path: .lycheecache
+                  key: cache-lychee-${{ env.TIMESTAMP }}
+                  restore-keys: cache-lychee-
+
+            - name: Link Checker
+              uses: lycheeverse/lychee-action@f81112d0d2814ded911bd23e3beaa9dda9093915 # v2.1.0
+              with:
+                  fail: true
+                  args: -c ./lychee-links.toml --base . --cache --max-cache-age 1d . --verbose --no-progress '*.md' './**/*.md'
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Create Issue From File
+              if: failure() && github.event_name == 'schedule'
+              uses: peter-evans/create-issue-from-file@e8ef132d6df98ed982188e460ebb3b5d4ef3a9cd # v5
+              with:
+                  title: Link Checker Report
+                  content-filepath: ./lychee/out.md
+                  labels: report, automated issue
+
+            - name: Notify in Slack in case of failure
+              id: slack-notification
+              if: failure() && github.event_name == 'schedule'
+              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@4dcb257030b8026f86747777802b10cc6d64c20b # 1.2.5
+              with:
+                  vault_addr: ${{ secrets.VAULT_ADDR }}
+                  vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
+                  vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
