@@ -1,7 +1,7 @@
-ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:26.0.5-debian-12-r1"
+ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:26.0.6-debian-12-r0"
 # List of all available images with associated sha: https://hub.docker.com/r/bitnami/keycloak/tags
 # Note: use the global image digest to make this image platform agnostic (see: https://github.com/camunda/zeebe/pull/14186)
-ARG BASE_IMAGE_DIGEST="sha256:768945092e044e0a3d6194faa1788444086d4215078c4e4f946c9ecfa031d167"
+ARG BASE_IMAGE_DIGEST="sha256:bb9bca49d0e2a065de44e1f505add4c477136a96cd9ebf9c97d4b0178d0f0302"
 
 # We use the identity image to copy the keycloak theme
 FROM docker.io/camunda/identity:latest@sha256:8cf2ba673a1b61b4a57289757344bd3569fc9b2ddaaef2a752e15f1e55d21162 AS identity
