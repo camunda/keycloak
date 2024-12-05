@@ -12,5 +12,3 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: camunda/infra-global-github-actions/actionlint@gh-620-centralized-infracheck-workflow
-        with:
-          custom-config-file: .github/actionlint.yaml
