@@ -2,12 +2,12 @@
 name: lint
 
 on:
-    workflow_dispatch:
-    pull_request:
-    push:
-        branches: [main]
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
 
 jobs:
-    lint:
-        uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@d809dbc4cd95c04cb3a00fc043aa31ef6b590515 # 1.2.7
-        secrets: inherit
+  lint:
+    uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@050601a7d7461db8fc57a139525787fc71ca9d94
+    secrets: inherit
