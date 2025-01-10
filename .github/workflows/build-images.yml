@@ -230,7 +230,7 @@ jobs:
             fail-fast: false # don't propagate failing jobs
             matrix:
                 runner_desc:
-                    - runner: ubuntu-22.04
+                    - runner: ubuntu-24.04
                       postgres_replicas: 1
                       keycloak_jdbc_driver: postgresql
                       keycloak_db_driver: org.postgresql.Driver
