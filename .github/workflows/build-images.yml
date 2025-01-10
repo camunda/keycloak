@@ -74,9 +74,9 @@ jobs:
               with:
                   path: |
                       /home/runner/.asdf
-                  key: ${{ runner.os }}-tooling-${{ hashFiles('**/.tool-versions') }}
+                  key: ${{ runner.os }}-${{ runner.arch }}-tooling-${{ hashFiles('**/.tool-versions') }}
                   restore-keys: |
-                      ${{ runner.os }}-tooling-
+                      ${{ runner.os }}-${{ runner.arch }}-tooling-
 
             - name: Install tooling using asdf
               uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
@@ -180,9 +180,9 @@ jobs:
               with:
                   path: |
                       /home/runner/.asdf
-                  key: ${{ runner.os }}-tooling-${{ hashFiles('**/.tool-versions') }}
+                  key: ${{ runner.os }}-${{ runner.arch }}-tooling-${{ hashFiles('**/.tool-versions') }}
                   restore-keys: |
-                      ${{ runner.os }}-tooling-
+                      ${{ runner.os }}-${{ runner.arch }}-tooling-
 
             - name: Install tooling using asdf
               uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
@@ -281,9 +281,9 @@ jobs:
               with:
                   path: |
                       /home/runner/.asdf
-                  key: ${{ runner.os }}-tooling-${{ hashFiles('**/.tool-versions') }}
+                  key: ${{ runner.os }}-${{ runner.arch }}-tooling-${{ hashFiles('**/.tool-versions') }}
                   restore-keys: |
-                      ${{ runner.os }}-tooling-
+                      ${{ runner.os }}-${{ runner.arch }}-tooling-
 
             - name: Install tooling using asdf
               uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
@@ -520,9 +520,9 @@ jobs:
               with:
                   path: |
                       /home/runner/.asdf
-                  key: ${{ runner.os }}-tooling-${{ hashFiles('**/.tool-versions') }}
+                  key: ${{ runner.os }}-${{ runner.arch }}-tooling-${{ hashFiles('**/.tool-versions') }}
                   restore-keys: |
-                      ${{ runner.os }}-tooling-
+                      ${{ runner.os }}-${{ runner.arch }}-tooling-
 
             - name: Install tooling using asdf
               uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
