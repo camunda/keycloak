@@ -46,7 +46,7 @@ jobs:
             - name: Notify in Slack in case of failure
               id: slack-notification
               if: failure() && github.event_name == 'schedule'
-              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@c5aabcb89fbaca9143d940fc21bfc39723f3c0ca # 1.2.9
+              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@08c796604f9b08614df763b333833dd1bdc037c0 # 1.2.11
               with:
                   vault_addr: ${{ secrets.VAULT_ADDR }}
                   vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
