@@ -117,7 +117,7 @@ jobs:
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@e5313bba9c105f41c38a3bbadfa4465837e9f1d8 # main
+              uses: camunda/infra-global-github-actions/build-docker-image@96e7112f7eff04c74d7ea3ddd83d552062623732 # main
               with:
                   registry_host: ${{ vars.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -506,7 +506,7 @@ jobs:
               uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
             - name: Install if required common software tooling
-              uses: camunda/infra-global-github-actions/common-tooling@e5313bba9c105f41c38a3bbadfa4465837e9f1d8 # main
+              uses: camunda/infra-global-github-actions/common-tooling@96e7112f7eff04c74d7ea3ddd83d552062623732 # main
               with:
                   node-enabled: false
                   java-enabled: false
@@ -606,7 +606,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Retrigger job
-              uses: camunda/infra-global-github-actions/rerun-failed-run@e5313bba9c105f41c38a3bbadfa4465837e9f1d8 # main
+              uses: camunda/infra-global-github-actions/rerun-failed-run@96e7112f7eff04c74d7ea3ddd83d552062623732 # main
               with:
                   error-messages: |
                       lost communication with the server
@@ -631,7 +631,7 @@ jobs:
         steps:
             - name: Notify in Slack in case of failure
               id: slack-notification
-              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@08c796604f9b08614df763b333833dd1bdc037c0 # 1.2.11
+              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@41bed71d5715d2e2e83a83997a44be59fcddf615 # 1.2.12
               with:
                   vault_addr: ${{ secrets.VAULT_ADDR }}
                   vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
