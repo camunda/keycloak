@@ -17,4 +17,5 @@ exclude_path = [
 exclude = [
   "^file:",
   "^http(s?)://localhost",
+  "https://hub.docker.com/repository/docker/camunda/keycloak",
 ]
