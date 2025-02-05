@@ -51,7 +51,7 @@ repos:
             pass_filenames: false # ensure that we don't run the command multiple times
             entry: .pre-commit-hooks/update_readme_version.sh
             types: [text]
-            stages: [commit, push, manual]
+            stages: [pre-commit, pre-push, manual]
 
     - repo: https://github.com/adrienverge/yamllint
       rev: v1.35.1
