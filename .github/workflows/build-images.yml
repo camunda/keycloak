@@ -68,18 +68,8 @@ jobs:
             - name: Checkout
               uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-            - name: Cache asdf installation
-              id: cache
-              uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
-              with:
-                  path: |
-                      /home/runner/.asdf
-                  key: ${{ runner.os }}-${{ runner.arch }}-tooling-${{ hashFiles('**/.tool-versions') }}
-                  restore-keys: |
-                      ${{ runner.os }}-${{ runner.arch }}-tooling-
-
-            - name: Install tooling using asdf
-              uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
+            - name: Install asdf tools with cache
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@d97ec3138367714e8ecf8d925c0b5287450b6b47 # 1.2.17
 
             - name: Import secrets
               uses: hashicorp/vault-action@a1b77a09293a4366e48a5067a86692ac6e94fdc0 # v3.1.0
@@ -174,18 +164,8 @@ jobs:
             - name: Checkout
               uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-            - name: Cache asdf installation
-              id: cache
-              uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
-              with:
-                  path: |
-                      /home/runner/.asdf
-                  key: ${{ runner.os }}-${{ runner.arch }}-tooling-${{ hashFiles('**/.tool-versions') }}
-                  restore-keys: |
-                      ${{ runner.os }}-${{ runner.arch }}-tooling-
-
-            - name: Install tooling using asdf
-              uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
+            - name: Install asdf tools with cache
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@d97ec3138367714e8ecf8d925c0b5287450b6b47 # 1.2.17
 
             - name: Set Keycloak Image Name
               id: set-keycloak-image-name
@@ -275,18 +255,8 @@ jobs:
                   libsqlite3-dev libffi-dev tcl-dev linux-headers-generic libgdbm-dev \
                   libreadline-dev tk tk-dev
 
-            - name: Cache asdf installation
-              id: cache
-              uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
-              with:
-                  path: |
-                      /home/runner/.asdf
-                  key: ${{ runner.os }}-${{ runner.arch }}-tooling-${{ hashFiles('**/.tool-versions') }}
-                  restore-keys: |
-                      ${{ runner.os }}-${{ runner.arch }}-tooling-
-
-            - name: Install tooling using asdf
-              uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
+            - name: Install asdf tools with cache
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@d97ec3138367714e8ecf8d925c0b5287450b6b47 # 1.2.17
 
             - name: Set Keycloak Image Name
               id: set-keycloak-image-name
@@ -514,18 +484,8 @@ jobs:
                   python-enabled: false
                   buildx-install: true
 
-            - name: Cache asdf installation
-              id: cache
-              uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
-              with:
-                  path: |
-                      /home/runner/.asdf
-                  key: ${{ runner.os }}-${{ runner.arch }}-tooling-${{ hashFiles('**/.tool-versions') }}
-                  restore-keys: |
-                      ${{ runner.os }}-${{ runner.arch }}-tooling-
-
-            - name: Install tooling using asdf
-              uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3
+            - name: Install asdf tools with cache
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@d97ec3138367714e8ecf8d925c0b5287450b6b47 # 1.2.17
 
             - name: Import secrets
               uses: hashicorp/vault-action@a1b77a09293a4366e48a5067a86692ac6e94fdc0 # v3.1.0
