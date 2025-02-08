@@ -11,5 +11,5 @@ concurrency:
 
 jobs:
     renovate-automerge:
-        uses: camunda/infraex-common-config/.github/workflows/automerge-global.yml@510ca7776bb17f028ce9b6254ff68e81744fa76e # 1.2.14
+        uses: camunda/infraex-common-config/.github/workflows/automerge-global.yml@e9a9f33ab193348a82a79bd9250fdf12f708390a # 1.2.19
         secrets: inherit
