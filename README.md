@@ -96,6 +96,12 @@ externalDatabase:
   port: 5432
   user: keycloak
   database: keycloak
+
+global:
+  security:
+    # The following parameter is required due to https://github.com/bitnami/charts/issues/30850
+    # It does not lower security, as it only allows forks of Bitnami images, such as this one, to be deployed by the chart.
+    allowInsecureImages: true
 ```
 
 Feel free to adjust the values according to your actual configuration.
