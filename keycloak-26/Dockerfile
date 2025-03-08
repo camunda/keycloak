@@ -4,7 +4,7 @@ ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:26.1.3-debian-12-r0"
 ARG BASE_IMAGE_DIGEST="sha256:56249cf91274b093389b9b4b3edc10fe9162c95dcd32aca8222592e3a71123ac"
 
 # We use the identity image to copy the keycloak theme
-FROM docker.io/camunda/identity:latest@sha256:05e96da7b029e28778a352cbda40a9708eb9870fc928789baed885994bec2502 AS identity
+FROM docker.io/camunda/identity:latest@sha256:24d6580dea3b42acc118d6abbda01b95c5f53cab873a220a353eea72f73e7eef AS identity
 
 # Building builder image
 # hadolint ignore=DL3006
