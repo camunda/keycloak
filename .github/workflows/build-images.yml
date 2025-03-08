@@ -69,10 +69,10 @@ jobs:
               uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@e9a9f33ab193348a82a79bd9250fdf12f708390a # 1.2.19
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@6158b7c7534f6dbeb3fa7c3c836f6e6aa6881b2e # 1.3.0
 
             - name: Import secrets
-              uses: hashicorp/vault-action@a1b77a09293a4366e48a5067a86692ac6e94fdc0 # v3.1.0
+              uses: hashicorp/vault-action@7709c609789c5e27b757a85817483caadbb5939a # v3.3.0
               id: secrets
               with:
                   url: ${{ secrets.VAULT_ADDR }}
@@ -165,7 +165,7 @@ jobs:
               uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@e9a9f33ab193348a82a79bd9250fdf12f708390a # 1.2.19
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@6158b7c7534f6dbeb3fa7c3c836f6e6aa6881b2e # 1.3.0
 
             - name: Set Keycloak Image Name
               id: set-keycloak-image-name
@@ -176,7 +176,7 @@ jobs:
                   echo "keycloak_image_name=${keycloak_image_name}"
 
             - name: Import secrets
-              uses: hashicorp/vault-action@a1b77a09293a4366e48a5067a86692ac6e94fdc0 # v3.1.0
+              uses: hashicorp/vault-action@7709c609789c5e27b757a85817483caadbb5939a # v3.3.0
               id: secrets
               with:
                   url: ${{ secrets.VAULT_ADDR }}
@@ -256,7 +256,7 @@ jobs:
                   libreadline-dev tk tk-dev
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@e9a9f33ab193348a82a79bd9250fdf12f708390a # 1.2.19
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@6158b7c7534f6dbeb3fa7c3c836f6e6aa6881b2e # 1.3.0
 
             - name: Set Keycloak Image Name
               id: set-keycloak-image-name
@@ -267,7 +267,7 @@ jobs:
                   echo "keycloak_image_name=${keycloak_image_name}"
 
             - name: Import secrets
-              uses: hashicorp/vault-action@a1b77a09293a4366e48a5067a86692ac6e94fdc0 # v3.1.0
+              uses: hashicorp/vault-action@7709c609789c5e27b757a85817483caadbb5939a # v3.3.0
               id: secrets
               with:
                   url: ${{ secrets.VAULT_ADDR }}
@@ -485,10 +485,10 @@ jobs:
                   buildx-install: true
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@e9a9f33ab193348a82a79bd9250fdf12f708390a # 1.2.19
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@6158b7c7534f6dbeb3fa7c3c836f6e6aa6881b2e # 1.3.0
 
             - name: Import secrets
-              uses: hashicorp/vault-action@a1b77a09293a4366e48a5067a86692ac6e94fdc0 # v3.1.0
+              uses: hashicorp/vault-action@7709c609789c5e27b757a85817483caadbb5939a # v3.3.0
               id: secrets
               with:
                   url: ${{ secrets.VAULT_ADDR }}
@@ -591,7 +591,7 @@ jobs:
         steps:
             - name: Notify in Slack in case of failure
               id: slack-notification
-              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@e9a9f33ab193348a82a79bd9250fdf12f708390a # 1.2.19
+              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@6158b7c7534f6dbeb3fa7c3c836f6e6aa6881b2e # 1.3.0
               with:
                   vault_addr: ${{ secrets.VAULT_ADDR }}
                   vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
