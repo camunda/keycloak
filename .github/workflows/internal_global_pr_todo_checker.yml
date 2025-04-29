@@ -1,0 +1,21 @@
+---
+name: Internal - Global - Pull Request TODO checker
+
+on:
+    pull_request_review_comment:
+        types: [edited, deleted]
+    pull_request:
+        types: [opened, synchronize, reopened]
+
+jobs:
+    find_todos:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+            - name: Check for Todos
+              uses: phntmxyz/pr_todo_checker@5d17d239637854388b338cc010d08c4f50093c4e # v1
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
