@@ -13,10 +13,10 @@
 # check it with
 # diff <(sed '/^#/d; /^$/d' .tool-versions | sort) <(sed '/^#/d; /^$/d' .tool-versions) && echo ".tool-versions is sorted correctly" || echo ".tool-versions is not sorted correctly"
 
-awscli 2.27.31
+awscli 2.27.35
 
 just 1.40.0
 
 pre-commit 4.2.0
 
-python 3.13.4
+python 3.13.5
