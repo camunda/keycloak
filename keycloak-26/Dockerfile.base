@@ -1,8 +1,3 @@
-ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:23.0.7-debian-12-r5"
-# List of all available images with associated sha: https://hub.docker.com/r/bitnami/keycloak/tags
-# Note: use the global image digest to make this image platform agnostic (see: https://github.com/camunda/zeebe/pull/14186)
-ARG BASE_IMAGE_DIGEST="sha256:9596e39ee28105274379903db57aee298ab9f3292aa96797fda2aeaabcc38326"
-
 # We use the identity image to copy the keycloak theme
 FROM docker.io/camunda/identity:latest@sha256:f8fe4e00c1a67992f76f2bcc35297e4e837da53c4ab118607ee306ad8412a062 AS identity
 
@@ -27,7 +22,6 @@ USER 1001
 
 WORKDIR /home/keycloak
 
-# download the wrapper from github, then fetch the dependencies from maven
 # Install the custom providers
 # download the wrapper from github, then fetch the dependencies from maven
 RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" \
@@ -45,9 +39,10 @@ RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-j
 
     ls -alh /opt/bitnami/keycloak/providers/
 
+
 RUN /opt/bitnami/keycloak/bin/kc.sh build
 
-##### FINAL Keycloak IMAGE #####
+##### FINAL Keycloak IMAGE # ####
 
 # hadolint ignore=DL3006
 FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST}
@@ -59,9 +54,10 @@ ARG BASE_IMAGE_DIGEST
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 
 # Copy the previously built aws jdbc drivers
-COPY --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
+COPY --chown=1001:1000 --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
 
-COPY --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
+COPY --chown=1001:1000 --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
+
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md

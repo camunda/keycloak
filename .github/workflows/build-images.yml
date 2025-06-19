@@ -18,6 +18,7 @@ on:
                 required: false
                 default: ''
 
+
 jobs:
     triage:
         runs-on: ubuntu-24.04
@@ -44,15 +45,17 @@ jobs:
                   : # if we release a specified version of keycloak, the matrix should only contain it
                   if [[ $GITHUB_REF =~ ^refs/tags/keycloak-([0-9]+)- ]]; then
                     keycloak_version=${BASH_REMATCH[1]}
-                    matrix_json="[\"${keycloak_version}\"]"
+                    matrix_json=$(jq -n --arg v "$keycloak_version" '["\($v)-prem", "\($v)-hub"]')
                   else
                     : # List folders matching the pattern keycloak-*
                     : # Export the list as an output in JSON format
-                    matrix_json=$(printf "%s\n" keycloak-*/ | sed 's/\/$//' | sed 's/keycloak-//' | jq -R -s -c 'split("\n")[:-1]')
+                    versions=$(printf "%s\n" keycloak-*/ | sed 's/\/$//' | sed 's/keycloak-//')
+                    matrix_json=$(echo "$versions" | jq -R -s -c 'split("\n")[:-1] | map("\(.)-prem", "\(.)-hub") | flatten')
                   fi
 
                   echo "matrix_keycloak_versions=${matrix_json}" >> "$GITHUB_OUTPUT"
                   echo "matrix_keycloak_versions=${matrix_json}"
+
 
     build-image:
         runs-on: ubuntu-24.04
@@ -97,7 +100,10 @@ jobs:
             - name: Compute build image variables
               id: compute-build-image-name-step
               run: |
-                  keycloak_full_version=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile \
+                  version_name="${{ matrix.keycloak_version }}"
+                  base_version="${version_name%-*}"  # remove -hub or -prem
+
+                  keycloak_full_version=$(grep "ARG BASE_IMAGE_NAME=.*$1" "keycloak-${base_version}/Dockerfile" \
                       | awk -F'[:=]' '{print $NF}' \
                       | tr -d '"' \
                       | awk -F'[:/-]' '{print $1}' \
@@ -129,7 +135,7 @@ jobs:
                   echo "full_image_name=${full_image_name}" >> "$GITHUB_OUTPUT"
                   echo "$full_image_name"
 
-      ## Write for matrix outputs workaround
+            ## Write for matrix outputs workaround
             - uses: cloudposse/github-action-matrix-outputs-write@ed06cf3a6bf23b8dce36d1cf0d63123885bb8375 # v1
               id: out
               with:
@@ -138,7 +144,7 @@ jobs:
                   outputs: |-
                       full_image_name: ${{ steps.compute-image-name-step.outputs.full_image_name }}
 
-  ## Read matrix outputs
+    ## Read matrix outputs
     read-build-image-output:
         runs-on: ubuntu-24.04
         needs: [build-image]
@@ -512,6 +518,7 @@ jobs:
 
             - name: Login to Docker Hub
               uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+              if: false  # TODO: revert
               with:
                   registry: ${{ vars.CONTAINER_REGISTRY }}
                   username: ${{ steps.secrets.outputs.DOCKERHUB_USER }}
@@ -534,6 +541,7 @@ jobs:
 
             - name: Retag and push the image
               shell: bash
+              if: false # TODO: revert
               run: |
                   : # extract the base image tag to use it as base tag
                   base_image_tag=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile \
