@@ -113,8 +113,8 @@ jobs:
                     exit 1
                   fi
 
-                  base_image_name="${base_image_entry%@*}"
-                  base_image_digest="${base_image_entry#*@}"
+                  base_image_name=$(echo "$base_image_entry" | awk -F'@' '{print $1}')
+                  base_image_digest=$(echo "$base_image_entry" | awk -F'@' '{print $2}')
 
                   # Extract full Keycloak version from the tag (e.g. 23.0.7)
                   keycloak_full_version=$(echo "$base_image_name" | awk -F'[:/-]' '{print $(NF-1)}')
