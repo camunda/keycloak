@@ -7,7 +7,7 @@
       "groupName": "new major keycloak available",
       "groupSlug": "new-major-keycloak",
       "matchDatasources": ["docker"],
-      "matchFileNames": [".watch-latest/Dockerfile"],
+      "matchFileNames": [".watch-latest/Dockerfile*"],
       "matchUpdateTypes": ["major"],
       "enabled": true,
       "addLabels": ["dependencies", "docker", "hold"],
