@@ -42,6 +42,8 @@ jobs:
             - name: List Keycloak Versions from repository's folders
               id: set-matrix
               run: |
+                  set -euo pipefail
+
                   : # if we release a specified version of keycloak, the matrix should only contain it
                   if [[ $GITHUB_REF =~ ^refs/tags/keycloak-([0-9]+)- ]]; then
                     keycloak_version=${BASH_REMATCH[1]}
@@ -100,6 +102,8 @@ jobs:
             - name: Compute build image variables
               id: compute-build-image-name-step
               run: |
+                  set -euo pipefail
+
                   version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub" or "24-prem"
                   base_version="${version_name%-*}"                   # e.g. "24"
                   base_type="${version_name##*-}"                     # e.g. "hub" or "prem"
@@ -148,6 +152,8 @@ jobs:
             - name: Compute target built image fully qualified name from metadata
               id: compute-image-name-step
               run: |
+                  set -euo pipefail
+
                   image_metadata='${{ steps.build-image-step.outputs.image_metadata }}'
                   image_name=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."image.name"' | tr ',' '\n' | head -n 1 | tr -d ' ')
                   digest=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."containerimage.digest"')
@@ -197,6 +203,8 @@ jobs:
               id: set-keycloak-image-name
               shell: bash
               run: |
+                  set -euo pipefail
+
                   keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
                   echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
                   echo "keycloak_image_name=${keycloak_image_name}"
@@ -223,6 +231,8 @@ jobs:
 
             - name: KeyCloak Show-Config
               run: |
+                  set -euo pipefail
+
                   docker run "${{ env.keycloak_image_name }}" /opt/bitnami/keycloak/bin/kc.sh show-config >> docker.log
                   echo "config=$(< docker.log tr '\n' ' ')" >> "$GITHUB_ENV"
 
@@ -274,6 +284,8 @@ jobs:
 
             - name: Install build-essentials for asdf
               run: |
+                  set -euo pipefail
+
                   sudo apt-get update
 
                   sudo apt-get install -y build-essential git libexpat1-dev libssl-dev zlib1g-dev \
@@ -288,6 +300,8 @@ jobs:
               id: set-keycloak-image-name
               shell: bash
               run: |
+                  set -euo pipefail
+
                   keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
                   echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
                   echo "keycloak_image_name=${keycloak_image_name}"
@@ -328,6 +342,8 @@ jobs:
             - name: Compute AWS variables
               if: startsWith(matrix.runner_desc.runner, 'aws')
               run: |
+                  set -euo pipefail
+
                   : # aws aurora superuser is only used for bootstrapping a standard user that will auth using irsa
                   echo "postgres_user=keycloak-irsa" | tee -a "$GITHUB_ENV"
                   echo "postgres_password=" | tee -a "$GITHUB_ENV"
@@ -349,6 +365,8 @@ jobs:
             - name: Compute Ubuntu variables
               if: startsWith(matrix.runner_desc.runner, 'ubuntu')
               run: |
+                  set -euo pipefail
+
                   : # we use plain values that will be used by the postgres container
                   echo "postgres_user=keycloak" | tee -a "$GITHUB_ENV"
                   echo "postgres_password=password" | tee -a "$GITHUB_ENV"
@@ -356,6 +374,8 @@ jobs:
             - name: Declare test recipe variables
               shell: bash
               run: |
+                  set -euo pipefail
+
                   if (( "${{ matrix.runner_desc.postgres_replicas }}" < 1 )); then
                     echo "compose_keycloak_depends_on=" >> "$GITHUB_ENV"
                   else
@@ -402,6 +422,8 @@ jobs:
               if: startsWith(matrix.runner_desc.runner, 'aws')
               shell: bash
               run: |
+                  set -euo pipefail
+
                   : # We generate a db auth token using the aws cli because IRSA access in Keycloak might not be easy to debug.
                   : # This token will be used in the "Test psql db connection" step, and then it will be reset for the Keycloak integration test.
                   : # The aws command uses the environment variables provided by the runner
@@ -414,6 +436,8 @@ jobs:
               if: ${{ matrix.runner_desc.postgres_replicas == 0 }}
               shell: bash
               run: |
+                  set -euo pipefail
+
                   : # Perform a simple psql connection test to ensure the database can be reached.
                   : # The psql command provides clear and simple error messages compared to jdbc,
                   : # which is why we perform this step.
@@ -426,6 +450,8 @@ jobs:
               if: startsWith(matrix.runner_desc.runner, 'aws')
               shell: bash
               run: |
+                  set -euo pipefail
+
                   : # For AWS IRSA connection, we don't use password-based authentication.
                   : # Since a password was generated in the previous steps, we need to ensure it is empty.
                   echo "postgres_password=" >> "$GITHUB_ENV"
@@ -467,6 +493,8 @@ jobs:
 
             - name: Install dependencies
               run: |
+                  set -euo pipefail
+
                   python -m pip install --upgrade pip
                   pip install -r ./.github/scripts/integration/requirements.txt
 
@@ -547,6 +575,8 @@ jobs:
             - name: Set Keycloak Version
               id: set-keycloak-version
               run: |
+                  set -euo pipefail
+
                   keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
                   echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
                   echo "keycloak_image_name=${keycloak_image_name}"
@@ -557,12 +587,16 @@ jobs:
 
             - name: Pull built image
               run: |
+                  set -euo pipefail
+
                   docker pull "${{ env.keycloak_image_name }}"
 
             - name: Retag and push the image
               shell: bash
               if: false # TODO: revert
               run: |
+                  set -euo pipefail
+
                   : # extract the base image tag to use it as base tag
                   base_image_tag=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile \
                   | awk -F'[:=]' '{print $NF}' \
