@@ -142,7 +142,7 @@ jobs:
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@96d2582c14dc5c3c4c680435f48bdb952234b910
+              uses: camunda/infra-global-github-actions/build-docker-image@96d2582c14dc5c3c4c680435f48bdb952234b910 # main
               with:
                   registry_host: ${{ env.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}

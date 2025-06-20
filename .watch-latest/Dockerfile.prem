@@ -2,4 +2,4 @@
 # It is its only purpose.
 
 # Note: When renovate alerts about a new version of keycloak, please follow the `DEVELOPER.md` new release procedure.
-FROM dev.registry.camunda.cloud/dockerhub-infraex/bitnamiprem/keycloak:26
+FROM registry.camunda.cloud/dockerhub-infraex/bitnamiprem/keycloak:26
