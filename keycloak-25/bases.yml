@@ -5,7 +5,7 @@ sources:
         # skopeo --override-os linux inspect  docker://docker.io/bitnami/keycloak
         # Note: use the global index image digest to make this image platform agnostic
         # skopeo --override-os linux inspect docker://docker.io/bitnami/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
-        name: docker.io/bitnami/keycloak:25.0.6-debian-12-r0sha256:f9c6583ae2b5079824b35f13ecef3ad96e90af185b8df7ae0b686e83c33e257b
+        name: docker.io/bitnami/keycloak:25.0.6-debian-12-r0@sha256:f9c6583ae2b5079824b35f13ecef3ad96e90af185b8df7ae0b686e83c33e257b
 
     prem:
         # List of all available images with associated sha:

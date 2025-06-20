@@ -120,17 +120,12 @@ jobs:
                   base_image_name=$(echo "$base_image_entry" | awk -F'@' '{print $1}')
                   base_image_digest=$(echo "$base_image_entry" | awk -F'@' '{print $2}')
 
-                  # Extract full Keycloak version from the tag (e.g. 23.0.7)
-                  keycloak_full_version=$(echo "$base_image_name" | awk -F'[:/-]' '{print $(NF-1)}')
-
                   echo "base_image_name=$base_image_name"
                   echo "base_image_digest=$base_image_digest"
-                  echo "keycloak_full_version=$keycloak_full_version"
 
                   echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
                   echo "base_image_name=$base_image_name" | tee -a "$GITHUB_OUTPUT"
                   echo "base_image_digest=$base_image_digest" | tee -a "$GITHUB_OUTPUT"
-                  echo "keycloak_full_version=$keycloak_full_version" | tee -a "$GITHUB_OUTPUT"
 
             - name: Build image using Camunda docker build
               id: build-image-step
