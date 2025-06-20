@@ -5,6 +5,7 @@ sources:
         # skopeo --override-os linux inspect  docker://docker.io/bitnami/keycloak
         # Note: use the global index image digest to make this image platform agnostic
         # skopeo --override-os linux inspect docker://docker.io/bitnami/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
+        # renovate: datasource=docker depName=docker.io/bitnami/keycloak digest=sha256
         name: docker.io/bitnami/keycloak:25.0.6-debian-12-r0@sha256:f9c6583ae2b5079824b35f13ecef3ad96e90af185b8df7ae0b686e83c33e257b
 
     prem:
@@ -13,4 +14,6 @@ sources:
         # Note: use the global index image digest to make this image platform agnostic
         # skopeo --override-os linux inspect docker://dev.registry.camunda.cloud/dockerhub-infraex/bitnamiprem/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
         # TODO: revert
+
+        # renovate: datasource=docker depName=docker.io/bitnamiprem/keycloak digest=sha256
         name: docker.io/bitnamiprem/keycloak:25.0.6-debian-12-r4@sha256:ffa3de6d343bcb1401febf462d44500b02a2a55cf41eda91474b092b36e92050
