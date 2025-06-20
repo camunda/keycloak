@@ -397,8 +397,8 @@ jobs:
                   echo "postgres_host=${postgres_host}" >> "$GITHUB_ENV"
                   echo "postgres_host=${postgres_host}"
 
-      # The self-hosted runner doesn't provide a postgres client and the prerequisites for make,
-      # so we need to install them manually
+            # The self-hosted runner doesn't provide a postgres client and the prerequisites for make,
+            # so we need to install them manually
             - name: Install required packages
               run: sudo apt-get update && sudo apt-get install -y build-essential postgresql-client
 
@@ -592,12 +592,16 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  : # extract the base image tag to use it as base tag
-                  base_image_tag=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile \
-                  | awk -F'[:=]' '{print $NF}' \
-                  | tr -d '"' \
-                  || { echo "Error: Image tag $1 not found in Dockerfile"; exit 1; })
+                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub" or "24-prem"
+                  base_version="${version_name%-*}"                   # e.g. "24"
+                  base_type="${version_name##*-}"                     # e.g. "hub" or "prem"
+                  base_path="keycloak-${base_version}"                # e.g. "keycloak-24"
 
+                  # Extract the image name from bases.yml using yq
+                  base_image_entry=$(yq e ".sources.${base_type}.name" "${base_path}/bases.yml")
+
+                  : # extract the base image tag to use it as base tag
+                  base_image_tag=$(echo "$base_image_entry" | cut -d':' -f2)
                   echo "base_image_tag=${base_image_tag}"
 
                   : # version of keycloak (e.g.: 23.0.1)
@@ -606,16 +610,18 @@ jobs:
                   : # remove keycloak- prefix
                   suffix_version=$(echo '${{ github.ref_name }}' | sed 's/keycloak-[0-9]*-//')
 
-                  docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}" "${{ env.keycloak_image_name }}"
+                  # TODO: update env.dockerhub_target_name to point on the registry depending of hub or io
+
+                  docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${base_version}" "${{ env.keycloak_image_name }}"
                   docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${base_image_tag}" "${{ env.keycloak_image_name }}"
                   docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${base_image_tag}-${suffix_version}" "${{ env.keycloak_image_name }}"
                   docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${semver_tag}" "${{ env.keycloak_image_name }}"
 
-                  if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${{ matrix.keycloak_version }}" ]; then
+                  if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${base_version}" ]; then
                     docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:latest" "${{ env.keycloak_image_name }}"
                   fi
 
-  # Rerun failed jobs running on self-hosted runners in case of network issues or node preemption
+    # Rerun failed jobs running on self-hosted runners in case of network issues or node preemption
     rerun-failed-jobs:
         needs:
             - test-postgres-integ
