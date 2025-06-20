@@ -106,7 +106,7 @@ jobs:
                   base_path="keycloak-${base_version}"                # e.g. "keycloak-24"
 
                   # Extract the image name from bases.yml using yq
-                  base_image_entry=$(yq e ".sources.${base_type}[0].name" "${base_path}/bases.yml")
+                  base_image_entry=$(yq e ".sources.${base_type}.name" "${base_path}/bases.yml")
 
                   if [ -z "$base_image_entry" ] || [[ "$base_image_entry" == "null" ]]; then
                     echo "Error: Could not find image entry for source '$base_type' in bases.yml"
