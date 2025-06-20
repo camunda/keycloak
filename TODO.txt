@@ -4,3 +4,6 @@
 
 - [ ] verify new naming convention .hub and .prem and .base
 - [ ] explain in the developper doc that we source from harbor that cache it from docker.io => also document it in helm
+
+
+- [ ] test renovate syntax for yaml

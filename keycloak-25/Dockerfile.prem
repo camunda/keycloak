@@ -1,7 +1,0 @@
-# List of all available images with associated sha:
-# skopeo --override-os linux inspect docker://dev.registry.camunda.cloud/dockerhub-infraex/bitnamiprem/keycloak
-ARG BASE_IMAGE_NAME="dev.registry.camunda.cloud/dockerhub-infraex/bitnamiprem/keycloak:25.0.6-debian-12-r4"
-
-# Note: use the global index image digest to make this image platform agnostic
-# skopeo --override-os linux inspect docker://dev.registry.camunda.cloud/dockerhub-infraex/bitnamiprem/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
-ARG BASE_IMAGE_DIGEST="sha256:ffa3de6d343bcb1401febf462d44500b02a2a55cf41eda91474b092b36e92050"

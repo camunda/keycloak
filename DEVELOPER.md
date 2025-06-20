@@ -17,22 +17,45 @@ just install-tooling
 just --list
 ```
 
-## Building the Image (Development Only)
+## 🛠️ Building the Image (Development Only)
 
-Building a local image is for development purposes only.
-In production, the pipeline will handle this and build a multi-architecture image using Docker Buildx.
+> **Note:** Building a local image is **only for development purposes**.
+> In production, the pipeline handles building a multi-architecture image using Docker Buildx.
 
-Navigate to the `keycloak-<version>` (e.g. `keycloak-24`) directory and execute the following commands:
+Navigate to the `keycloak-<version>` directory (e.g. `keycloak-24`) and execute the following commands:
+
+### 1. 📦 Choose your base image
+
+The base image is defined in the `bases.yml` file. You must decide between:
+
+* `hub`: the **open-source** Bitnami Keycloak image (from Docker Hub)
+* `prem`: the **Bitnami Premium** version (from Camunda’s private registry)
+
+### 2. 🔧 Build with `yq`
+
+Use the following command to extract the base image name and digest using [`yq`](https://mikefarah.gitbook.io/yq/) (Go version):
 
 ```bash
-# retrieve the aws jdbc wrapper version from the referenced keycloak version
-keycloak_full_version="$(grep "ARG BASE_IMAGE_NAME=.*$1" ./Dockerfile | awk -F'[:=]' '{print $NF}' | tr -d '"' | awk -F'[:/-]' '{print $1}')"
-echo "keycloak_full_version=$keycloak_full_version"
+# Choose 'hub' or 'prem'
+BASE_SOURCE="hub"
 
-docker build . -t "docker.io/camunda/keycloak:$keycloak_full_version""
+# Extract base image name and digest
+BASE_IMAGE_NAME="$(yq e ".sources.$BASE_SOURCE.name" bases.yml | cut -d@ -f1)"
+BASE_IMAGE_DIGEST="$(yq e ".sources.$BASE_SOURCE.name" bases.yml | cut -d@ -f2)"
+
+# Extract Keycloak version from image tag
+KEYCLOAK_VERSION="$(echo "$BASE_IMAGE_NAME" | awk -F'[:/-]' '{print $(NF-1)}')"
+echo "Using Keycloak version: $KEYCLOAK_VERSION"
+
+# Build the image
+docker build \
+  --build-arg BASE_IMAGE_NAME="$BASE_IMAGE_NAME" \
+  --build-arg BASE_IMAGE_DIGEST="$BASE_IMAGE_DIGEST" \
+  -t "docker.io/camunda/keycloak:$KEYCLOAK_VERSION" .
 ```
 
-This Dockerfile includes the necessary dependencies and configurations for AWS Advanced JDBC Wrapper.
+This Dockerfile includes the necessary dependencies and configurations for the **AWS Advanced JDBC Wrapper** and custom Keycloak themes.
+
 
 ## Setting up a New Version of Keycloak
 

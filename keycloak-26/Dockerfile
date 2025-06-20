@@ -1,3 +1,11 @@
+# Consume it from the bases.yml
+# docker build \
+#  --build-arg BASE_IMAGE_NAME="$(yq e '.sources.hub.name' bases.yml | cut -d@ -f1)" \
+#  --build-arg BASE_IMAGE_DIGEST="$(yq e '.sources.hub.name' bases.yml | cut -d@ -f2)" \
+#  -t your-image-name .
+ARG BASE_IMAGE_NAME=""
+ARG BASE_IMAGE_DIGEST=""
+
 # We use the identity image to copy the keycloak theme
 FROM docker.io/camunda/identity:latest@sha256:f8fe4e00c1a67992f76f2bcc35297e4e837da53c4ab118607ee306ad8412a062 AS identity
 

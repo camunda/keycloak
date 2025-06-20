@@ -100,29 +100,49 @@ jobs:
             - name: Compute build image variables
               id: compute-build-image-name-step
               run: |
-                  version_name="${{ matrix.keycloak_version }}"
-                  base_version="${version_name%-*}"  # remove -hub or -prem
+                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub" or "24-prem"
+                  base_version="${version_name%-*}"                   # e.g. "24"
+                  base_type="${version_name##*-}"                     # e.g. "hub" or "prem"
+                  base_path="keycloak-${base_version}"                # e.g. "keycloak-24"
 
-                  keycloak_full_version=$(grep "ARG BASE_IMAGE_NAME=.*$1" "keycloak-${base_version}/Dockerfile" \
-                      | awk -F'[:=]' '{print $NF}' \
-                      | tr -d '"' \
-                      | awk -F'[:/-]' '{print $1}' \
-                      || { echo "Error: Image tag $1 not found in Dockerfile"; exit 1; })
+                  # Extract the image name from bases.yml using yq
+                  base_image_entry=$(yq e ".sources.${base_type}[0].name" "${base_path}/bases.yml")
 
-                  echo "keycloak_full_version=${keycloak_full_version}"
+                  if [ -z "$base_image_entry" ] || [[ "$base_image_entry" == "null" ]]; then
+                    echo "Error: Could not find image entry for source '$base_type' in bases.yml"
+                    exit 1
+                  fi
+
+                  base_image_name="${base_image_entry%@*}"
+                  base_image_digest="${base_image_entry#*@}"
+
+                  # Extract full Keycloak version from the tag (e.g. 23.0.7)
+                  keycloak_full_version=$(echo "$base_image_name" | awk -F'[:/-]' '{print $(NF-1)}')
+
+                  echo "base_image_name=$base_image_name"
+                  echo "base_image_digest=$base_image_digest"
+                  echo "keycloak_full_version=$keycloak_full_version"
+
+                  echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_image_name=$base_image_name" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_image_digest=$base_image_digest" | tee -a "$GITHUB_OUTPUT"
+                  echo "keycloak_full_version=$keycloak_full_version" | tee -a "$GITHUB_OUTPUT"
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@96d2582c14dc5c3c4c680435f48bdb952234b910 # main
+              uses: camunda/infra-global-github-actions/build-docker-image@96d2582c14dc5c3c4c680435f48bdb952234b910
               with:
                   registry_host: ${{ vars.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
                   registry_password: ${{ steps.secrets.outputs.MACHINE_PWD }}
                   force_push: true
                   image_name: ${{ vars.CONTAINER_IMAGE_NAME_CI }}
-                  build_context: ./keycloak-${{ matrix.keycloak_version }}/
+                  build_context: ./keycloak-${{ steps.compute-build-image-name-step.outputs.base_version }}/
                   build_platforms: linux/amd64,linux/arm64
-                  extra_tags: | # the ci- prefix ensures a build context, this image is treated as "temporary"
+                  build_args: |
+                      BASE_IMAGE_NAME=${{ steps.compute-build-image-name-step.outputs.base_image_name }}
+                      BASE_IMAGE_DIGEST=${{ steps.compute-build-image-name-step.outputs.base_image_digest }}
+                  extra_tags: |
                       type=sha,enable=true,priority=1000,prefix=ci-${{ matrix.keycloak_version }}-sha-,suffix=,format=short
 
             - name: Compute target built image fully qualified name from metadata

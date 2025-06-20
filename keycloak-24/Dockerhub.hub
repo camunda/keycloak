@@ -1,7 +1,0 @@
-# List of all available images with associated sha:
-# skopeo --override-os linux inspect  docker://docker.io/bitnami/keycloak
-ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:24.0.5-debian-12-r8"
-
-# Note: use the global index image digest to make this image platform agnostic
-# skopeo --override-os linux inspect docker://docker.io/bitnami/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
-ARG BASE_IMAGE_DIGEST="sha256:4751a8e76af19343068f141c5d2adbba9e4e7d7476874f89cdb0cd61c922e277"
