@@ -7,7 +7,7 @@
       "groupName": "new major keycloak available",
       "groupSlug": "new-major-keycloak",
       "matchDatasources": ["docker"],
-      "matchFileNames": [".watch-latest/Dockerfile"],
+      "matchFileNames": [".watch-latest/Dockerfile*"],
       "matchUpdateTypes": ["major"],
       "enabled": true,
       "addLabels": ["dependencies", "docker", "hold"],
@@ -29,5 +29,27 @@
       "matchUpdateTypes": ["major"],
       "enabled": false,
     },
-  ]
+  ],
+  // TODO: integrates this into the common-config
+  // we will also need to add INFRAEX_CAMUNDA_DOCKER_REGISTRY_PASSWORD
+  hostRules: [
+    {
+      hostType: 'docker',
+      matchHost: 'https://registry.camunda.cloud',
+      username: 'ci-infraex',
+      password: '{{ secrets.INFRAEX_CAMUNDA_DOCKER_REGISTRY_PASSWORD }}',
+    },
+  ],
+  "customManagers": [
+           {
+             "customType": "regex",
+             "managerFilePatterns": ["/bases.yaml/"],
+             "matchStrings": [
+               "# renovate: datasource=docker depName=(?<depName>[^\\s]+) digest=sha256\\s*name:\\s*(?<depName2>[^:@\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]+)"
+             ],
+             "datasourceTemplate": "docker",
+             "versioningTemplate": "docker",
+             "autoReplaceStringTemplate": "name: {{{depName}}}:{{{newValue}}}@{{{newDigest}}}"
+           }
+         ],
 }
