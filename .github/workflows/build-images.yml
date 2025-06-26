@@ -25,8 +25,7 @@ env:
     CONTAINER_IMAGE_NAME_HUB: camunda/keycloak
 
     # Enterprise registry available for customers
-    # TODO: revert to non dev registry
-    CONTAINER_REGISTRY_CAMUNDA: dev.registry.camunda.cloud
+    CONTAINER_REGISTRY_CAMUNDA: registry.camunda.cloud
     CONTAINER_IMAGE_NAME_CAMUNDA: keycloak-ee/keycloak
 
     # Internal registry only used for ci tests
