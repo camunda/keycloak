@@ -1,9 +1,2 @@
 - [ ] renovate rule for bitnami premium
-- [ ] on-the-fly build for bitnami premium
-- [ ] conditional registry publication : docker vs private
-
-- [ ] verify new naming convention .hub and .prem and .base
-- [ ] explain in the developper doc that we source from harbor that cache it from docker.io => also document it in helm
-
-
-- [ ] test renovate syntax for yaml
+  - [ ] test renovate syntax for yaml

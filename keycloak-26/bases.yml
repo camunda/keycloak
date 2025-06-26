@@ -13,4 +13,4 @@ sources:
         # Note: use the global index image digest to make this image platform agnostic
         # skopeo --override-os linux inspect docker://dev.registry.camunda.cloud/dockerhub-infraex/bitnamiprem/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
         # TODO: revert
-        name: docker.io/bitnamiprem/keycloak:26.2.5-debian-12-r3@sha256:17aff522766636a7a315188481662b4bf4ce846731c06da261ba5b6a95fea70d
+        name: dev.registry.camunda.cloud/vendor-ee/keycloak:26.2.5-debian-12-r3@sha256:17aff522766636a7a315188481662b4bf4ce846731c06da261ba5b6a95fea70d
