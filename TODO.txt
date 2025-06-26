@@ -1,0 +1,2 @@
+- [ ] renovate rule for bitnami premium
+  - [ ] test renovate syntax for yaml
