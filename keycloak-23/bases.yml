@@ -5,16 +5,14 @@ sources:
         # skopeo --override-os linux inspect  docker://docker.io/bitnami/keycloak
         # Note: use the global index image digest to make this image platform agnostic
         # skopeo --override-os linux inspect docker://docker.io/bitnami/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
-        # renovate: datasource=docker depName=docker.io/bitnami/keycloak digest=sha256
-        name: docker.io/bitnami/keycloak:23.0.7-debian-12-r5@sha256:9596e39ee28105274379903db57aee298ab9f3292aa96797fda2aeaabcc38326
-
+        image:
+            repository: docker.io/bitnami/keycloak
+            tag: 23.0.7-debian-12-r5@sha256:9596e39ee28105274379903db57aee298ab9f3292aa96797fda2aeaabcc38326
     prem:
         # List of all available images with associated sha:
         # skopeo --override-os linux inspect docker://registry.camunda.cloud/dockerhub-infraex/bitnamiprem/keycloak
         # Note: use the global index image digest to make this image platform agnostic
         # skopeo --override-os linux inspect docker://registry.camunda.cloud/dockerhub-infraex/bitnamiprem/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
-        # name: registry.camunda.cloud/dockerhub-infraex/bitnamiprem/keycloak:23.0.7-debian-12-r5@sha256:9596e39ee28105274379903db57aee298ab9f3292aa96797fda2aeaabcc38326
-        # TODO: revert docker.io => registry.camunda.cloud - currently registry.camunda.cloud due to PR
-
-        # renovate: datasource=docker depName=registry.camunda.cloud/vendor-ee/keycloak digest=sha256
-        name: registry.camunda.cloud/vendor-ee/keycloak:23.0.7-debian-12-r5@sha256:9596e39ee28105274379903db57aee298ab9f3292aa96797fda2aeaabcc38326
+        image:
+            repository: registry.camunda.cloud/vendor-ee/keycloak
+            tag: 23.0.7-debian-12-r5@sha256:9596e39ee28105274379903db57aee298ab9f3292aa96797fda2aeaabcc38326

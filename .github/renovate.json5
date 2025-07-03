@@ -1,31 +1,36 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: ["github>camunda/infraex-common-config:default.json5"],
+  "dockerfile": {
+    "enabled": true,
+    "managerFilePatterns": [
+      '**/Dockerfile*',
+    ],
+  },
   "packageRules": [
     {
-      "matchManagers": ["dockerfile", "custom.regex"],
+      "matchManagers": ["dockerfile"],
       "groupName": "new major keycloak available",
       "groupSlug": "new-major-keycloak",
       "matchDatasources": ["docker"],
-      "matchFileNames": [".watch-latest/Dockerfile*", "keycloak-*/bases.yml"],
+      "matchFileNames": [".watch-latest/Dockerfile*"],
       "matchUpdateTypes": ["major"],
       "enabled": true,
       "addLabels": ["dependencies", "docker", "hold"],
     },
     {
-      "matchManagers": ["dockerfile", "custom.regex"],
+      "matchManagers": ["helm-values"],
       "groupName": "all non-major keycloak",
       "groupSlug": "all-non-major-keycloak",
       "matchDatasources": ["docker"],
-      "matchFileNames": ["keycloak-*/Dockerfile", "keycloak-*/bases.yml"],
-      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(:?-(?<compatibility>.+)(?<build>\\d+)-r(?<revision>\\d+))?$",
+      "matchFileNames": ["keycloak-*/bases.yml"],
       "enabled": true,
       "addLabels": ["dependencies", "docker"],
     },
     {
-      "matchManagers": ["dockerfile", "custom.regex"],
+      "matchManagers": ["helm-values"],
       "matchDatasources": ["docker"],
-      "matchFileNames": ["keycloak-*/Dockerfile", "keycloak-*/bases.yml"],
+      "matchFileNames": ["keycloak-*/bases.yml"],
       "matchUpdateTypes": ["major"],
       "enabled": false,
     },
@@ -40,16 +45,4 @@
       password: '{{ secrets.INFRAEX_CAMUNDA_DOCKER_REGISTRY_PASSWORD }}',
     },
   ],
-  "customManagers": [
-           {
-             "customType": "regex",
-             "managerFilePatterns": ["**/bases.yaml"],
-             "matchStrings": [
-                "\\s+image: (?<depName>.*?)(?::(?<currentValue>.*?))?@(?<currentDigest>sha256:[a-f0-9]+)\\s"
-             ],
-             "datasourceTemplate": "docker",
-             "versioningTemplate": "docker",
-             "autoReplaceStringTemplate": "name: {{{depName}}}:{{{newValue}}}@{{{newDigest}}}"
-           }
-         ],
 }

@@ -31,6 +31,8 @@ The base image is defined in the `bases.yml` file. You must decide between:
 * `hub`: the **open-source** Bitnami Keycloak image (from Docker Hub)
 * `prem`: the **Bitnami Premium** version (from Camunda’s private registry)
 
+Note: The YAML schema is a valid Helm values schema. This choice was made for easier maintenance with Renovate parsing.
+
 ### 2. 🔧 Build with `yq`
 
 Use the following command to extract the base image name and digest using [`yq`](https://mikefarah.gitbook.io/yq/) (Go version):
@@ -40,8 +42,9 @@ Use the following command to extract the base image name and digest using [`yq`]
 BASE_SOURCE="hub"
 
 # Extract base image name and digest
-BASE_IMAGE_NAME="$(yq e ".sources.$BASE_SOURCE.name" bases.yml | cut -d@ -f1)"
-BASE_IMAGE_DIGEST="$(yq e ".sources.$BASE_SOURCE.name" bases.yml | cut -d@ -f2)"
+BASE_IMAGE_NAME="$(yq e ".sources.$BASE_SOURCE.image.repository" bases.yml)"
+BASE_IMAGE_TAG="$(yq e ".sources.$BASE_SOURCE.image.tag" bases.yml | cut -d@ -f1)"
+BASE_IMAGE_DIGEST="$(yq e ".sources.$BASE_SOURCE.image.tag" bases.yml | cut -d@ -f2)"
 
 # Extract Keycloak version from image tag
 KEYCLOAK_VERSION="$(echo "$BASE_IMAGE_NAME" | awk -F'[:/-]' '{print $(NF-1)}')"
@@ -50,6 +53,7 @@ echo "Using Keycloak version: $KEYCLOAK_VERSION"
 # Build the image
 docker build \
   --build-arg BASE_IMAGE_NAME="$BASE_IMAGE_NAME" \
+  --build-arg BASE_IMAGE_TAG="$BASE_IMAGE_TAG" \
   --build-arg BASE_IMAGE_DIGEST="$BASE_IMAGE_DIGEST" \
   -t "docker.io/camunda/keycloak:$KEYCLOAK_VERSION" .
 ```

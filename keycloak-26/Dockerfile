@@ -1,9 +1,11 @@
 # Consume it from the bases.yml
 # docker build \
-#  --build-arg BASE_IMAGE_NAME="$(yq e '.sources.hub.name' bases.yml | cut -d@ -f1)" \
-#  --build-arg BASE_IMAGE_DIGEST="$(yq e '.sources.hub.name' bases.yml | cut -d@ -f2)" \
+#  --build-arg BASE_IMAGE_NAME="$(yq e '.sources.hub.image.repository' bases.yml | cut -d@ -f1)" \
+#  --build-arg BASE_IMAGE_TAG="$(yq e '.sources.hub.image.tag' bases.yml | cut -d@ -f1)" \
+#  --build-arg BASE_IMAGE_DIGEST="$(yq e '.sources.hub.image.tag' bases.yml | cut -d@ -f2)" \
 #  -t your-image-name .
 ARG BASE_IMAGE_NAME=""
+ARG BASE_IMAGE_TAG=""
 ARG BASE_IMAGE_DIGEST=""
 
 # We use the identity image to copy the keycloak theme
@@ -11,7 +13,7 @@ FROM docker.io/camunda/identity:latest@sha256:f8fe4e00c1a67992f76f2bcc35297e4e83
 
 # Building builder image
 # hadolint ignore=DL3006
-FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST} AS builder
+FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST} AS builder
 
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
@@ -53,9 +55,10 @@ RUN /opt/bitnami/keycloak/bin/kc.sh build
 ##### FINAL Keycloak IMAGE # ####
 
 # hadolint ignore=DL3006
-FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST}
+FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST}
 # leave the values below unset to use the default value at the top of the file
 ARG BASE_IMAGE_NAME
+ARG BASE_IMAGE_TAG
 ARG BASE_IMAGE_DIGEST
 
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper

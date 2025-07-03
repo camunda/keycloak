@@ -122,22 +122,13 @@ jobs:
                   base_type="${version_name##*-}"                     # e.g. "hub" or "prem"
                   base_path="keycloak-${base_version}"                # e.g. "keycloak-24"
 
-                  # Extract the image name from bases.yml using yq
-                  base_image_entry=$(yq e ".sources.${base_type}.name" "${base_path}/bases.yml")
-
-                  if [ -z "$base_image_entry" ] || [[ "$base_image_entry" == "null" ]]; then
-                    echo "Error: Could not find image entry for source '$base_type' in bases.yml"
-                    exit 1
-                  fi
-
-                  base_image_name=$(echo "$base_image_entry" | awk -F'@' '{print $1}')
-                  base_image_digest=$(echo "$base_image_entry" | awk -F'@' '{print $2}')
-
-                  echo "base_image_name=$base_image_name"
-                  echo "base_image_digest=$base_image_digest"
+                  base_image_name=$(yq e ".sources.${base_type}.image.repository" "${base_path}/bases.yml")
+                  base_image_tag=$(yq e ".sources.${base_type}.image.tag" bases.yml | cut -d@ -f1)
+                  base_image_digest=$(yq e ".sources.${base_type}.image.tag" bases.yml | cut -d@ -f2)
 
                   echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
                   echo "base_image_name=$base_image_name" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_image_tag=$base_image_tag" | tee -a "$GITHUB_OUTPUT"
                   echo "base_image_digest=$base_image_digest" | tee -a "$GITHUB_OUTPUT"
 
             - name: Build image using Camunda docker build
@@ -153,6 +144,7 @@ jobs:
                   build_platforms: linux/amd64,linux/arm64
                   build_args: |
                       BASE_IMAGE_NAME=${{ steps.compute-build-image-name-step.outputs.base_image_name }}
+                      BASE_IMAGE_TAG=${{ steps.compute-build-image-name-step.outputs.base_image_tag }}
                       BASE_IMAGE_DIGEST=${{ steps.compute-build-image-name-step.outputs.base_image_digest }}
                   extra_tags: |
                       type=sha,enable=true,priority=1000,prefix=ci-${{ matrix.keycloak_version }}-sha-,suffix=,format=short
