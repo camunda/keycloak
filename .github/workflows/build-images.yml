@@ -123,8 +123,8 @@ jobs:
                   base_path="keycloak-${base_version}"                # e.g. "keycloak-24"
 
                   base_image_name=$(yq e ".sources.${base_type}.image.repository" "${base_path}/bases.yml")
-                  base_image_tag=$(yq e ".sources.${base_type}.image.tag" bases.yml | cut -d@ -f1)
-                  base_image_digest=$(yq e ".sources.${base_type}.image.tag" bases.yml | cut -d@ -f2)
+                  base_image_tag=$(yq e ".sources.${base_type}.image.tag" "${base_path}/bases.yml" | cut -d@ -f1)
+                  base_image_digest=$(yq e ".sources.${base_type}.image.tag" "${base_path}/bases.yml" | cut -d@ -f2)
 
                   echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
                   echo "base_image_name=$base_image_name" | tee -a "$GITHUB_OUTPUT"
