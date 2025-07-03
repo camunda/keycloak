@@ -35,14 +35,12 @@
       "enabled": false,
     },
   ],
-  // TODO: integrates this into the common-config
-  // we will also need to add INFRAEX_CAMUNDA_DOCKER_REGISTRY_PASSWORD
   hostRules: [
     {
       hostType: 'docker',
       matchHost: 'https://registry.camunda.cloud',
-      username: 'ci-infraex',
-      password: '{{ secrets.INFRAEX_CAMUNDA_DOCKER_REGISTRY_PASSWORD }}',
+      username: '{{ secrets.INFRAEX_HARBOR_REGISTRY_USERNAME }}',
+      password: '{{ secrets.INFRAEX_HARBOR_REGISTRY_PASSWORD }}',
     },
   ],
 }
