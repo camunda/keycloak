@@ -599,10 +599,10 @@ jobs:
                   set -euo pipefail
 
                   keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
-                  echo "keycloak_image_name=${keycloak_image_name}" | tee -a "$GITHUB_OUTPUTS"
+                  echo "keycloak_image_name=${keycloak_image_name}" | tee -a "$GITHUB_OUTPUT"
 
                   publishing_image_target_name="${{ steps.publishing-registry.outputs.publishing_registry }}/${{ steps.publishing-registry.outputs.publishing_image_name }}"
-                  echo "publishing_image_target_name=${publishing_image_target_name}" | tee -a "$GITHUB_OUTPUTS"
+                  echo "publishing_image_target_name=${publishing_image_target_name}" | tee -a "$GITHUB_OUTPUT"
 
             - name: Pull built image
               run: |
