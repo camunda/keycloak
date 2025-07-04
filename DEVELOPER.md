@@ -19,7 +19,8 @@ just --list
 
 ## 🛠️ Building the Image (Development Only)
 
-> **Note:** Building a local image is **only for development purposes**.
+> [!NOTE]
+> Building a local image is **only for development purposes**.
 > In production, the pipeline handles building a multi-architecture image using Docker Buildx.
 
 Navigate to the `keycloak-<version>` directory (e.g. `keycloak-24`) and execute the following commands:
@@ -31,7 +32,8 @@ The base image is defined in the `bases.yml` file. You must decide between:
 * `hub`: the **open-source** Bitnami Keycloak image (from Docker Hub)
 * `prem`: the **Bitnami Premium** version (from Camunda’s private registry)
 
-Note: The YAML schema is a valid Helm values schema. This choice was made for easier maintenance with Renovate parsing.
+> [!NOTE]
+> The YAML schema is a valid Helm values schema. This choice was made for easier maintenance with Renovate parsing.
 
 ### 2. 🔧 Build with `yq`
 
