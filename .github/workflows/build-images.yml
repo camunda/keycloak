@@ -18,6 +18,20 @@ on:
                 required: false
                 default: ''
 
+
+env:
+    # Public registry available on docker hub
+    CONTAINER_REGISTRY_HUB: docker.io
+    CONTAINER_IMAGE_NAME_HUB: camunda/keycloak
+
+    # Enterprise registry available for customers
+    CONTAINER_REGISTRY_CAMUNDA: registry.camunda.cloud
+    CONTAINER_IMAGE_NAME_CAMUNDA: keycloak-ee/keycloak
+
+    # Internal registry only used for ci tests
+    CONTAINER_REGISTRY_CI: registry.camunda.cloud
+    CONTAINER_IMAGE_NAME_CI: team-infrastructure-experience/keycloak
+
 jobs:
     triage:
         runs-on: ubuntu-24.04
@@ -41,18 +55,22 @@ jobs:
             - name: List Keycloak Versions from repository's folders
               id: set-matrix
               run: |
+                  set -euo pipefail
+
                   : # if we release a specified version of keycloak, the matrix should only contain it
                   if [[ $GITHUB_REF =~ ^refs/tags/keycloak-([0-9]+)- ]]; then
                     keycloak_version=${BASH_REMATCH[1]}
-                    matrix_json="[\"${keycloak_version}\"]"
+                    matrix_json=$(jq -n --arg v "$keycloak_version" '["\($v)-prem", "\($v)-hub"]')
                   else
                     : # List folders matching the pattern keycloak-*
                     : # Export the list as an output in JSON format
-                    matrix_json=$(printf "%s\n" keycloak-*/ | sed 's/\/$//' | sed 's/keycloak-//' | jq -R -s -c 'split("\n")[:-1]')
+                    versions=$(printf "%s\n" keycloak-*/ | sed 's/\/$//' | sed 's/keycloak-//')
+                    matrix_json=$(echo "$versions" | jq -R -s -c 'split("\n")[:-1] | map("\(.)-prem", "\(.)-hub") | flatten')
                   fi
 
                   echo "matrix_keycloak_versions=${matrix_json}" >> "$GITHUB_OUTPUT"
                   echo "matrix_keycloak_versions=${matrix_json}"
+
 
     build-image:
         runs-on: ubuntu-24.04
@@ -90,38 +108,52 @@ jobs:
             - name: Login to the dockerhub registry # prevents pull limit rate
               uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
               with:
-                  registry: ${{ vars.CONTAINER_REGISTRY }}
+                  registry: ${{ env.CONTAINER_REGISTRY_HUB }}
                   username: ${{ steps.secrets.outputs.DOCKERHUB_USER }}
                   password: ${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}
 
             - name: Compute build image variables
               id: compute-build-image-name-step
               run: |
-                  keycloak_full_version=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile \
-                      | awk -F'[:=]' '{print $NF}' \
-                      | tr -d '"' \
-                      | awk -F'[:/-]' '{print $1}' \
-                      || { echo "Error: Image tag $1 not found in Dockerfile"; exit 1; })
+                  set -euo pipefail
 
-                  echo "keycloak_full_version=${keycloak_full_version}"
+                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub" or "24-prem"
+                  base_version="${version_name%-*}"                   # e.g. "24"
+                  base_type="${version_name##*-}"                     # e.g. "hub" or "prem"
+                  base_path="keycloak-${base_version}"                # e.g. "keycloak-24"
+
+                  base_image_name=$(yq e ".sources.${base_type}.image.repository" "${base_path}/bases.yml")
+                  base_image_tag=$(yq e ".sources.${base_type}.image.tag" "${base_path}/bases.yml" | cut -d@ -f1)
+                  base_image_digest=$(yq e ".sources.${base_type}.image.tag" "${base_path}/bases.yml" | cut -d@ -f2)
+
+                  echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_image_name=$base_image_name" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_image_tag=$base_image_tag" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_image_digest=$base_image_digest" | tee -a "$GITHUB_OUTPUT"
 
             - name: Build image using Camunda docker build
               id: build-image-step
               uses: camunda/infra-global-github-actions/build-docker-image@c14fc2f96b40e93e931eec38d0cd9106b9b697c1 # main
               with:
-                  registry_host: ${{ vars.CONTAINER_REGISTRY_CI }}
+                  registry_host: ${{ env.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
                   registry_password: ${{ steps.secrets.outputs.MACHINE_PWD }}
                   force_push: true
-                  image_name: ${{ vars.CONTAINER_IMAGE_NAME_CI }}
-                  build_context: ./keycloak-${{ matrix.keycloak_version }}/
+                  image_name: ${{ env.CONTAINER_IMAGE_NAME_CI }}
+                  build_context: ./keycloak-${{ steps.compute-build-image-name-step.outputs.base_version }}/
                   build_platforms: linux/amd64,linux/arm64
-                  extra_tags: | # the ci- prefix ensures a build context, this image is treated as "temporary"
+                  build_args: |
+                      BASE_IMAGE_NAME=${{ steps.compute-build-image-name-step.outputs.base_image_name }}
+                      BASE_IMAGE_TAG=${{ steps.compute-build-image-name-step.outputs.base_image_tag }}
+                      BASE_IMAGE_DIGEST=${{ steps.compute-build-image-name-step.outputs.base_image_digest }}
+                  extra_tags: |
                       type=sha,enable=true,priority=1000,prefix=ci-${{ matrix.keycloak_version }}-sha-,suffix=,format=short
 
             - name: Compute target built image fully qualified name from metadata
               id: compute-image-name-step
               run: |
+                  set -euo pipefail
+
                   image_metadata='${{ steps.build-image-step.outputs.image_metadata }}'
                   image_name=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."image.name"' | tr ',' '\n' | head -n 1 | tr -d ' ')
                   digest=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."containerimage.digest"')
@@ -129,7 +161,7 @@ jobs:
                   echo "full_image_name=${full_image_name}" >> "$GITHUB_OUTPUT"
                   echo "$full_image_name"
 
-      ## Write for matrix outputs workaround
+            ## Write for matrix outputs workaround
             - uses: cloudposse/github-action-matrix-outputs-write@ed06cf3a6bf23b8dce36d1cf0d63123885bb8375 # v1
               id: out
               with:
@@ -138,7 +170,7 @@ jobs:
                   outputs: |-
                       full_image_name: ${{ steps.compute-image-name-step.outputs.full_image_name }}
 
-  ## Read matrix outputs
+    ## Read matrix outputs
     read-build-image-output:
         runs-on: ubuntu-24.04
         needs: [build-image]
@@ -171,6 +203,8 @@ jobs:
               id: set-keycloak-image-name
               shell: bash
               run: |
+                  set -euo pipefail
+
                   keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
                   echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
                   echo "keycloak_image_name=${keycloak_image_name}"
@@ -191,12 +225,14 @@ jobs:
             - name: Login to the registry
               uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
               with:
-                  registry: ${{ vars.CONTAINER_REGISTRY_CI }}
+                  registry: ${{ env.CONTAINER_REGISTRY_CI }}
                   username: ${{ steps.secrets.outputs.MACHINE_USR }}
                   password: ${{ steps.secrets.outputs.MACHINE_PWD }}
 
             - name: KeyCloak Show-Config
               run: |
+                  set -euo pipefail
+
                   docker run "${{ env.keycloak_image_name }}" /opt/bitnami/keycloak/bin/kc.sh show-config >> docker.log
                   echo "config=$(< docker.log tr '\n' ' ')" >> "$GITHUB_ENV"
 
@@ -248,6 +284,8 @@ jobs:
 
             - name: Install build-essentials for asdf
               run: |
+                  set -euo pipefail
+
                   sudo apt-get update
 
                   sudo apt-get install -y build-essential git libexpat1-dev libssl-dev zlib1g-dev \
@@ -262,6 +300,8 @@ jobs:
               id: set-keycloak-image-name
               shell: bash
               run: |
+                  set -euo pipefail
+
                   keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
                   echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
                   echo "keycloak_image_name=${keycloak_image_name}"
@@ -288,20 +328,22 @@ jobs:
             - name: Login to the dockerhub registry # prevents pull limit rate
               uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
               with:
-                  registry: ${{ vars.CONTAINER_REGISTRY }}
+                  registry: ${{ env.CONTAINER_REGISTRY_HUB }}
                   username: ${{ steps.secrets.outputs.DOCKERHUB_USER }}
                   password: ${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}
 
             - name: Login to the registry
               uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
               with:
-                  registry: ${{ vars.CONTAINER_REGISTRY_CI }}
+                  registry: ${{ env.CONTAINER_REGISTRY_CI }}
                   username: ${{ steps.secrets.outputs.MACHINE_USR }}
                   password: ${{ steps.secrets.outputs.MACHINE_PWD }}
 
             - name: Compute AWS variables
               if: startsWith(matrix.runner_desc.runner, 'aws')
               run: |
+                  set -euo pipefail
+
                   : # aws aurora superuser is only used for bootstrapping a standard user that will auth using irsa
                   echo "postgres_user=keycloak-irsa" | tee -a "$GITHUB_ENV"
                   echo "postgres_password=" | tee -a "$GITHUB_ENV"
@@ -323,6 +365,8 @@ jobs:
             - name: Compute Ubuntu variables
               if: startsWith(matrix.runner_desc.runner, 'ubuntu')
               run: |
+                  set -euo pipefail
+
                   : # we use plain values that will be used by the postgres container
                   echo "postgres_user=keycloak" | tee -a "$GITHUB_ENV"
                   echo "postgres_password=password" | tee -a "$GITHUB_ENV"
@@ -330,6 +374,8 @@ jobs:
             - name: Declare test recipe variables
               shell: bash
               run: |
+                  set -euo pipefail
+
                   if (( "${{ matrix.runner_desc.postgres_replicas }}" < 1 )); then
                     echo "compose_keycloak_depends_on=" >> "$GITHUB_ENV"
                   else
@@ -356,8 +402,8 @@ jobs:
                   echo "postgres_host=${postgres_host}" >> "$GITHUB_ENV"
                   echo "postgres_host=${postgres_host}"
 
-      # The self-hosted runner doesn't provide a postgres client and the prerequisites for make,
-      # so we need to install them manually
+            # The self-hosted runner doesn't provide a postgres client and the prerequisites for make,
+            # so we need to install them manually
             - name: Install required packages
               run: sudo apt-get update && sudo apt-get install -y build-essential postgresql-client
 
@@ -376,6 +422,8 @@ jobs:
               if: startsWith(matrix.runner_desc.runner, 'aws')
               shell: bash
               run: |
+                  set -euo pipefail
+
                   : # We generate a db auth token using the aws cli because IRSA access in Keycloak might not be easy to debug.
                   : # This token will be used in the "Test psql db connection" step, and then it will be reset for the Keycloak integration test.
                   : # The aws command uses the environment variables provided by the runner
@@ -388,6 +436,8 @@ jobs:
               if: ${{ matrix.runner_desc.postgres_replicas == 0 }}
               shell: bash
               run: |
+                  set -euo pipefail
+
                   : # Perform a simple psql connection test to ensure the database can be reached.
                   : # The psql command provides clear and simple error messages compared to jdbc,
                   : # which is why we perform this step.
@@ -400,6 +450,8 @@ jobs:
               if: startsWith(matrix.runner_desc.runner, 'aws')
               shell: bash
               run: |
+                  set -euo pipefail
+
                   : # For AWS IRSA connection, we don't use password-based authentication.
                   : # Since a password was generated in the previous steps, we need to ensure it is empty.
                   echo "postgres_password=" >> "$GITHUB_ENV"
@@ -441,6 +493,8 @@ jobs:
 
             - name: Install dependencies
               run: |
+                  set -euo pipefail
+
                   python -m pip install --upgrade pip
                   pip install -r ./.github/scripts/integration/requirements.txt
 
@@ -506,41 +560,71 @@ jobs:
             - name: Login to the registry
               uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
               with:
-                  registry: ${{ vars.CONTAINER_REGISTRY_CI }}
+                  registry: ${{ env.CONTAINER_REGISTRY_CI }}
                   username: ${{ steps.secrets.outputs.MACHINE_USR }}
                   password: ${{ steps.secrets.outputs.MACHINE_PWD }}
 
-            - name: Login to Docker Hub
+            - name: Set registry credentials based on keycloak_version
+              id: publishing-registry
+              run: |
+                  version="${{ matrix.keycloak_version }}"
+
+                  if [[ "$version" == *-hub ]]; then
+                    echo "publishing_registry=${{ env.CONTAINER_REGISTRY_HUB }}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_registry_username=${{ steps.secrets.outputs.DOCKERHUB_USER }}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_registry_password=${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}" | tee -a "$GITHUB_OUTPUT"
+                    # Image target for Hub
+                    echo "publishing_image_name=${{ env.CONTAINER_IMAGE_NAME_HUB }}" | tee -a "$GITHUB_OUTPUT"
+                  elif [[ "$version" == *-prem ]]; then
+                    echo "publishing_registry=${{ env.CONTAINER_REGISTRY_CAMUNDA }}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_registry_username=${{ steps.secrets.outputs.MACHINE_USR }}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_registry_password=${{ steps.secrets.outputs.MACHINE_PWD }}" | tee -a "$GITHUB_OUTPUT"
+                    # Image target for Camunda
+                    echo "publishing_image_name=${{ env.CONTAINER_IMAGE_NAME_CAMUNDA }}" | tee -a "$GITHUB_OUTPUT"
+                  else
+                    echo "❌ Error: Unsupported version suffix in '$version'. Expected '-hub' or '-prem'."
+                    exit 1
+                  fi
+
+            - name: Login to the publishing registry
               uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
               with:
-                  registry: ${{ vars.CONTAINER_REGISTRY }}
-                  username: ${{ steps.secrets.outputs.DOCKERHUB_USER }}
-                  password: ${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}
+                  registry: ${{ steps.publishing-registry.outputs.publishing_registry }}
+                  username: ${{ steps.publishing-registry.outputs.publishing_registry_username }}
+                  password: ${{ steps.publishing-registry.outputs.publishing_registry_password }}
 
             - name: Set Keycloak Version
               id: set-keycloak-version
               run: |
-                  keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
-                  echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
-                  echo "keycloak_image_name=${keycloak_image_name}"
+                  set -euo pipefail
 
-                  dockerhub_target_name="${{ vars.CONTAINER_REGISTRY }}/${{ vars.CONTAINER_IMAGE_NAME }}"
-                  echo "dockerhub_target_name=${dockerhub_target_name}" >> "$GITHUB_ENV"
-                  echo "dockerhub_target_name=${dockerhub_target_name}"
+                  keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
+                  echo "keycloak_image_name=${keycloak_image_name}" | tee -a "$GITHUB_OUTPUTS"
+
+                  publishing_image_target_name="${{ steps.publishing-registry.outputs.publishing_registry }}/${{ steps.publishing-registry.outputs.publishing_image_name }}"
+                  echo "publishing_image_target_name=${publishing_image_target_name}" | tee -a "$GITHUB_OUTPUTS"
 
             - name: Pull built image
               run: |
-                  docker pull "${{ env.keycloak_image_name }}"
+                  set -euo pipefail
+
+                  docker pull "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
 
             - name: Retag and push the image
               shell: bash
               run: |
-                  : # extract the base image tag to use it as base tag
-                  base_image_tag=$(grep "ARG BASE_IMAGE_NAME=.*$1" keycloak-${{ matrix.keycloak_version }}/Dockerfile \
-                  | awk -F'[:=]' '{print $NF}' \
-                  | tr -d '"' \
-                  || { echo "Error: Image tag $1 not found in Dockerfile"; exit 1; })
+                  set -euo pipefail
 
+                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub" or "24-prem"
+                  base_version="${version_name%-*}"                   # e.g. "24"
+                  base_type="${version_name##*-}"                     # e.g. "hub" or "prem"
+                  base_path="keycloak-${base_version}"                # e.g. "keycloak-24"
+
+                  # Extract the image name from bases.yml using yq
+                  base_image_entry=$(yq e ".sources.${base_type}.name" "${base_path}/bases.yml")
+
+                  : # extract the base image tag to use it as base tag
+                  base_image_tag=$(echo "$base_image_entry" | cut -d':' -f2)
                   echo "base_image_tag=${base_image_tag}"
 
                   : # version of keycloak (e.g.: 23.0.1)
@@ -549,16 +633,21 @@ jobs:
                   : # remove keycloak- prefix
                   suffix_version=$(echo '${{ github.ref_name }}' | sed 's/keycloak-[0-9]*-//')
 
-                  docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${{ matrix.keycloak_version }}" "${{ env.keycloak_image_name }}"
-                  docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${base_image_tag}" "${{ env.keycloak_image_name }}"
-                  docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${base_image_tag}-${suffix_version}" "${{ env.keycloak_image_name }}"
-                  docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:${semver_tag}" "${{ env.keycloak_image_name }}"
+                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_version}" \
+                    "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_image_tag}" \
+                    "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_image_tag}-${suffix_version}" \
+                    "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${semver_tag}" \
+                    "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
 
-                  if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${{ matrix.keycloak_version }}" ]; then
-                    docker buildx imagetools create -t "${{ env.dockerhub_target_name }}:latest" "${{ env.keycloak_image_name }}"
+                  if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${base_version}" ]; then
+                    docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:latest" \
+                      "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
                   fi
 
-  # Rerun failed jobs running on self-hosted runners in case of network issues or node preemption
+    # Rerun failed jobs running on self-hosted runners in case of network issues or node preemption
     rerun-failed-jobs:
         needs:
             - test-postgres-integ

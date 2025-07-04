@@ -1,33 +1,54 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: ["github>camunda/infraex-common-config:default.json5"],
+  "dockerfile": {
+    "enabled": true,
+    "managerFilePatterns": [
+      '**/Dockerfile*',
+    ],
+  },
+  "helm-values": {
+    "enabled": true,
+    "pinDigests": true,
+    "managerFilePatterns": [
+      '/(^|/)bases\\.ya?ml$/',
+    ],
+  },
+  "separateMajorMinor": true,
   "packageRules": [
     {
       "matchManagers": ["dockerfile"],
       "groupName": "new major keycloak available",
       "groupSlug": "new-major-keycloak",
       "matchDatasources": ["docker"],
-      "matchFileNames": [".watch-latest/Dockerfile"],
+      "matchFileNames": [".watch-latest/Dockerfile*"],
       "matchUpdateTypes": ["major"],
       "enabled": true,
       "addLabels": ["dependencies", "docker", "hold"],
     },
     {
-      "matchManagers": ["dockerfile"],
+      "matchManagers": ["helm-values"],
       "groupName": "all non-major keycloak",
       "groupSlug": "all-non-major-keycloak",
       "matchDatasources": ["docker"],
-      "matchFileNames": ["keycloak-*/Dockerfile"],
-      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(:?-(?<compatibility>.+)(?<build>\\d+)-r(?<revision>\\d+))?$",
+      "matchFileNames": ["keycloak-*/bases.yml"],
       "enabled": true,
       "addLabels": ["dependencies", "docker"],
     },
     {
-      "matchManagers": ["dockerfile"],
+      "matchManagers": ["helm-values"],
       "matchDatasources": ["docker"],
-      "matchFileNames": ["keycloak-*/Dockerfile"],
+      "matchFileNames": ["keycloak-*/bases.yml"],
       "matchUpdateTypes": ["major"],
       "enabled": false,
     },
-  ]
+  ],
+  hostRules: [
+    {
+      hostType: 'docker',
+      matchHost: 'https://registry.camunda.cloud',
+      username: '{{ secrets.INFRAEX_HARBOR_REGISTRY_USERNAME }}',
+      password: '{{ secrets.INFRAEX_HARBOR_REGISTRY_PASSWORD }}',
+    },
+  ],
 }

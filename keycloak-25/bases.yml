@@ -1,0 +1,19 @@
+---
+sources:
+    hub:
+        # List of all available images with associated sha:
+        # skopeo --override-os linux inspect  docker://docker.io/bitnami/keycloak
+        # Note: use the global index image digest to make this image platform agnostic
+        # skopeo --override-os linux inspect docker://docker.io/bitnami/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
+        image:
+            repository: docker.io/bitnami/keycloak
+            tag: 25.0.4-debian-12-r3@sha256:77646e81a63cf05a25c59a659d10bc6d90cddd8201f8c66d89e0485c32be203b
+
+    prem:
+        # List of all available images with associated sha:
+        # skopeo --override-os linux inspect docker://registry.camunda.cloud/vendor-ee/keycloak
+        # Note: use the global index image digest to make this image platform agnostic
+        # skopeo --override-os linux inspect docker://registry.camunda.cloud/vendor-ee/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
+        image:
+            repository: registry.camunda.cloud/vendor-ee/keycloak
+            tag: 25.0.6-debian-12-r4@sha256:ffa3de6d343bcb1401febf462d44500b02a2a55cf41eda91474b092b36e92050

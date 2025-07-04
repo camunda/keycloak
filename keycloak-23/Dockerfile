@@ -1,14 +1,19 @@
-ARG BASE_IMAGE_NAME="docker.io/bitnami/keycloak:23.0.7-debian-12-r5"
-# List of all available images with associated sha: https://hub.docker.com/r/bitnami/keycloak/tags
-# Note: use the global image digest to make this image platform agnostic (see: https://github.com/camunda/zeebe/pull/14186)
-ARG BASE_IMAGE_DIGEST="sha256:9596e39ee28105274379903db57aee298ab9f3292aa96797fda2aeaabcc38326"
+# Consume it from the bases.yml
+# docker build \
+#  --build-arg BASE_IMAGE_NAME="$(yq e '.sources.hub.image.repository' bases.yml | cut -d@ -f1)" \
+#  --build-arg BASE_IMAGE_TAG="$(yq e '.sources.hub.image.tag' bases.yml | cut -d@ -f1)" \
+#  --build-arg BASE_IMAGE_DIGEST="$(yq e '.sources.hub.image.tag' bases.yml | cut -d@ -f2)" \
+#  -t your-image-name .
+ARG BASE_IMAGE_NAME=""
+ARG BASE_IMAGE_TAG=""
+ARG BASE_IMAGE_DIGEST=""
 
 # We use the identity image to copy the keycloak theme
 FROM docker.io/camunda/identity:latest@sha256:f8fe4e00c1a67992f76f2bcc35297e4e837da53c4ab118607ee306ad8412a062 AS identity
 
 # Building builder image
 # hadolint ignore=DL3006
-FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST} AS builder
+FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST} AS builder
 
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
@@ -50,9 +55,10 @@ RUN /opt/bitnami/keycloak/bin/kc.sh build
 ##### FINAL Keycloak IMAGE #####
 
 # hadolint ignore=DL3006
-FROM ${BASE_IMAGE_NAME}@${BASE_IMAGE_DIGEST}
+FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST}
 # leave the values below unset to use the default value at the top of the file
 ARG BASE_IMAGE_NAME
+ARG BASE_IMAGE_TAG
 ARG BASE_IMAGE_DIGEST
 
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
@@ -77,7 +83,7 @@ LABEL maintainer="Camunda" \
       org.opencontainers.image.vendor="Camunda" \
       org.opencontainers.image.documentation="https://hub.docker.com/camunda/keycloak/" \
       org.opencontainers.image.licenses="Apache License 2.0" \
-      org.opencontainers.image.base.name="docker.io/library/${BASE_IMAGE_NAME}" \
+      org.opencontainers.image.base.name="${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}" \
       org.opencontainers.image.base.digest="${BASE_IMAGE_DIGEST}" \
       io.openshift.tags="bpmn,identity,keycloak,camunda,bitnami" \
       io.openshift.min-memory="1Gi" \
