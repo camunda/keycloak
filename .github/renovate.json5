@@ -7,6 +7,14 @@
       '**/Dockerfile*',
     ],
   },
+  "helm-values": {
+    "enabled": true,
+    "pinDigests": true,
+    "managerFilePatterns": [
+      '/(^|/)bases\\.ya?ml$/',
+    ],
+  },
+  "separateMajorMinor": true,
   "packageRules": [
     {
       "matchManagers": ["dockerfile"],
