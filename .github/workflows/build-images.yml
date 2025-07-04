@@ -620,11 +620,8 @@ jobs:
                   base_type="${version_name##*-}"                     # e.g. "hub" or "prem"
                   base_path="keycloak-${base_version}"                # e.g. "keycloak-24"
 
-                  # Extract the image name from bases.yml using yq
-                  base_image_entry=$(yq e ".sources.${base_type}.name" "${base_path}/bases.yml")
-
-                  : # extract the base image tag to use it as base tag
-                  base_image_tag=$(echo "$base_image_entry" | cut -d':' -f2)
+                  # e.g. base_image_tag=23.0.7-debian-12-r5
+                  base_image_tag=$(yq e ".sources.${base_type}.image.tag" "${base_path}/bases.yml" | cut -d@ -f1)
                   echo "base_image_tag=${base_image_tag}"
 
                   : # version of keycloak (e.g.: 23.0.1)
