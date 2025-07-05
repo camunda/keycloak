@@ -7,7 +7,7 @@ sources:
         # skopeo --override-os linux inspect docker://docker.io/bitnami/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
         image:
             repository: docker.io/bitnami/keycloak
-            tag: 26.2.5-debian-12-r3@sha256:17aff522766636a7a315188481662b4bf4ce846731c06da261ba5b6a95fea70d
+            tag: 26.3.0-debian-12-r0@sha256:f5727c6357f947beda242391a9c6add244b50d5b179687e6c6d1a919f9f5293e
 
     prem:
         # List of all available images with associated sha:
