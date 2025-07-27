@@ -13,9 +13,9 @@
 # check it with
 # diff <(sed '/^#/d; /^$/d' .tool-versions | sort) <(sed '/^#/d; /^$/d' .tool-versions) && echo ".tool-versions is sorted correctly" || echo ".tool-versions is not sorted correctly"
 
-awscli 2.27.55
+awscli 2.27.60
 
-just 1.42.3
+just 1.42.4
 
 pre-commit 4.2.0
 
