@@ -28,8 +28,6 @@ RUN mkdir /home/keycloak && chown keycloak /home/keycloak && \
 COPY --from=identity /app/keycloak-theme/ /opt/bitnami/keycloak/themes/identity
 RUN chown 1001:1000 -R /opt/bitnami/keycloak/themes
 
-USER 1001
-
 WORKDIR /home/keycloak
 
 # Install the custom providers
@@ -40,7 +38,8 @@ RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-j
     && chmod 0644 /home/keycloak/pom.xml && \
 
     cat /home/keycloak/pom.xml && mvn install && \
-    cp /home/keycloak/.m2/repository/software/amazon/*/*/*/*.jar /opt/bitnami/keycloak/providers/ && \
+    chown -R 1001:1000 /root/.m2/repository && \
+    cp /root/.m2/repository/software/amazon/*/*/*/*.jar /opt/bitnami/keycloak/providers/ && \
 
     curl -fL "https://github.com/aws/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" \
     -o /opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar \
@@ -49,6 +48,7 @@ RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-j
 
     ls -alh /opt/bitnami/keycloak/providers/
 
+USER 1001
 
 RUN /opt/bitnami/keycloak/bin/kc.sh build
 
