@@ -9,7 +9,7 @@ ARG BASE_IMAGE_TAG=""
 ARG BASE_IMAGE_DIGEST=""
 
 # We use the identity image to copy the keycloak theme
-FROM docker.io/camunda/identity:latest@sha256:c63263df40ee3e7db9e989efc5ebb96010651566d6d4399c0385329b6d0102a3 AS identity
+FROM docker.io/camunda/identity:latest@sha256:96308c370b684d180b998c622d72d0a9e7690cf0e6888c8e287f70534f706597 AS identity
 
 # Building builder image
 # hadolint ignore=DL3006
@@ -28,8 +28,6 @@ RUN mkdir /home/keycloak && chown keycloak /home/keycloak && \
 COPY --from=identity /app/keycloak-theme/ /opt/bitnami/keycloak/themes/identity
 RUN chown 1001:1000 -R /opt/bitnami/keycloak/themes
 
-USER 1001
-
 WORKDIR /home/keycloak
 
 # Install the custom providers
@@ -40,7 +38,8 @@ RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-j
     && chmod 0644 /home/keycloak/pom.xml && \
 
     cat /home/keycloak/pom.xml && mvn install && \
-    cp /home/keycloak/.m2/repository/software/amazon/*/*/*/*.jar /opt/bitnami/keycloak/providers/ && \
+    chown -R 1001:1000 /root/.m2/repository && \
+    cp /root/.m2/repository/software/amazon/*/*/*/*.jar /opt/bitnami/keycloak/providers/ && \
 
     curl -fL "https://github.com/aws/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" \
     -o /opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar \
@@ -49,6 +48,7 @@ RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-j
 
     ls -alh /opt/bitnami/keycloak/providers/
 
+USER 1001
 
 RUN /opt/bitnami/keycloak/bin/kc.sh build
 
