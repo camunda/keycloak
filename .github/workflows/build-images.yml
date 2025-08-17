@@ -133,7 +133,7 @@ jobs:
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@4c0c3611b80ac8e147f7991092a0e282b52c48fa # main
+              uses: camunda/infra-global-github-actions/build-docker-image@91d83a1361508ada5bc48e82d21c3d7317e1d47b # main
               with:
                   registry_host: ${{ env.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -530,7 +530,7 @@ jobs:
               uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
             - name: Install if required common software tooling
-              uses: camunda/infra-global-github-actions/common-tooling@4c0c3611b80ac8e147f7991092a0e282b52c48fa # main
+              uses: camunda/infra-global-github-actions/common-tooling@91d83a1361508ada5bc48e82d21c3d7317e1d47b # main
               with:
                   node-enabled: false
                   java-enabled: false
@@ -652,7 +652,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Retrigger job
-              uses: camunda/infra-global-github-actions/rerun-failed-run@4c0c3611b80ac8e147f7991092a0e282b52c48fa # main
+              uses: camunda/infra-global-github-actions/rerun-failed-run@91d83a1361508ada5bc48e82d21c3d7317e1d47b # main
               with:
                   error-messages: |
                       lost communication with the server
