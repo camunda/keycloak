@@ -128,9 +128,9 @@ jobs:
 
                   # Set the Dockerfile path based on base type
                   if [[ "$base_type" == "quay" ]]; then
-                    dockerfile_path="{context}/Dockerfile.quay"
+                    dockerfile_path="Dockerfile.quay"
                   else
-                    dockerfile_path="{context}/Dockerfile"
+                    dockerfile_path="Dockerfile"
                   fi
 
                   echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
@@ -150,7 +150,8 @@ jobs:
                   force_push: true
                   image_name: ${{ env.CONTAINER_IMAGE_NAME_CI }}
                   build_context: ./keycloak-${{ steps.compute-build-image-name-step.outputs.base_version }}/
-                  build_docker_file: ${{ steps.compute-build-image-name-step.outputs.dockerfile_path }}
+                  build_docker_file: |
+                      ./keycloak-${{ steps.compute-build-image-name-step.outputs.base_version }}/${{ steps.compute-build-image-name-step.outputs.dockerfile_path }}
                   build_platforms: linux/amd64,linux/arm64
                   build_args: |
                       BASE_IMAGE_NAME=${{ steps.compute-build-image-name-step.outputs.base_image_name }}
