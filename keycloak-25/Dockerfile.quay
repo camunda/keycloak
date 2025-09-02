@@ -56,7 +56,7 @@ USER keycloak
 
 WORKDIR /opt/keycloak
 
-# Configure Keycloak for PostgreSQL and enable health/metrics
+# Configure Keycloak for PostgreSQL with AWS wrapper and enable health/metrics
 ENV KC_DB=postgres
 ENV KC_DB_DRIVER=software.amazon.jdbc.Driver
 ENV KC_TRANSACTION_XA_ENABLED=false

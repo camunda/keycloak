@@ -68,8 +68,7 @@ jobs:
                     matrix_json=$(echo "$versions" | jq -R -s -c 'split("\n")[:-1] | map("\(.)-prem", "\(.)-hub", "\(.)-quay") | flatten')
                   fi
 
-                  echo "matrix_keycloak_versions=${matrix_json}" >> "$GITHUB_OUTPUT"
-                  echo "matrix_keycloak_versions=${matrix_json}"
+                  echo "matrix_keycloak_versions=${matrix_json}" | tee -a "$GITHUB_OUTPUT"
 
 
     build-image:
@@ -169,8 +168,7 @@ jobs:
                   image_name=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."image.name"' | tr ',' '\n' | head -n 1 | tr -d ' ')
                   digest=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."containerimage.digest"')
                   full_image_name="${image_name}@${digest}"
-                  echo "full_image_name=${full_image_name}" >> "$GITHUB_OUTPUT"
-                  echo "$full_image_name"
+                  echo "full_image_name=${full_image_name}" | tee -a "$GITHUB_OUTPUT"
 
             ## Write for matrix outputs workaround
             - uses: cloudposse/github-action-matrix-outputs-write@ed06cf3a6bf23b8dce36d1cf0d63123885bb8375 # v1
@@ -217,8 +215,7 @@ jobs:
                   set -euo pipefail
 
                   keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
-                  echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
-                  echo "keycloak_image_name=${keycloak_image_name}"
+                  echo "keycloak_image_name=${keycloak_image_name}" | tee -a "$GITHUB_ENV"
 
             - name: Import secrets
               uses: hashicorp/vault-action@4c06c5ccf5c0761b6029f56cfb1dcf5565918a3b # v3.4.0
@@ -248,9 +245,9 @@ jobs:
                   base_type="${version_name##*-}"                     # e.g. "hub", "prem", or "quay"
 
                   if [[ "$base_type" == "quay" ]]; then
-                  docker run "${{ env.keycloak_image_name }}" show-config >> docker.log
+                    docker run "${{ env.keycloak_image_name }}" show-config >> docker.log
                   else
-                  docker run "${{ env.keycloak_image_name }}" /opt/bitnami/keycloak/bin/kc.sh show-config >> docker.log
+                    docker run "${{ env.keycloak_image_name }}" /opt/bitnami/keycloak/bin/kc.sh show-config >> docker.log
                   fi
 
                   echo "config=$(< docker.log tr '\n' ' ')" >> "$GITHUB_ENV"
@@ -322,8 +319,7 @@ jobs:
                   set -euo pipefail
 
                   keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
-                  echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
-                  echo "keycloak_image_name=${keycloak_image_name}"
+                  echo "keycloak_image_name=${keycloak_image_name}" | tee -a "$GITHUB_ENV"
 
             - name: Import secrets
               uses: hashicorp/vault-action@4c06c5ccf5c0761b6029f56cfb1dcf5565918a3b # v3.4.0
@@ -370,16 +366,11 @@ jobs:
                   echo "compose_keycloak_volume_1=$AWS_WEB_IDENTITY_TOKEN_FILE:$AWS_WEB_IDENTITY_TOKEN_FILE" >> "$GITHUB_ENV"
 
                   : # export AWS variables
-                  echo "AWS_STS_REGIONAL_ENDPOINTS=$AWS_STS_REGIONAL_ENDPOINTS" >> "$GITHUB_ENV"
-                  echo "AWS_STS_REGIONAL_ENDPOINTS=${AWS_STS_REGIONAL_ENDPOINTS}"
-                  echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION" >> "$GITHUB_ENV"
-                  echo "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
-                  echo "AWS_REGION=$AWS_REGION" >> "$GITHUB_ENV"
-                  echo "AWS_REGION=${AWS_REGION}"
-                  echo "AWS_ROLE_ARN=$AWS_ROLE_ARN" >> "$GITHUB_ENV"
-                  echo "AWS_ROLE_ARN=${AWS_ROLE_ARN}"
-                  echo "AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE" >> "$GITHUB_ENV"
-                  echo "AWS_WEB_IDENTITY_TOKEN_FILE=${AWS_WEB_IDENTITY_TOKEN_FILE}"
+                  echo "AWS_STS_REGIONAL_ENDPOINTS=$AWS_STS_REGIONAL_ENDPOINTS" | tee -a "$GITHUB_ENV"
+                  echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION" | tee -a "$GITHUB_ENV"
+                  echo "AWS_REGION=$AWS_REGION" | tee -a "$GITHUB_ENV"
+                  echo "AWS_ROLE_ARN=$AWS_ROLE_ARN" | tee -a "$GITHUB_ENV"
+                  echo "AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE" | tee -a "$GITHUB_ENV"
 
             - name: Compute Ubuntu variables
               if: startsWith(matrix.runner_desc.runner, 'ubuntu')
@@ -396,9 +387,9 @@ jobs:
                   set -euo pipefail
 
                   if (( "${{ matrix.runner_desc.postgres_replicas }}" < 1 )); then
-                    echo "compose_keycloak_depends_on=" >> "$GITHUB_ENV"
+                    echo "compose_keycloak_depends_on=" | tee -a "$GITHUB_ENV"
                   else
-                    echo "compose_keycloak_depends_on=postgres" >> "$GITHUB_ENV"
+                    echo "compose_keycloak_depends_on=postgres" | tee -a "$GITHUB_ENV"
                   fi
 
                   : # ensure uniqueness of the db name
@@ -413,13 +404,11 @@ jobs:
                     | awk -F'[><]' '/<postgresql.version>/{print $3}'
                   )
 
-                  echo "postgres_version=${postgres_version}" >> "$GITHUB_ENV"
-                  echo "postgres_version=${postgres_version}"
+                  echo "postgres_version=${postgres_version}" | tee -a "$GITHUB_ENV"
 
                   : # apply template on the address
                   postgres_host=$(echo "${{ matrix.runner_desc.keycloak_db_host_template }}" | sed "s/{{ postgres_version }}/${postgres_version}/g")
-                  echo "postgres_host=${postgres_host}" >> "$GITHUB_ENV"
-                  echo "postgres_host=${postgres_host}"
+                  echo "postgres_host=${postgres_host}" | tee -a "$GITHUB_ENV"
 
             # The self-hosted runner doesn't provide a postgres client and the prerequisites for make,
             # so we need to install them manually
@@ -484,9 +473,16 @@ jobs:
                   base_type="${version_name##*-}"
 
                   if [[ "$base_type" == "quay" ]]; then
-                    echo "compose_file=docker-compose.quay.yml" >> "$GITHUB_OUTPUT"
+                    echo "compose_file=docker-compose.quay.yml" | tee -a "$GITHUB_OUTPUT"
+                    # For Quay images, KEYCLOAK_JDBC_DRIVER is not needed (hardcoded as aws-wrapper:postgresql)
+                    echo "keycloak_jdbc_driver=" | tee -a "$GITHUB_OUTPUT"
+                    # No KC_DB_DRIVER needed as it's pre-configured in the image
+                    echo "kc_db_driver=" | tee -a "$GITHUB_OUTPUT"
                   else
-                    echo "compose_file=docker-compose.yml" >> "$GITHUB_OUTPUT"
+                    echo "compose_file=docker-compose.yml" | tee -a "$GITHUB_OUTPUT"
+                    # For Bitnami images, use the matrix configuration
+                    echo "keycloak_jdbc_driver=${{ matrix.runner_desc.keycloak_jdbc_driver }}" | tee -a "$GITHUB_OUTPUT"
+                    echo "kc_db_driver=${{ matrix.runner_desc.keycloak_db_driver }}" | tee -a "$GITHUB_OUTPUT"
                   fi
 
             - name: Start Test Environment
@@ -505,9 +501,9 @@ jobs:
                   KEYCLOAK_DATABASE_NAME: ${{ env.postgres_database }}
                   KEYCLOAK_DATABASE_HOST: ${{ env.postgres_host }}
                   KEYCLOAK_DATABASE_PORT: ${{ matrix.runner_desc.keycloak_db_port }}
-                  KEYCLOAK_JDBC_DRIVER: ${{ matrix.runner_desc.keycloak_jdbc_driver }}
+                  KEYCLOAK_JDBC_DRIVER: ${{ steps.set-compose-file.outputs.keycloak_jdbc_driver }}
                   KEYCLOAK_JDBC_PARAMS: ${{ matrix.runner_desc.keycloak_db_jdbc_query }}
-                  KC_DB_DRIVER: ${{ matrix.runner_desc.keycloak_db_driver }}
+                  KC_DB_DRIVER: ${{ steps.set-compose-file.outputs.kc_db_driver }}
 
                   # Disable HTTPS for tests - force HTTP mode
                   KC_HTTP_ENABLED: true

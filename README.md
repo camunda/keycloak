@@ -157,7 +157,9 @@ For Kubernetes with IRSA, configure the following environment variables:
   value: "jdbc:aws-wrapper:postgresql://db-host:5432/db-name?wrapperPlugins=iam"
 - name: KC_DB_USERNAME
   value: db-user-name
-# Note: KC_DB_DRIVER is pre-configured in the image as software.amazon.jdbc.Driver
+# Note: KC_DB_DRIVER is pre-configured in Quay images as software.amazon.jdbc.Driver
+# for optimal performance. To use a different driver (e.g., org.postgresql.Driver),
+# you would need to rebuild the image with the desired driver configuration.
 
 - name: KC_HEALTH_ENABLED
   value: "true"
@@ -257,7 +259,9 @@ extraEnv: |
     value: "jdbc:aws-wrapper:postgresql://aurora.rds.your.domain:5432/keycloak?wrapperPlugins=iam"
   - name: KC_DB_USERNAME
     value: keycloak
-  # Note: KC_DB_DRIVER is pre-configured in the image as software.amazon.jdbc.Driver
+  # Note: KC_DB_DRIVER is pre-configured in Quay images as software.amazon.jdbc.Driver
+  # for optimal performance. To use a different driver (e.g., org.postgresql.Driver),
+  # you would need to rebuild the image with the desired driver configuration.
   - name: KC_HEALTH_ENABLED
     value: "true"
   - name: KC_METRICS_ENABLED
@@ -270,6 +274,25 @@ args:
 ```
 
 Feel free to adjust the values according to your actual configuration.
+
+## Important: Database Driver Configuration
+
+### Quay-based Images
+Quay-based images (`quay-*` tags) have the AWS JDBC wrapper (`software.amazon.jdbc.Driver`) **pre-configured at build time** for optimal performance. This provides the following benefits:
+
+- ✅ **Maximum Performance**: Keycloak's optimized build process eliminates runtime overhead
+- ✅ **Both Connection Types Supported**: Can connect to both local PostgreSQL and AWS Aurora with IRSA
+- ✅ **Production Ready**: No runtime driver configuration needed
+
+The AWS JDBC wrapper is compatible with standard PostgreSQL connections (using `jdbc:aws-wrapper:postgresql://...` URLs) and provides IRSA support when needed (using `wrapperPlugins=iam` parameter).
+
+**Changing the Database Driver**: If you need to use a different database driver (e.g., `org.postgresql.Driver`), you'll need to:
+1. Modify the `KC_DB_DRIVER` environment variable in the Dockerfile.quay
+2. Rebuild the image to apply the new driver configuration
+3. This ensures optimal performance while maintaining flexibility when needed
+
+### Bitnami-based Images
+Bitnami-based images allow runtime driver configuration via the `KC_DB_DRIVER` environment variable for maximum flexibility.
 
 ## Reference
 

@@ -24,7 +24,7 @@ services:
 
             # Database configuration for Quay Keycloak
             KC_DB_URL: >-
-                jdbc:${KEYCLOAK_JDBC_DRIVER:-aws-wrapper:postgresql}://${KEYCLOAK_DATABASE_HOST:-postgres}:${KEYCLOAK_DATABASE_PORT:-5432}/${KEYCLOAK_DATABASE_NAME:-keycloak}?${KEYCLOAK_JDBC_PARAMS:-}
+                jdbc:aws-wrapper:postgresql://${KEYCLOAK_DATABASE_HOST:-postgres}:${KEYCLOAK_DATABASE_PORT:-5432}/${KEYCLOAK_DATABASE_NAME:-keycloak}?${KEYCLOAK_JDBC_PARAMS:-}
             KC_DB_USERNAME: ${KEYCLOAK_DATABASE_USER:-keycloak}
             KC_DB_PASSWORD: ${KEYCLOAK_DATABASE_PASSWORD-password}
 
