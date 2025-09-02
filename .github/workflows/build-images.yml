@@ -142,7 +142,7 @@ jobs:
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@5b991eb6368800c8dd97dde7ce50015eb3e1ae9e # main
+              uses: camunda/infra-global-github-actions/build-docker-image@feature/add-option-dockerfile # TODO: use main when emrged
               with:
                   registry_host: ${{ env.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -150,7 +150,7 @@ jobs:
                   force_push: true
                   image_name: ${{ env.CONTAINER_IMAGE_NAME_CI }}
                   build_context: ./keycloak-${{ steps.compute-build-image-name-step.outputs.base_version }}/
-                  dockerfile_path: ${{ steps.compute-build-image-name-step.outputs.dockerfile_path }}
+                  build_docker_file: ${{ steps.compute-build-image-name-step.outputs.dockerfile_path }}
                   build_platforms: linux/amd64,linux/arm64
                   build_args: |
                       BASE_IMAGE_NAME=${{ steps.compute-build-image-name-step.outputs.base_image_name }}
