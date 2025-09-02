@@ -19,8 +19,8 @@ ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 
 # Install required packages for building
 # hadolint ignore=DL3041
-RUN dnf install -y curl maven && \
-    dnf clean all
+RUN microdnf install -y curl maven && \
+    microdnf clean all
 
 # Create directories and download dependencies
 RUN mkdir -p /opt/keycloak/providers /opt/keycloak/themes/identity
