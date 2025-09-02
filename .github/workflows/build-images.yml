@@ -50,7 +50,7 @@ jobs:
             matrix_keycloak_versions: ${{ steps.set-matrix.outputs.matrix_keycloak_versions }}
         steps:
             - name: Checkout
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+              uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
             - name: List Keycloak Versions from repository's folders
               id: set-matrix
@@ -84,10 +84,10 @@ jobs:
                 keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
         steps:
             - name: Checkout
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+              uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@6493c4661ae26f7c81689994c4c75e8f42b67f6a # 1.4.5
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@eb9d51b4dc89deeda7fc160166f378725ee0f06a # 1.5.3
 
             - name: Import secrets
               uses: hashicorp/vault-action@4c06c5ccf5c0761b6029f56cfb1dcf5565918a3b # v3.4.0
@@ -106,7 +106,7 @@ jobs:
                       secret/data/products/infrastructure-experience/ci/common DOCKERHUB_PASSWORD;
 
             - name: Login to the dockerhub registry # prevents pull limit rate
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+              uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
               with:
                   registry: ${{ env.CONTAINER_REGISTRY_HUB }}
                   username: ${{ steps.secrets.outputs.DOCKERHUB_USER }}
@@ -142,7 +142,7 @@ jobs:
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@415155f7c608854a13c36a2f13b770c56507ab95 # main
+              uses: camunda/infra-global-github-actions/build-docker-image@5b991eb6368800c8dd97dde7ce50015eb3e1ae9e # main
               with:
                   registry_host: ${{ env.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -204,10 +204,10 @@ jobs:
                 keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
         steps:
             - name: Checkout
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+              uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@6493c4661ae26f7c81689994c4c75e8f42b67f6a # 1.4.5
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@eb9d51b4dc89deeda7fc160166f378725ee0f06a # 1.5.3
 
             - name: Set Keycloak Image Name
               id: set-keycloak-image-name
@@ -233,7 +233,7 @@ jobs:
                       secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
 
             - name: Login to the registry
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+              uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
               with:
                   registry: ${{ env.CONTAINER_REGISTRY_CI }}
                   username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -290,7 +290,7 @@ jobs:
             - read-build-image-output
         steps:
             - name: Checkout
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+              uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
             - name: Install build-essentials for asdf
               run: |
@@ -304,7 +304,7 @@ jobs:
                   libreadline-dev tk tk-dev
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@6493c4661ae26f7c81689994c4c75e8f42b67f6a # 1.4.5
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@eb9d51b4dc89deeda7fc160166f378725ee0f06a # 1.5.3
 
             - name: Set Keycloak Image Name
               id: set-keycloak-image-name
@@ -336,14 +336,14 @@ jobs:
                       secret/data/products/infrastructure-experience/ci/common DOCKERHUB_PASSWORD;
 
             - name: Login to the dockerhub registry # prevents pull limit rate
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+              uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
               with:
                   registry: ${{ env.CONTAINER_REGISTRY_HUB }}
                   username: ${{ steps.secrets.outputs.DOCKERHUB_USER }}
                   password: ${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}
 
             - name: Login to the registry
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+              uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
               with:
                   registry: ${{ env.CONTAINER_REGISTRY_CI }}
                   username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -537,10 +537,10 @@ jobs:
             - test-base-image
         steps:
             - name: Checkout
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+              uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
             - name: Install if required common software tooling
-              uses: camunda/infra-global-github-actions/common-tooling@415155f7c608854a13c36a2f13b770c56507ab95 # main
+              uses: camunda/infra-global-github-actions/common-tooling@5b991eb6368800c8dd97dde7ce50015eb3e1ae9e # main
               with:
                   node-enabled: false
                   java-enabled: false
@@ -549,7 +549,7 @@ jobs:
                   buildx-install: true
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@6493c4661ae26f7c81689994c4c75e8f42b67f6a # 1.4.5
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@eb9d51b4dc89deeda7fc160166f378725ee0f06a # 1.5.3
 
             - name: Import secrets
               uses: hashicorp/vault-action@4c06c5ccf5c0761b6029f56cfb1dcf5565918a3b # v3.4.0
@@ -568,7 +568,7 @@ jobs:
                       secret/data/products/infrastructure-experience/ci/common DOCKERHUB_PASSWORD;
 
             - name: Login to the registry
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+              uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
               with:
                   registry: ${{ env.CONTAINER_REGISTRY_CI }}
                   username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -603,7 +603,7 @@ jobs:
                   fi
 
             - name: Login to the publishing registry
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+              uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
               with:
                   registry: ${{ steps.publishing-registry.outputs.publishing_registry }}
                   username: ${{ steps.publishing-registry.outputs.publishing_registry_username }}
@@ -674,7 +674,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Retrigger job
-              uses: camunda/infra-global-github-actions/rerun-failed-run@415155f7c608854a13c36a2f13b770c56507ab95 # main
+              uses: camunda/infra-global-github-actions/rerun-failed-run@5b991eb6368800c8dd97dde7ce50015eb3e1ae9e # main
               with:
                   error-messages: |
                       lost communication with the server
@@ -699,7 +699,7 @@ jobs:
         steps:
             - name: Notify in Slack in case of failure
               id: slack-notification
-              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@6493c4661ae26f7c81689994c4c75e8f42b67f6a # 1.4.5
+              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@eb9d51b4dc89deeda7fc160166f378725ee0f06a # 1.5.3
               with:
                   vault_addr: ${{ secrets.VAULT_ADDR }}
                   vault_role_id: ${{ secrets.VAULT_ROLE_ID }}

@@ -1,12 +1,12 @@
 ---
 repos:
     - repo: https://github.com/camunda/infraex-common-config
-      rev: 1.4.5 # use tags until renovate supports sha: https://github.com/renovatebot/renovate/issues/22567
+      rev: 1.5.3 # use tags until renovate supports sha: https://github.com/renovatebot/renovate/issues/22567
       hooks:
           - id: update-action-readmes-docker
 
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v5.0.0
+      rev: v6.0.0
       hooks:
           - id: end-of-file-fixer
           - id: trailing-whitespace
@@ -28,7 +28,7 @@ repos:
           - id: actionlint-docker
 
     - repo: https://github.com/renovatebot/pre-commit-hooks
-      rev: 41.21.0
+      rev: 41.91.0
       hooks:
           - id: renovate-config-validator
             args: [--strict]
