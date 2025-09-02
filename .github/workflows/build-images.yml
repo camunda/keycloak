@@ -596,8 +596,8 @@ jobs:
                     echo "publishing_registry=${{ env.CONTAINER_REGISTRY_HUB }}" | tee -a "$GITHUB_OUTPUT"
                     echo "publishing_registry_username=${{ steps.secrets.outputs.DOCKERHUB_USER }}" | tee -a "$GITHUB_OUTPUT"
                     echo "publishing_registry_password=${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}" | tee -a "$GITHUB_OUTPUT"
-                    # Image target for Hub with -quay suffix
-                    echo "publishing_image_name=${{ env.CONTAINER_IMAGE_NAME_HUB }}-quay" | tee -a "$GITHUB_OUTPUT"
+                    # Image target for Hub with quay- prefix in tags
+                    echo "publishing_image_name=${{ env.CONTAINER_IMAGE_NAME_HUB }}" | tee -a "$GITHUB_OUTPUT"
                   else
                     echo "❌ Error: Unsupported version suffix in '$version'. Expected '-hub', '-prem', or '-quay'."
                     exit 1
@@ -645,26 +645,66 @@ jobs:
                   # For quay images, the tag is just the semver, for bitnami it includes extra suffix
                   if [[ "$base_type" == "quay" ]]; then
                     semver_tag="${base_image_tag}"
-                  else
+                    tag_prefix="quay-"
+                  elif [[ "$base_type" == "hub" ]]; then
                     semver_tag=$(echo "${base_image_tag}"  | awk -F'-' '{print $1}')
+                    tag_prefix="bitnami-"
+                  elif [[ "$base_type" == "prem" ]]; then
+                    semver_tag=$(echo "${base_image_tag}"  | awk -F'-' '{print $1}')
+                    tag_prefix="bitnami-ee-"
+                  else
+                    echo "❌ Error: Unsupported base_type '$base_type'. Expected 'hub', 'prem', or 'quay'."
+                    exit 1
                   fi
 
                   : # remove keycloak- prefix
                   suffix_version=$(echo '${{ github.ref_name }}' | sed 's/keycloak-[0-9]*-//')
 
-                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_version}" \
+                  # Create tags with appropriate prefix
+                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${tag_prefix}${base_version}" \
                     "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
-                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_image_tag}" \
+                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${tag_prefix}${base_image_tag}" \
                     "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
-                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_image_tag}-${suffix_version}" \
+                  docker buildx imagetools create \
+                    -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${tag_prefix}${base_image_tag}-${suffix_version}" \
                     "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
-                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${semver_tag}" \
+                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${tag_prefix}${semver_tag}" \
                     "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
 
-                  # Only create latest tag for non-quay images to avoid conflicts
-                  if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${base_version}" ] && [[ "$base_type" != "quay" ]]; then
-                    docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:latest" \
+                  # For backward compatibility, also publish bitnami images without prefix
+                  if [[ "$base_type" == "hub" || "$base_type" == "prem" ]]; then
+                    docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_version}" \
                       "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                    docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_image_tag}" \
+                      "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                    docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_image_tag}-${suffix_version}" \
+                      "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                    docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${semver_tag}" \
+                      "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                  fi
+
+                  # Make Quay the default latest, keep latest for non-quay as well for backward compatibility
+                  if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${base_version}" ]; then
+                    if [[ "$base_type" == "quay" ]]; then
+                      # Quay becomes the main latest
+                      docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:latest" \
+                        "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                    fi
+
+                    # Create prefixed latest tags for all types
+                    docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${tag_prefix}latest" \
+                      "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+
+                    # For backward compatibility, also create non-prefixed latest for bitnami hub images
+                    # (prem images are in a different registry so no conflict with quay)
+                    if [[ "$base_type" == "hub" ]]; then
+                      docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:latest-bitnami" \
+                        "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                    elif [[ "$base_type" == "prem" ]]; then
+                      # Prem images are in separate registry, so they can have their own latest
+                      docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:latest" \
+                        "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                    fi
                   fi
 
     # Rerun failed jobs running on self-hosted runners in case of network issues or node preemption

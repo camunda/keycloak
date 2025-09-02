@@ -83,7 +83,7 @@ COPY --chown=keycloak:keycloak --from=builder /opt/keycloak/ /opt/keycloak/
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
 # OCP: https://docs.openshift.com/container-platform/4.10/openshift_images/create-images.html#defining-image-metadata
 LABEL maintainer="Camunda" \
-      name="camunda/keycloak-quay" \
+      name="camunda/keycloak" \
       summary="Keycloak official with AWS wrapper" \
       io.k8s.description="Keycloak official with AWS wrapper." \
       io.k8s.display-name="keycloak-quay" \

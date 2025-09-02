@@ -2,11 +2,11 @@
 sources:
     hub:
         # List of all available images with associated sha:
-        # skopeo --override-os linux inspect  docker://docker.io/bitnami/keycloak
+        # skopeo --override-os linux inspect  docker://docker.io/bitnamilegacy/keycloak
         # Note: use the global index image digest to make this image platform agnostic
-        # skopeo --override-os linux inspect docker://docker.io/bitnami/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
+        # skopeo --override-os linux inspect docker://docker.io/bitnamilegacy/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
         image:
-            repository: docker.io/bitnami/keycloak
+            repository: docker.io/bitnamilegacy/keycloak
             tag: 23.0.7-debian-12-r5@sha256:9596e39ee28105274379903db57aee298ab9f3292aa96797fda2aeaabcc38326
     prem:
         # List of all available images with associated sha:

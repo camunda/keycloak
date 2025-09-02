@@ -22,7 +22,7 @@ services:
             replicas: ${COMPOSE_POSTGRES_DEPLOY_REPLICAS:-1}
 
     keycloak:
-        image: ${COMPOSE_KEYCLOAK_IMAGE:-camunda/keycloak-quay:latest}
+        image: ${COMPOSE_KEYCLOAK_IMAGE:-camunda/keycloak:latest}
         environment:
             # Quay Keycloak uses different environment variables than Bitnami
             KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
