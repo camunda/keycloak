@@ -1,0 +1,104 @@
+# Consume it from the bases.yml
+# docker build \
+#  --build-arg BASE_IMAGE_NAME="$(yq e '.sources.quay.image.repository' bases.yml | cut -d@ -f1)" \
+#  --build-arg BASE_IMAGE_TAG="$(yq e '.sources.quay.image.tag' bases.yml | cut -d@ -f1)" \
+#  --build-arg BASE_IMAGE_DIGEST="$(yq e '.sources.quay.image.tag' bases.yml | cut -d@ -f2)" \
+#  -f Dockerfile.quay -t your-image-name .
+ARG BASE_IMAGE_NAME=""
+ARG BASE_IMAGE_TAG=""
+ARG BASE_IMAGE_DIGEST=""
+
+# We use the identity image to copy the keycloak theme
+FROM docker.io/camunda/identity:latest@sha256:c63263df40ee3e7db9e989efc5ebb96010651566d6d4399c0385329b6d0102a3 AS identity
+
+# Building builder image
+# hadolint ignore=DL3006
+FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST} AS builder
+
+# renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
+ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
+
+USER root
+
+# Install required packages for building (the quay image is more minimal than bitnami)
+# hadolint ignore=DL3041
+RUN microdnf update -y && \
+    microdnf install -y curl maven && \
+    microdnf clean all
+
+# Copy the identity theme
+COPY --from=identity /app/keycloak-theme/ /opt/keycloak/themes/identity
+RUN chown keycloak:keycloak -R /opt/keycloak/themes
+
+USER keycloak
+
+WORKDIR /opt/keycloak
+
+# Install the custom providers
+# download the wrapper from github, then fetch the dependencies from maven
+# hadolint ignore=DL3003
+RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" \
+    -o /tmp/pom.xml && \
+
+    mkdir -p /tmp/.m2 && \
+    cd /tmp && mvn -f pom.xml -Dmaven.repo.local=/tmp/.m2/repository dependency:copy-dependencies -DoutputDirectory=/opt/keycloak/providers && \
+    cp /tmp/.m2/repository/software/amazon/*/*/*/*.jar /opt/keycloak/providers/ && \
+
+    curl -fL "https://github.com/aws/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" \
+    -o /opt/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar && \
+
+    ls -alh /opt/keycloak/providers/
+
+# Configure Keycloak for PostgreSQL and enable health/metrics
+ENV KC_DB=postgres
+ENV KC_HEALTH_ENABLED=true
+ENV KC_METRICS_ENABLED=true
+
+# Build the optimized Keycloak
+RUN /opt/keycloak/bin/kc.sh build
+
+##### FINAL Keycloak IMAGE ####
+
+# hadolint ignore=DL3006
+FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST}
+# leave the values below unset to use the default value at the top of the file
+ARG BASE_IMAGE_NAME
+ARG BASE_IMAGE_TAG
+ARG BASE_IMAGE_DIGEST
+
+# renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
+ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
+
+# Copy the previously built aws jdbc drivers and optimized keycloak
+COPY --chown=keycloak:keycloak --from=builder /opt/keycloak/ /opt/keycloak/
+
+# common, k8s, openshift and OCI labels:
+# OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
+# OCP: https://docs.openshift.com/container-platform/4.10/openshift_images/create-images.html#defining-image-metadata
+LABEL maintainer="Camunda" \
+      name="camunda/keycloak-quay" \
+      summary="Keycloak official with AWS wrapper" \
+      io.k8s.description="Keycloak official with AWS wrapper." \
+      io.k8s.display-name="keycloak-quay" \
+      description="Keycloak official with AWS JDBC wrapper." \
+      jdbc.aws-jdbc-wrapper.version="${AWS_JDBC_WRAPPER_VERSION}" \
+      org.opencontainers.image.authors="Camunda" \
+      org.opencontainers.image.vendor="Camunda" \
+      org.opencontainers.image.documentation="https://hub.docker.com/camunda/keycloak/" \
+      org.opencontainers.image.licenses="Apache License 2.0" \
+      org.opencontainers.image.base.name="${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}" \
+      org.opencontainers.image.base.digest="${BASE_IMAGE_DIGEST}" \
+      io.openshift.tags="bpmn,identity,keycloak,camunda,quay" \
+      io.openshift.min-memory="1Gi" \
+      io.openshift.min-cpu="1"
+
+      # cpu and ram allocation reference: https://www.keycloak.org/high-availability/concepts-memory-and-cpu-sizing
+
+      # the following labels are generated at buildtime - see https://github.com/docker/metadata-action
+      # org.opencontainers.image.title
+      # org.opencontainers.image.description
+      # org.opencontainers.image.url
+      # org.opencontainers.image.created
+      # org.opencontainers.image.revision
+      # org.opencontainers.image.source
+      # org.opencontainers.image.version

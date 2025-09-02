@@ -16,3 +16,12 @@ sources:
         image:
             repository: registry.camunda.cloud/vendor-ee/keycloak
             tag: 23.0.7-debian-12-r5@sha256:9596e39ee28105274379903db57aee298ab9f3292aa96797fda2aeaabcc38326
+
+    quay:
+        # List of all available images with associated sha:
+        # skopeo --override-os linux inspect docker://quay.io/keycloak/keycloak
+        # Note: use the global index image digest to make this image platform agnostic
+        # skopeo --override-os linux inspect docker://quay.io/keycloak/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
+        image:
+            repository: quay.io/keycloak/keycloak
+            tag: 23.0.7@sha256:14e99d6f5dd0516a5bdc82537b732cb85469ecdb15ad7fe5f11ff67521544db8
