@@ -29,18 +29,13 @@ services:
             KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
 
             # Database configuration for Quay Keycloak
-            KC_DB: postgres
+
             KC_DB_URL: >-
                 jdbc:${KEYCLOAK_JDBC_DRIVER:-aws-wrapper:postgresql}://
                 ${KEYCLOAK_DATABASE_HOST:-postgres}:${KEYCLOAK_DATABASE_PORT:-5432}/
                 ${KEYCLOAK_DATABASE_NAME:-keycloak}?${KEYCLOAK_JDBC_PARAMS:-wrapperPlugins=iam}
-
             KC_DB_PASSWORD: ${KEYCLOAK_DATABASE_PASSWORD:-password}
             KC_DB_DRIVER: ${KC_DB_DRIVER:-software.amazon.jdbc.Driver}
-
-            # Health and metrics
-            KC_HEALTH_ENABLED: ${KC_HEALTH_ENABLED:-true}
-            KC_METRICS_ENABLED: ${KC_METRICS_ENABLED:-true}
 
             # Logging configuration
             KC_LOG_LEVEL: ${KEYCLOAK_LOG_LEVEL:-INFO}

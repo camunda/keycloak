@@ -248,7 +248,7 @@ jobs:
                   base_type="${version_name##*-}"                     # e.g. "hub", "prem", or "quay"
 
                   if [[ "$base_type" == "quay" ]]; then
-                  docker run "${{ env.keycloak_image_name }}" /opt/keycloak/bin/kc.sh show-config >> docker.log
+                  docker run "${{ env.keycloak_image_name }}" kc.sh show-config >> docker.log
                   else
                   docker run "${{ env.keycloak_image_name }}" /opt/bitnami/keycloak/bin/kc.sh show-config >> docker.log
                   fi
