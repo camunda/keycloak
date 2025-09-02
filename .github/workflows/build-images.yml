@@ -644,7 +644,7 @@ jobs:
                   : # version of keycloak (e.g.: 23.0.1)
                   # For quay images, the tag is just the semver, for bitnami it includes extra suffix
                   if [[ "$base_type" == "quay" ]]; then
-                    semver_tag="${base_image_tag}"
+                    semver_tag=$(echo "${base_image_tag}"  | awk -F'-' '{print $1}')
                     tag_prefix="quay-"
                   elif [[ "$base_type" == "hub" ]]; then
                     semver_tag=$(echo "${base_image_tag}"  | awk -F'-' '{print $1}')
