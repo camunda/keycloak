@@ -1,13 +1,7 @@
 ---
-volumes:
-    postgres_data:
-        driver: local
-
 services:
     postgres:
         image: ${COMPOSE_POSTGRES_IMAGE:-docker.io/postgres:latest}
-        volumes:
-            - postgres_data:/var/lib/postgresql/data
         environment:
             POSTGRES_DB: ${POSTGRES_DB:-keycloak}
             POSTGRES_USER: ${POSTGRES_USER:-keycloak}
@@ -33,9 +27,9 @@ services:
             KC_DB_URL: >-
                 jdbc:${KEYCLOAK_JDBC_DRIVER:-aws-wrapper:postgresql}://
                 ${KEYCLOAK_DATABASE_HOST:-postgres}:${KEYCLOAK_DATABASE_PORT:-5432}/
-                ${KEYCLOAK_DATABASE_NAME:-keycloak}?${KEYCLOAK_JDBC_PARAMS:-wrapperPlugins=iam}
-            KC_DB_PASSWORD: ${KEYCLOAK_DATABASE_PASSWORD:-password}
-            KC_DB_DRIVER: ${KC_DB_DRIVER:-software.amazon.jdbc.Driver}
+                ${KEYCLOAK_DATABASE_NAME:-keycloak}?${KEYCLOAK_JDBC_PARAMS:-}
+
+            KC_DB_PASSWORD: ${KEYCLOAK_DATABASE_PASSWORD-password}
 
             # Logging configuration
             KC_LOG_LEVEL: ${KEYCLOAK_LOG_LEVEL:-INFO}

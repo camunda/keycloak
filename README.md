@@ -157,8 +157,7 @@ For Kubernetes with IRSA, configure the following environment variables:
   value: "jdbc:aws-wrapper:postgresql://db-host:5432/db-name?wrapperPlugins=iam"
 - name: KC_DB_USERNAME
   value: db-user-name
-- name: KC_DB_DRIVER
-  value: "software.amazon.jdbc.Driver"
+# Note: KC_DB_DRIVER is pre-configured in the image as software.amazon.jdbc.Driver
 
 - name: KC_HEALTH_ENABLED
   value: "true"
@@ -258,8 +257,7 @@ extraEnv: |
     value: "jdbc:aws-wrapper:postgresql://aurora.rds.your.domain:5432/keycloak?wrapperPlugins=iam"
   - name: KC_DB_USERNAME
     value: keycloak
-  - name: KC_DB_DRIVER
-    value: "software.amazon.jdbc.Driver"
+  # Note: KC_DB_DRIVER is pre-configured in the image as software.amazon.jdbc.Driver
   - name: KC_HEALTH_ENABLED
     value: "true"
   - name: KC_METRICS_ENABLED
