@@ -11,6 +11,33 @@ ARG BASE_IMAGE_DIGEST=""
 # We use the identity image to copy the keycloak theme
 FROM docker.io/camunda/identity:latest@sha256:c63263df40ee3e7db9e989efc5ebb96010651566d6d4399c0385329b6d0102a3 AS identity
 
+# Use UBI9 to install packages and prepare dependencies
+FROM registry.access.redhat.com/ubi9@sha256316f51c12ef4a9f0959faccc130bb1022f7d77b18cd7d5fefb12a696af85578c AS ubi-micro-build
+
+# renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
+ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
+
+# Install required packages for building
+# hadolint ignore=DL3041
+RUN dnf install -y curl maven && \
+    dnf clean all
+
+# Create directories and download dependencies
+RUN mkdir -p /opt/keycloak/providers /opt/keycloak/themes/identity
+
+# Download and process Maven dependencies
+# hadolint ignore=DL3003
+RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" \
+    -o /tmp/pom.xml && \
+    mkdir -p /tmp/.m2 && \
+    cd /tmp && mvn -f pom.xml -Dmaven.repo.local=/tmp/.m2/repository dependency:copy-dependencies -DoutputDirectory=/opt/keycloak/providers && \
+    cp /tmp/.m2/repository/software/amazon/*/*/*/*.jar /opt/keycloak/providers/ && \
+    curl -fL "https://github.com/aws/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" \
+    -o /opt/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar
+
+# Copy the identity theme
+COPY --from=identity /app/keycloak-theme/ /opt/keycloak/themes/identity
+
 # Building builder image
 # hadolint ignore=DL3006
 FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST} AS builder
@@ -18,36 +45,16 @@ FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST} AS builder
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 
+# Copy the AWS JDBC drivers and theme from ubi-micro-build stage
+COPY --from=ubi-micro-build /opt/keycloak/providers/ /opt/keycloak/providers/
+COPY --from=ubi-micro-build /opt/keycloak/themes/identity /opt/keycloak/themes/identity
+
+# Fix permissions for keycloak user
 USER root
-
-# Install required packages for building (the quay image is more minimal than bitnami)
-# hadolint ignore=DL3041
-RUN microdnf update -y && \
-    microdnf install -y curl maven && \
-    microdnf clean all
-
-# Copy the identity theme
-COPY --from=identity /app/keycloak-theme/ /opt/keycloak/themes/identity
-RUN chown keycloak:keycloak -R /opt/keycloak/themes
-
+RUN chown -R keycloak:keycloak /opt/keycloak/providers /opt/keycloak/themes
 USER keycloak
 
 WORKDIR /opt/keycloak
-
-# Install the custom providers
-# download the wrapper from github, then fetch the dependencies from maven
-# hadolint ignore=DL3003
-RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" \
-    -o /tmp/pom.xml && \
-
-    mkdir -p /tmp/.m2 && \
-    cd /tmp && mvn -f pom.xml -Dmaven.repo.local=/tmp/.m2/repository dependency:copy-dependencies -DoutputDirectory=/opt/keycloak/providers && \
-    cp /tmp/.m2/repository/software/amazon/*/*/*/*.jar /opt/keycloak/providers/ && \
-
-    curl -fL "https://github.com/aws/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" \
-    -o /opt/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar && \
-
-    ls -alh /opt/keycloak/providers/
 
 # Configure Keycloak for PostgreSQL and enable health/metrics
 ENV KC_DB=postgres
