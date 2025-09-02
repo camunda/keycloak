@@ -19,7 +19,7 @@ ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 
 # Install required packages for building
 # hadolint ignore=DL3041
-RUN microdnf install -y curl maven && \
+RUN microdnf install -y maven && \
     microdnf clean all
 
 # Create directories and download dependencies
