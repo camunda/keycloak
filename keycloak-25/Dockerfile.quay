@@ -12,7 +12,7 @@ ARG BASE_IMAGE_DIGEST=""
 FROM docker.io/camunda/identity:latest@sha256:c63263df40ee3e7db9e989efc5ebb96010651566d6d4399c0385329b6d0102a3 AS identity
 
 # Use UBI9 to install packages and prepare dependencies
-FROM registry.redhat.io/ubi9/ubi@sha256:7ff0b510498fa9f368a58e735e0c57f3497fd3205dbc2ea5e6e8ddf84f48752f AS ubi-micro-build
+FROM docker.io/almalinux@sha256:cfefa10fe2b6a22e0b510af9845eb9051a474cf3638c05149eea63d82b385178 AS minimal-build
 
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
@@ -45,9 +45,9 @@ FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST} AS builder
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 
-# Copy the AWS JDBC drivers and theme from ubi-micro-build stage
-COPY --from=ubi-micro-build /opt/keycloak/providers/ /opt/keycloak/providers/
-COPY --from=ubi-micro-build /opt/keycloak/themes/identity /opt/keycloak/themes/identity
+# Copy the AWS JDBC drivers and theme from minimal-build stage
+COPY --from=minimal-build /opt/keycloak/providers/ /opt/keycloak/providers/
+COPY --from=minimal-build /opt/keycloak/themes/identity /opt/keycloak/themes/identity
 
 # Fix permissions for keycloak user
 USER root
