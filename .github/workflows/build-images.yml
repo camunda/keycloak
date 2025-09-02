@@ -128,9 +128,9 @@ jobs:
 
                   # Set the Dockerfile path based on base type
                   if [[ "$base_type" == "quay" ]]; then
-                    dockerfile_path="Dockerfile.quay"
+                    dockerfile_path="{context}/Dockerfile.quay"
                   else
-                    dockerfile_path="Dockerfile"
+                    dockerfile_path="{context}/Dockerfile"
                   fi
 
                   echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
