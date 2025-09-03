@@ -21,6 +21,8 @@ services:
             # Quay Keycloak uses different environment variables than Bitnami
             KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
             KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
+            KEYCLOAK_ADMIN: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
+            KEYCLOAK_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
 
             # Database configuration for Quay Keycloak
             KC_DB_URL: >-
@@ -57,6 +59,3 @@ services:
         volumes:
             - ${COMPOSE_KEYCLOAK_VOLUME_1:-/dev/null:/mynull1} # can be used to inject irsa token
         command: [start, --optimized]
-
-
-# /opt/keycloak/bin/kcadm.sh get clients --realm master --server http://localhost:8080 --user admin --password admin
