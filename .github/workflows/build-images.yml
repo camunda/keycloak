@@ -544,11 +544,6 @@ jobs:
             - name: Test Environment
               run: python3 ./.github/scripts/integration/main.py
 
-
-            - name: Setup tmate session
-              if: failure()
-              id: tmate
-              uses: mxschmitt/action-tmate@v3
             - name: Tear down Aurora PG (aws only)
               if: startsWith(matrix.runner_desc.runner, 'aws') && always()
               run: ./.helpers/actions/delete_aurora_pg_db.sh
