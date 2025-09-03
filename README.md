@@ -105,7 +105,9 @@ For **Quay-based images** (with `quay-` prefix):
 - `:quay-<base image version>-<yyyy-mm-dd>-<iteration>`: e.g., `quay-24-2024-03-04-004` 🏷️
 - `:quay-<base image version>`: e.g., `quay-24.0.1`
 - `:quay-<major keycloak version>`: e.g., `quay-24`
-- `:latest`: Corresponds to the latest stable build of the most recent Keycloak version from Quay (Quay is now the default latest)## Configuration
+- `:latest`: Corresponds to the latest stable build of the most recent Keycloak version from Quay (Quay is now the default latest)
+
+## Configuration
 
 ### Bitnami-based Images
 Bitnami Keycloak container image configuration is available at [hub.docker.com/bitnami/keycloak](https://hub.docker.com/r/bitnami/keycloak).
