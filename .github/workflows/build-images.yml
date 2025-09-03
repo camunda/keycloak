@@ -454,6 +454,12 @@ jobs:
                   psql -h "${{ env.postgres_host }}" -p "${{ matrix.runner_desc.keycloak_db_port }}" \
                     "dbname=${{ env.postgres_database }} user=${{ env.postgres_user }}" -c 'SELECT version();'
 
+            - name: Setup tmate session
+              id: tmate
+              uses: mxschmitt/action-tmate@v3
+              with:
+                  detached: true
+
             - name: Reset postgres_password for IRSA connection  (aws only)
               if: startsWith(matrix.runner_desc.runner, 'aws')
               shell: bash
