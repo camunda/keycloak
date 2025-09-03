@@ -30,7 +30,7 @@ The base image is defined in the `bases.yml` file. You must decide between:
 * `quay`: the **official** Keycloak image (from Quay.io) - ✅ **Recommended and actively maintained**
 * `hub`: the **open-source** Bitnami Legacy Keycloak image (from `docker.io/bitnamilegacy`) - ⚠️ **No longer updated**
 > [!NOTE]
-> The YAML schema is a valid Helm values schema. This choice was made for easier maintenance with Renovate parsing.development reference for Keycloak by Camunda! This document provides guidance on setting up a basic testing environment, running unit tests, and testing changes locally.
+> The YAML schema is a valid Helm values schema. This choice was made for easier maintenance with Renovate parsing.
 
 ### 2. 🔧 Build with `yq`
 
@@ -139,8 +139,9 @@ When adding a new version of Keycloak, follow these steps:
      - **Quay-based public images (`docker.io/camunda/keycloak`)**:
        - `camunda/keycloak:latest` (latest quay version - this is now the default latest)
        - `camunda/keycloak:quay-24` (mutable - triggered by any change in the base image of Keycloak)
-       - `camunda/keycloak:quay-24.0.1` (mutable - triggered by any change part of the base image of Keycloak)
-       - `camunda/keycloak:quay-24.0.1-${date in yyyy-mm-dd-xxx format}` (immutable, recommended for production usage)
+       - `camunda/keycloak:quay-24.0.5-1` (mutable - triggered by any change part of the base image of Keycloak)
+       - `camunda/keycloak:quay-24.0.5-1-${date in yyyy-mm-dd-xxx format}` (immutable, recommended for production usage)
+       - `camunda/keycloak:quay-24.0.5` (mutable - semver tag without suffix)
        - `camunda/keycloak:quay-latest` (latest quay version - same as `latest`)
 
 Following these steps ensures a smooth integration of new Keycloak versions, consistent testing across the development environment, and easy access to the latest version. Happy coding!
