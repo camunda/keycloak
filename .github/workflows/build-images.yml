@@ -141,7 +141,7 @@ jobs:
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@feature/add-option-dockerfile # TODO: use main when emrged
+              uses: camunda/infra-global-github-actions/build-docker-image@2bc1e208e9cb3211c8b4936a79d1197b201d0fa9 # main
               with:
                   registry_host: ${{ env.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
