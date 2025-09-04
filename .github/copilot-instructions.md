@@ -12,7 +12,7 @@ This repository builds and maintains containerized Keycloak images for Camunda w
 - **IRSA Support**: Enables passwordless database authentication using AWS IAM roles
 - **AWS JDBC Wrapper**: Provides connection failover, monitoring, and IAM authentication
 - **Connection Types**:
-  - Local PostgreSQL: `jdbc:aws-wrapper:postgresql://postgres:5432/db`
+  - Local PostgreSQL: `jdbc:postgresql://postgres:5432/db`
   - AWS Aurora with IRSA: `jdbc:aws-wrapper:postgresql://aurora.domain:5432/db?wrapperPlugins=iam`
 
 ### Build System
@@ -45,7 +45,7 @@ KEYCLOAK_DATABASE_PASSWORD: ""  # Empty for IAM auth
 ```
 
 ## Testing Strategy
-- **Local PostgreSQL**: Tests basic connectivity with AWS wrapper
+- **Local PostgreSQL**: Tests basic connectivity with AWS wrapper and with standard postgres driver
 - **AWS Aurora + IRSA**: Tests IAM authentication in AWS environment
 - **Multi-architecture**: Builds for linux/amd64 and linux/arm64
 - **Integration Tests**: Python-based Keycloak admin API tests

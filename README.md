@@ -248,17 +248,6 @@ spec:
 
 Feel free to adjust the values according to your actual configuration.
 
-## Important: Database Driver Configuration
-
-Quay-based images (`quay-*` tags) and Bitnami-based images include the AWS JDBC wrapper for optimal performance but require runtime configuration. This provides the following benefits:
-
-- ✅ **Maximum Flexibility**: Can be configured for both local PostgreSQL and AWS Aurora with IRSA at runtime
-- ✅ **Production Ready**: Full control over database driver and transaction configuration
-- ✅ **IRSA Support**: Built-in AWS IAM authentication capabilities
-
-
-The AWS JDBC wrapper is compatible with standard PostgreSQL connections (using `jdbc:aws-wrapper:postgresql://...` URLs) and provides IRSA support when needed (using `wrapperPlugins=iam` parameter) and driver configuration via the `KC_DB_DRIVER` environment variable for maximum flexibility.
-
 ## Reference
 
 - [Keycloak Documentation](https://www.keycloak.org/documentation).
