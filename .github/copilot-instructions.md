@@ -2,16 +2,11 @@
 
 ## Repository Purpose
 This repository builds and maintains containerized Keycloak images for Camunda with three main variants:
-- **Quay-based images** (`quay-*` tags): Official Keycloak from Quay.io with AWS JDBC wrapper pre-configured
+- **Quay-based images** (`quay-*` tags): Official Keycloak from Quay.io with AWS JDBC wrapper and runtime configuration
 - **Bitnami-based images** (`bitnami-*` tags): Based on Bitnami Legacy Keycloak
 - **Enterprise images** (`bitnami-ee-*` tags): Premium enterprise-grade images
 
 ## Key Technical Architecture
-
-### Image Variants & Driver Configuration
-- **Quay images**: Have `KC_DB_DRIVER=software.amazon.jdbc.Driver` **fixed at build time** for optimal performance with Keycloak's optimized build process
-- **Bitnami images**: Allow runtime driver configuration via `KC_DB_DRIVER` environment variable
-- All images include AWS JDBC wrapper for IRSA (IAM Roles for Service Accounts) authentication
 
 ### AWS Integration Features
 - **IRSA Support**: Enables passwordless database authentication using AWS IAM roles
@@ -29,14 +24,17 @@ This repository builds and maintains containerized Keycloak images for Camunda w
 
 ### Docker Compose Files
 - `docker-compose.yml`: For Bitnami-based images with runtime driver flexibility
-- `docker-compose.quay.yml`: For Quay-based images with fixed AWS wrapper driver
+- `docker-compose.quay.yml`: For Quay-based images with runtime AWS wrapper configuration
 
 ### Environment Variables (Quay images)
 ```yaml
+KC_DB_DRIVER: software.amazon.jdbc.Driver
 KC_DB_URL: jdbc:aws-wrapper:postgresql://host:port/db?params
 KC_DB_USERNAME: username
 KC_DB_PASSWORD: password  # Can be empty for IRSA
-# Note: KC_DB_DRIVER is pre-configured, don't override
+KC_TRANSACTION_XA_ENABLED: false
+KC_HEALTH_ENABLED: true
+KC_METRICS_ENABLED: true
 ```
 
 ### IRSA Configuration
@@ -54,10 +52,8 @@ KEYCLOAK_DATABASE_PASSWORD: ""  # Empty for IAM auth
 
 ## Known Constraints & Design Decisions
 
-### Quay Images Optimization
-- Driver is **fixed at build time** for maximum performance (Keycloak's optimized build)
-- To change driver: modify Dockerfile and rebuild (not runtime configurable)
-- Always use `aws-wrapper:postgresql` URLs even for local PostgreSQL
+### Quay Images Runtime Configuration
+- All necessary configuration variables (KC_DB_DRIVER, KC_TRANSACTION_XA_ENABLED, etc.) must be set via environment variables
 
 ### Bitnami Legacy Migration
 - Bitnami stopped publishing to Docker Hub (Aug 2025)
@@ -84,6 +80,8 @@ COMPOSE_KEYCLOAK_IMAGE=camunda/keycloak:local-quay-26 \
 docker-compose -f docker-compose.quay.yml up -d
 
 # Test with IRSA configuration (will fail without real AWS RDS)
+KC_DB_DRIVER=software.amazon.jdbc.Driver \
+KC_TRANSACTION_XA_ENABLED=false \
 KEYCLOAK_DATABASE_HOST=test-rds.aws.example.com \
 KEYCLOAK_DATABASE_NAME=testdb \
 KEYCLOAK_JDBC_PARAMS="wrapperPlugins=iam" \

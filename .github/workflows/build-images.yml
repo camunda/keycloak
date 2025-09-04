@@ -474,15 +474,8 @@ jobs:
 
                   if [[ "$base_type" == "quay" ]]; then
                     echo "compose_file=docker-compose.quay.yml" | tee -a "$GITHUB_OUTPUT"
-                    # For Quay images, KEYCLOAK_JDBC_DRIVER is not needed (hardcoded as aws-wrapper:postgresql)
-                    echo "keycloak_jdbc_driver=" | tee -a "$GITHUB_OUTPUT"
-                    # No KC_DB_DRIVER needed as it's pre-configured in the image
-                    echo "kc_db_driver=" | tee -a "$GITHUB_OUTPUT"
                   else
                     echo "compose_file=docker-compose.yml" | tee -a "$GITHUB_OUTPUT"
-                    # For Bitnami images, use the matrix configuration
-                    echo "keycloak_jdbc_driver=${{ matrix.runner_desc.keycloak_jdbc_driver }}" | tee -a "$GITHUB_OUTPUT"
-                    echo "kc_db_driver=${{ matrix.runner_desc.keycloak_db_driver }}" | tee -a "$GITHUB_OUTPUT"
                   fi
 
             - name: Start Test Environment
@@ -501,9 +494,12 @@ jobs:
                   KEYCLOAK_DATABASE_NAME: ${{ env.postgres_database }}
                   KEYCLOAK_DATABASE_HOST: ${{ env.postgres_host }}
                   KEYCLOAK_DATABASE_PORT: ${{ matrix.runner_desc.keycloak_db_port }}
-                  KEYCLOAK_JDBC_DRIVER: ${{ steps.set-compose-file.outputs.keycloak_jdbc_driver }}
+                  KEYCLOAK_JDBC_DRIVER: ${{ matrix.runner_desc.keycloak_jdbc_driver }}
                   KEYCLOAK_JDBC_PARAMS: ${{ matrix.runner_desc.keycloak_db_jdbc_query }}
-                  KC_DB_DRIVER: ${{ steps.set-compose-file.outputs.kc_db_driver }}
+                  KC_DB_DRIVER: ${{ matrix.runner_desc.keycloak_db_driver }}
+                  KC_TRANSACTION_XA_ENABLED: false
+                  KC_HEALTH_ENABLED: true
+                  KC_METRICS_ENABLED: true
 
                   # Disable HTTPS for tests - force HTTP mode
                   KC_HTTP_ENABLED: true
@@ -514,7 +510,7 @@ jobs:
                   KC_BOOTSTRAP_ADMIN_USERNAME: admin
                   KC_BOOTSTRAP_ADMIN_PASSWORD: admin
 
-                  # Alternative admin user variables (for compatibility)
+                  # Alternative admin user variables (for compatibility, KC_BOOTSTRAP is not sufficient)
                   KEYCLOAK_ADMIN: admin
                   KEYCLOAK_ADMIN_PASSWORD: admin
 

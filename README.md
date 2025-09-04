@@ -153,13 +153,14 @@ For Kubernetes with IRSA, configure the following environment variables:
 For Kubernetes with IRSA, configure the following environment variables:
 
 ```yaml
-- name: KC_DB
-  value: postgres
+- name: KC_DB_DRIVER
+  value: software.amazon.jdbc.Driver
 - name: KC_DB_URL
   value: "jdbc:aws-wrapper:postgresql://db-host:5432/db-name?wrapperPlugins=iam"
 - name: KC_DB_USERNAME
   value: db-user-name
-# Note: KC_DB_DRIVER is pre-configured in Quay images as software.amazon.jdbc.Driver
+- name: KC_TRANSACTION_XA_ENABLED
+  value: "false"
 - name: KC_HEALTH_ENABLED
   value: "true"
 - name: KC_METRICS_ENABLED
@@ -227,8 +228,10 @@ spec:
       key: username
     # For IRSA, omit passwordSecret to use IAM authentication
   additionalOptions:
-    # Note: db-driver is pre-configured in Quay images as software.amazon.jdbc.Driver
-    # and transaction-xa-enabled is optimally configured at build time
+    - name: db-driver
+      value: software.amazon.jdbc.Driver
+    - name: transaction-xa-enabled
+      value: "false"
     - name: log-level
       value: "INFO,software.amazon.jdbc:INFO"
   # For IRSA support
@@ -247,29 +250,14 @@ Feel free to adjust the values according to your actual configuration.
 
 ## Important: Database Driver Configuration
 
-### Quay-based Images
-Quay-based images (`quay-*` tags) have the AWS JDBC wrapper (`software.amazon.jdbc.Driver`) **pre-configured at build time** for optimal performance. This provides the following benefits:
+Quay-based images (`quay-*` tags) and Bitnami-based images include the AWS JDBC wrapper for optimal performance but require runtime configuration. This provides the following benefits:
 
-- ✅ **Maximum Performance**: Keycloak's optimized build process eliminates runtime overhead
-- ✅ **Both Connection Types Supported**: Can connect to both local PostgreSQL and AWS Aurora with IRSA
-- ✅ **Production Ready**: No runtime driver configuration needed
-- ✅ **Simplified Configuration**: No need to specify `db-driver` or `transaction-xa-enabled` parameters
+- ✅ **Maximum Flexibility**: Can be configured for both local PostgreSQL and AWS Aurora with IRSA at runtime
+- ✅ **Production Ready**: Full control over database driver and transaction configuration
+- ✅ **IRSA Support**: Built-in AWS IAM authentication capabilities
 
-> **📝 Important**: Unlike Bitnami-based images, Quay-based images do **not** require the following parameters in `additionalOptions` or environment variables:
-> - `db-driver` (pre-configured as `software.amazon.jdbc.Driver`)
-> - `transaction-xa-enabled` (optimally configured at build time)
->
-> These are automatically configured for optimal performance.
 
-The AWS JDBC wrapper is compatible with standard PostgreSQL connections (using `jdbc:aws-wrapper:postgresql://...` URLs) and provides IRSA support when needed (using `wrapperPlugins=iam` parameter).
-
-**Changing the Database Driver**: If you need to use a different database driver (e.g., `org.postgresql.Driver`), you'll need to:
-1. Modify the `KC_DB_DRIVER` environment variable in the Dockerfile.quay
-2. Rebuild the image to apply the new driver configuration
-3. This ensures optimal performance while maintaining flexibility when needed
-
-### Bitnami-based Images
-Bitnami-based images allow runtime driver configuration via the `KC_DB_DRIVER` environment variable for maximum flexibility.
+The AWS JDBC wrapper is compatible with standard PostgreSQL connections (using `jdbc:aws-wrapper:postgresql://...` URLs) and provides IRSA support when needed (using `wrapperPlugins=iam` parameter) and driver configuration via the `KC_DB_DRIVER` environment variable for maximum flexibility.
 
 ## Reference
 

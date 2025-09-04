@@ -38,31 +38,6 @@ RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-j
 # Copy the identity theme
 COPY --from=identity /app/keycloak-theme/ /opt/keycloak/themes/identity
 
-# Building builder image
-# hadolint ignore=DL3006
-FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST} AS builder
-
-# renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
-ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
-
-# Copy the AWS JDBC drivers and theme from minimal-build stage
-COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/providers/ /opt/keycloak/providers/
-COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/themes/identity /opt/keycloak/themes/identity
-
-USER keycloak
-
-WORKDIR /opt/keycloak
-
-# Configure Keycloak for PostgreSQL with AWS wrapper and enable health/metrics
-ENV KC_DB=postgres
-ENV KC_DB_DRIVER=software.amazon.jdbc.Driver
-ENV KC_TRANSACTION_XA_ENABLED=false
-ENV KC_HEALTH_ENABLED=true
-ENV KC_METRICS_ENABLED=true
-
-# Build the optimized Keycloak
-RUN /opt/keycloak/bin/kc.sh build
-
 ##### FINAL Keycloak IMAGE ####
 
 # hadolint ignore=DL3006
@@ -75,8 +50,9 @@ ARG BASE_IMAGE_DIGEST
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 
-# Copy the previously built aws jdbc drivers and optimized keycloak
-COPY --chown=keycloak:keycloak --from=builder /opt/keycloak/ /opt/keycloak/
+# Copy the AWS JDBC drivers and theme from minimal-build stage
+COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/providers/ /opt/keycloak/providers/
+COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/themes/identity /opt/keycloak/themes/identity
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
