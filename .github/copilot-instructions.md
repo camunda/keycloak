@@ -28,6 +28,7 @@ This repository builds and maintains containerized Keycloak images for Camunda w
 
 ### Environment Variables (Quay images)
 ```yaml
+KC_DB: postgres
 KC_DB_DRIVER: software.amazon.jdbc.Driver
 KC_DB_URL: jdbc:aws-wrapper:postgresql://host:port/db?params
 KC_DB_USERNAME: username

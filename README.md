@@ -153,6 +153,8 @@ For Kubernetes with IRSA, configure the following environment variables:
 For Kubernetes with IRSA, configure the following environment variables:
 
 ```yaml
+- name: KC_DB
+  value: postgres
 - name: KC_DB_DRIVER
   value: software.amazon.jdbc.Driver
 - name: KC_DB_URL

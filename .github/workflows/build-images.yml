@@ -496,6 +496,7 @@ jobs:
                   KEYCLOAK_DATABASE_PORT: ${{ matrix.runner_desc.keycloak_db_port }}
                   KEYCLOAK_JDBC_DRIVER: ${{ matrix.runner_desc.keycloak_jdbc_driver }}
                   KEYCLOAK_JDBC_PARAMS: ${{ matrix.runner_desc.keycloak_db_jdbc_query }}
+                  KC_DB: postgres
                   KC_DB_DRIVER: ${{ matrix.runner_desc.keycloak_db_driver }}
                   KC_TRANSACTION_XA_ENABLED: false
                   KC_HEALTH_ENABLED: true
