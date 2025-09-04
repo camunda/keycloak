@@ -215,7 +215,7 @@ metadata:
   name: keycloak
   namespace: keycloak
 spec:
-  image: docker.io/camunda/keycloak:latest
+  image: docker.io/camunda/keycloak:quay-26
   instances: 3
   db:
     vendor: postgres
@@ -241,33 +241,6 @@ spec:
             env:
               - name: KC_DB_URL
                 value: "jdbc:aws-wrapper:postgresql://aurora.rds.your.domain:5432/keycloak?wrapperPlugins=iam"
-```
-
-**Alternative**: If you prefer Helm charts, you can use [codecentric/keycloak](https://artifacthub.io/packages/helm/codecentric/keycloak):
-
-```yaml
-image:
-  repository: docker.io/camunda/keycloak
-  tag: "latest"  # or "quay-26" for specific version
-extraEnv: |
-  - name: KC_DB
-    value: postgres
-  - name: KC_DB_URL
-    value: "jdbc:aws-wrapper:postgresql://aurora.rds.your.domain:5432/keycloak?wrapperPlugins=iam"
-  - name: KC_DB_USERNAME
-    value: keycloak
-  # Note: KC_DB_DRIVER is pre-configured in Quay images as software.amazon.jdbc.Driver
-  # for optimal performance. To use a different driver (e.g., org.postgresql.Driver),
-  # you would need to rebuild the image with the desired driver configuration.
-  - name: KC_HEALTH_ENABLED
-    value: "true"
-  - name: KC_METRICS_ENABLED
-    value: "true"
-command:
-  - "/opt/keycloak/bin/kc.sh"
-args:
-  - "start"
-  - "--optimized"
 ```
 
 Feel free to adjust the values according to your actual configuration.

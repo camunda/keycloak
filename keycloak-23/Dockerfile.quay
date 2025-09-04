@@ -11,7 +11,7 @@ ARG BASE_IMAGE_DIGEST=""
 # We use the identity image to copy the keycloak theme
 FROM docker.io/camunda/identity:latest@sha256:c63263df40ee3e7db9e989efc5ebb96010651566d6d4399c0385329b6d0102a3 AS identity
 
-# Use UBI9 to install packages and prepare dependencies
+# see https://www.keycloak.org/server/containers#_installing_additional_rpm_packages
 FROM docker.io/almalinux@sha256:cfefa10fe2b6a22e0b510af9845eb9051a474cf3638c05149eea63d82b385178 AS minimal-build
 
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
@@ -46,14 +46,10 @@ FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST} AS builder
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 
 # Copy the AWS JDBC drivers and theme from minimal-build stage
-COPY --from=minimal-build /opt/keycloak/providers/ /opt/keycloak/providers/
-COPY --from=minimal-build /opt/keycloak/themes/identity /opt/keycloak/themes/identity
+COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/providers/ /opt/keycloak/providers/
+COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/themes/identity /opt/keycloak/themes/identity
 
-# Fix permissions for keycloak user
-USER root
-RUN chown -R keycloak:keycloak /opt/keycloak/providers /opt/keycloak/themes
 USER keycloak
-
 WORKDIR /opt/keycloak
 
 # Configure Keycloak for PostgreSQL with AWS wrapper and enable health/metrics
