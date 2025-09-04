@@ -65,4 +65,4 @@ services:
             - ${COMPOSE_KEYCLOAK_DEPENDS_ON:-postgres}
         volumes:
             - ${COMPOSE_KEYCLOAK_VOLUME_1:-/dev/null:/mynull1} # can be used to inject irsa token
-        command: [start, --optimized]
+        command: [start]
