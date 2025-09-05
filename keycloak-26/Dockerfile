@@ -28,7 +28,7 @@ RUN mkdir /home/keycloak && chown keycloak:keycloak /home/keycloak && \
 COPY --from=identity /app/keycloak-theme/ /opt/bitnami/keycloak/themes/identity
 RUN chown keycloak:keycloak -R /opt/bitnami/keycloak/themes
 
-USER 1000
+USER keycloak
 
 WORKDIR /home/keycloak
 
