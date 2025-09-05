@@ -72,6 +72,15 @@ COPY --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
 # OCP: https://docs.openshift.com/container-platform/4.10/openshift_images/create-images.html#defining-image-metadata
+      # cpu and ram allocation reference: https://www.keycloak.org/high-availability/concepts-memory-and-cpu-sizing
+      # the following labels are generated at buildtime - see https://github.com/docker/metadata-action
+      # org.opencontainers.image.title
+      # org.opencontainers.image.description
+      # org.opencontainers.image.url
+      # org.opencontainers.image.created
+      # org.opencontainers.image.revision
+      # org.opencontainers.image.source
+      # org.opencontainers.image.version
 LABEL maintainer="Camunda" \
       name="camunda/keycloak" \
       summary="Keycloak bitnami with AWS wrapper" \
@@ -88,14 +97,3 @@ LABEL maintainer="Camunda" \
       io.openshift.tags="bpmn,identity,keycloak,camunda,bitnami" \
       io.openshift.min-memory="1Gi" \
       io.openshift.min-cpu="1"
-
-      # cpu and ram allocation reference: https://www.keycloak.org/high-availability/concepts-memory-and-cpu-sizing
-
-      # the following labels are generated at buildtime - see https://github.com/docker/metadata-action
-      # org.opencontainers.image.title
-      # org.opencontainers.image.description
-      # org.opencontainers.image.url
-      # org.opencontainers.image.created
-      # org.opencontainers.image.revision
-      # org.opencontainers.image.source
-      # org.opencontainers.image.version

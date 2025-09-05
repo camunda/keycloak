@@ -13,7 +13,7 @@ REQUIRED_AWS_COMPONENTS = [
 def run_docker_command(image_name, command):
     """Run a docker command and return the output"""
     try:
-        cmd = ["docker", "run", "--entrypoint", "/bin/sh", image_name, "-c"] + [" ".join(command)]
+        cmd = ["docker", "run", "--entrypoint", "/bin/sh", image_name, "-c", " ".join(command)]
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         return result.stdout
     except subprocess.CalledProcessError as e:
