@@ -22,13 +22,13 @@ USER 0
 
 # install maven (silence alert about version pinning of maven)
 # hadolint ignore=DL3008
-RUN mkdir /home/keycloak && chown 1001:1000 /home/keycloak && \
+RUN mkdir /home/keycloak && chown keycloak:keycloak /home/keycloak && \
     apt-get update && apt-get install maven -y --no-install-recommends
 
 COPY --from=identity /app/keycloak-theme/ /opt/bitnami/keycloak/themes/identity
-RUN chown 1001:1000 -R /opt/bitnami/keycloak/themes
+RUN chown keycloak:keycloak -R /opt/bitnami/keycloak/themes
 
-USER 1001
+USER 1000
 
 WORKDIR /home/keycloak
 
@@ -64,9 +64,9 @@ ARG BASE_IMAGE_DIGEST
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 
 # Copy the previously built aws jdbc drivers
-COPY --chown=1001:1000 --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
+COPY --chown=keycloak:keycloak --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
 
-COPY --chown=1001:1000 --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
+COPY --chown=keycloak:keycloak --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
 
 
 # common, k8s, openshift and OCI labels:
