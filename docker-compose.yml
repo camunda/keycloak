@@ -43,6 +43,13 @@ services:
             KEYCLOAK_ENABLE_STATISTICS: ${KEYCLOAK_ENABLE_STATISTICS:-true}
             KEYCLOAK_ENABLE_HEALTH_ENDPOINTS: ${KEYCLOAK_ENABLE_HEALTH_ENDPOINTS:-true}
 
+            # Production configuration (see https://github.com/bitnami/containers/issues/85301#issuecomment-3245394996)
+            KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
+            KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT:-false}
+            KC_HOSTNAME_STRICT_HTTPS: ${KC_HOSTNAME_STRICT_HTTPS:-false}
+            KC_HTTP_ENABLED: ${KC_HTTP_ENABLED:-true}
+
+
             # AWS specifics variables
             AWS_STS_REGIONAL_ENDPOINTS: ${AWS_STS_REGIONAL_ENDPOINTS:-}
             AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-}
