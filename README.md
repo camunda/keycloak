@@ -65,7 +65,7 @@ To start the Quay-based image, run:
 docker run --name mykeycloak -p 8443:8443 \
         -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=change_me \
         docker.io/camunda/keycloak:quay-26 \
-        start --optimized --hostname=localhost
+        start --hostname=localhost
 ```
 
 Keycloak will start in production mode, using secured HTTPS communication and will be available at [https://localhost:8443](https://localhost:8443).
