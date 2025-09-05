@@ -1,0 +1,68 @@
+---
+services:
+    postgres:
+        image: ${COMPOSE_POSTGRES_IMAGE:-docker.io/postgres:latest}
+        environment:
+            POSTGRES_DB: ${POSTGRES_DB:-keycloak}
+            POSTGRES_USER: ${POSTGRES_USER:-keycloak}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+        healthcheck:
+            test: [CMD-SHELL, "PGPASSWORD=$${POSTGRES_PASSWORD} psql --username=$${POSTGRES_USER} --host=localhost --dbname=$${POSTGRES_DB} --command='\\\
+                      q'"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+        deploy:
+            replicas: ${COMPOSE_POSTGRES_DEPLOY_REPLICAS:-1}
+
+    keycloak:
+        image: ${COMPOSE_KEYCLOAK_IMAGE:-camunda/keycloak:quay-latest}
+        environment:
+            # Quay Keycloak uses different environment variables than Bitnami
+            KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
+            KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
+            KEYCLOAK_ADMIN: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
+            KEYCLOAK_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
+
+            # Database configuration for Quay Keycloak
+            KC_DB: ${KC_DB:-postgres}
+            KC_DB_DRIVER: ${KC_DB_DRIVER:-software.amazon.jdbc.Driver}
+            KC_DB_URL: >-
+                jdbc:${KEYCLOAK_JDBC_DRIVER}://${KEYCLOAK_DATABASE_HOST:-postgres}:${KEYCLOAK_DATABASE_PORT:-5432}/${KEYCLOAK_DATABASE_NAME:-keycloak}?${KEYCLOAK_JDBC_PARAMS:-}
+            KC_DB_USERNAME: ${KEYCLOAK_DATABASE_USER:-keycloak}
+            KC_DB_PASSWORD: ${KEYCLOAK_DATABASE_PASSWORD-password}
+            KC_TRANSACTION_XA_ENABLED: ${KC_TRANSACTION_XA_ENABLED:-false}
+
+            # Health and metrics configuration
+            KC_HEALTH_ENABLED: ${KC_HEALTH_ENABLED:-true}
+            KC_METRICS_ENABLED: ${KC_METRICS_ENABLED:-true}
+
+            # Logging configuration
+            KC_LOG_LEVEL: ${KEYCLOAK_LOG_LEVEL:-INFO}
+
+            # Production configuration
+            KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
+            KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT:-false}
+            KC_HOSTNAME_STRICT_HTTPS: ${KC_HOSTNAME_STRICT_HTTPS:-false}
+            KC_HTTP_ENABLED: ${KC_HTTP_ENABLED:-true}
+
+            # AWS specifics variables
+            AWS_STS_REGIONAL_ENDPOINTS: ${AWS_STS_REGIONAL_ENDPOINTS:-}
+            AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-}
+            AWS_REGION: ${AWS_REGION:-}
+            AWS_ROLE_ARN: ${AWS_ROLE_ARN:-}
+            AWS_WEB_IDENTITY_TOKEN_FILE: ${AWS_WEB_IDENTITY_TOKEN_FILE:-}
+
+        healthcheck:
+            test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1
+            interval: 15s
+            timeout: 5s
+            retries: 5
+        ports:
+            - 8080:8080
+            - 9000:9000
+        depends_on:
+            - ${COMPOSE_KEYCLOAK_DEPENDS_ON:-postgres}
+        volumes:
+            - ${COMPOSE_KEYCLOAK_VOLUME_1:-/dev/null:/mynull1} # can be used to inject irsa token
+        command: [start]

@@ -60,16 +60,15 @@ jobs:
                   : # if we release a specified version of keycloak, the matrix should only contain it
                   if [[ $GITHUB_REF =~ ^refs/tags/keycloak-([0-9]+)- ]]; then
                     keycloak_version=${BASH_REMATCH[1]}
-                    matrix_json=$(jq -n --arg v "$keycloak_version" '["\($v)-prem", "\($v)-hub"]')
+                    matrix_json=$(jq -n --arg v "$keycloak_version" '["\($v)-prem", "\($v)-hub", "\($v)-quay"]')
                   else
                     : # List folders matching the pattern keycloak-*
                     : # Export the list as an output in JSON format
                     versions=$(printf "%s\n" keycloak-*/ | sed 's/\/$//' | sed 's/keycloak-//')
-                    matrix_json=$(echo "$versions" | jq -R -s -c 'split("\n")[:-1] | map("\(.)-prem", "\(.)-hub") | flatten')
+                    matrix_json=$(echo "$versions" | jq -R -s -c 'split("\n")[:-1] | map("\(.)-prem", "\(.)-hub", "\(.)-quay") | flatten')
                   fi
 
-                  echo "matrix_keycloak_versions=${matrix_json}" >> "$GITHUB_OUTPUT"
-                  echo "matrix_keycloak_versions=${matrix_json}"
+                  echo "matrix_keycloak_versions=${matrix_json}" | tee -a "$GITHUB_OUTPUT"
 
 
     build-image:
@@ -112,28 +111,47 @@ jobs:
                   username: ${{ steps.secrets.outputs.DOCKERHUB_USER }}
                   password: ${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}
 
+            - name: Extract version variables
+              id: version-vars
+              run: |
+                  set -euo pipefail
+
+                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", or "24-quay"
+                  base_version="${version_name%-*}"                   # e.g. "24"
+                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", or "quay"
+
+                  echo "version_name=$version_name" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
+
             - name: Compute build image variables
               id: compute-build-image-name-step
               run: |
                   set -euo pipefail
 
-                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub" or "24-prem"
-                  base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub" or "prem"
-                  base_path="keycloak-${base_version}"                # e.g. "keycloak-24"
+                  base_path="keycloak-${{ steps.version-vars.outputs.base_version }}"                # e.g. "keycloak-24"
 
-                  base_image_name=$(yq e ".sources.${base_type}.image.repository" "${base_path}/bases.yml")
-                  base_image_tag=$(yq e ".sources.${base_type}.image.tag" "${base_path}/bases.yml" | cut -d@ -f1)
-                  base_image_digest=$(yq e ".sources.${base_type}.image.tag" "${base_path}/bases.yml" | cut -d@ -f2)
+                  base_image_name=$(yq e ".sources.${{ steps.version-vars.outputs.base_type }}.image.repository" "${base_path}/bases.yml")
+                  base_image_tag=$(yq e ".sources.${{ steps.version-vars.outputs.base_type }}.image.tag" "${base_path}/bases.yml" | cut -d@ -f1)
+                  base_image_digest=$(yq e ".sources.${{ steps.version-vars.outputs.base_type }}.image.tag" "${base_path}/bases.yml" | cut -d@ -f2)
 
-                  echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
+                  # Set the Dockerfile path based on base type
+                  if [[ "${{ steps.version-vars.outputs.base_type }}" == "quay" ]]; then
+                    dockerfile_path="Dockerfile.quay"
+                  else
+                    dockerfile_path="Dockerfile"
+                  fi
+
+                  echo "base_version=${{ steps.version-vars.outputs.base_version }}" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_type=${{ steps.version-vars.outputs.base_type }}" | tee -a "$GITHUB_OUTPUT"
                   echo "base_image_name=$base_image_name" | tee -a "$GITHUB_OUTPUT"
                   echo "base_image_tag=$base_image_tag" | tee -a "$GITHUB_OUTPUT"
                   echo "base_image_digest=$base_image_digest" | tee -a "$GITHUB_OUTPUT"
+                  echo "dockerfile_path=$dockerfile_path" | tee -a "$GITHUB_OUTPUT"
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@5b991eb6368800c8dd97dde7ce50015eb3e1ae9e # main
+              uses: camunda/infra-global-github-actions/build-docker-image@2bc1e208e9cb3211c8b4936a79d1197b201d0fa9 # main
               with:
                   registry_host: ${{ env.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -141,6 +159,8 @@ jobs:
                   force_push: true
                   image_name: ${{ env.CONTAINER_IMAGE_NAME_CI }}
                   build_context: ./keycloak-${{ steps.compute-build-image-name-step.outputs.base_version }}/
+                  build_docker_file: |
+                      ./keycloak-${{ steps.compute-build-image-name-step.outputs.base_version }}/${{ steps.compute-build-image-name-step.outputs.dockerfile_path }}
                   build_platforms: linux/amd64,linux/arm64
                   build_args: |
                       BASE_IMAGE_NAME=${{ steps.compute-build-image-name-step.outputs.base_image_name }}
@@ -158,8 +178,7 @@ jobs:
                   image_name=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."image.name"' | tr ',' '\n' | head -n 1 | tr -d ' ')
                   digest=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."containerimage.digest"')
                   full_image_name="${image_name}@${digest}"
-                  echo "full_image_name=${full_image_name}" >> "$GITHUB_OUTPUT"
-                  echo "$full_image_name"
+                  echo "full_image_name=${full_image_name}" | tee -a "$GITHUB_OUTPUT"
 
             ## Write for matrix outputs workaround
             - uses: cloudposse/github-action-matrix-outputs-write@ed06cf3a6bf23b8dce36d1cf0d63123885bb8375 # v1
@@ -206,8 +225,7 @@ jobs:
                   set -euo pipefail
 
                   keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
-                  echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
-                  echo "keycloak_image_name=${keycloak_image_name}"
+                  echo "keycloak_image_name=${keycloak_image_name}" | tee -a "$GITHUB_ENV"
 
             - name: Import secrets
               uses: hashicorp/vault-action@4c06c5ccf5c0761b6029f56cfb1dcf5565918a3b # v3.4.0
@@ -229,17 +247,31 @@ jobs:
                   username: ${{ steps.secrets.outputs.MACHINE_USR }}
                   password: ${{ steps.secrets.outputs.MACHINE_PWD }}
 
-            - name: KeyCloak Show-Config
+            - name: Extract version variables
+              id: version-vars
               run: |
                   set -euo pipefail
 
-                  docker run "${{ env.keycloak_image_name }}" /opt/bitnami/keycloak/bin/kc.sh show-config >> docker.log
-                  echo "config=$(< docker.log tr '\n' ' ')" >> "$GITHUB_ENV"
+                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", or "24-quay"
+                  base_version="${version_name%-*}"                   # e.g. "24"
+                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", or "quay"
 
-            - name: Assert Config
-              env:
-                  CONFIG: ${{ env.config }}
-              run: python3 ./.github/scripts/build-check/main.py
+                  if [[ "$base_type" == "quay" ]]; then
+                    image_type="quay"
+                  else
+                    image_type="bitnami"
+                  fi
+
+                  echo "version_name=$version_name" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
+                  echo "image_type=$image_type" | tee -a "$GITHUB_OUTPUT"
+
+            - name: Check Keycloak Providers/Config
+              run: |
+                  set -euo pipefail
+
+                  python3 ./.github/scripts/build-check/check_providers.py "${{ env.keycloak_image_name }}" "${{ steps.version-vars.outputs.image_type }}"
 
     test-postgres-integ:
         strategy:
@@ -303,8 +335,7 @@ jobs:
                   set -euo pipefail
 
                   keycloak_image_name="${{ fromJson(needs.read-build-image-output.outputs.result).full_image_name[matrix.keycloak_version] }}"
-                  echo "keycloak_image_name=${keycloak_image_name}" >> "$GITHUB_ENV"
-                  echo "keycloak_image_name=${keycloak_image_name}"
+                  echo "keycloak_image_name=${keycloak_image_name}" | tee -a "$GITHUB_ENV"
 
             - name: Import secrets
               uses: hashicorp/vault-action@4c06c5ccf5c0761b6029f56cfb1dcf5565918a3b # v3.4.0
@@ -339,6 +370,19 @@ jobs:
                   username: ${{ steps.secrets.outputs.MACHINE_USR }}
                   password: ${{ steps.secrets.outputs.MACHINE_PWD }}
 
+            - name: Extract version variables
+              id: version-vars
+              run: |
+                  set -euo pipefail
+
+                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", or "24-quay"
+                  base_version="${version_name%-*}"                   # e.g. "24"
+                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", or "quay"
+
+                  echo "version_name=$version_name" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
+
             - name: Compute AWS variables
               if: startsWith(matrix.runner_desc.runner, 'aws')
               run: |
@@ -351,16 +395,11 @@ jobs:
                   echo "compose_keycloak_volume_1=$AWS_WEB_IDENTITY_TOKEN_FILE:$AWS_WEB_IDENTITY_TOKEN_FILE" >> "$GITHUB_ENV"
 
                   : # export AWS variables
-                  echo "AWS_STS_REGIONAL_ENDPOINTS=$AWS_STS_REGIONAL_ENDPOINTS" >> "$GITHUB_ENV"
-                  echo "AWS_STS_REGIONAL_ENDPOINTS=${AWS_STS_REGIONAL_ENDPOINTS}"
-                  echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION" >> "$GITHUB_ENV"
-                  echo "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
-                  echo "AWS_REGION=$AWS_REGION" >> "$GITHUB_ENV"
-                  echo "AWS_REGION=${AWS_REGION}"
-                  echo "AWS_ROLE_ARN=$AWS_ROLE_ARN" >> "$GITHUB_ENV"
-                  echo "AWS_ROLE_ARN=${AWS_ROLE_ARN}"
-                  echo "AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE" >> "$GITHUB_ENV"
-                  echo "AWS_WEB_IDENTITY_TOKEN_FILE=${AWS_WEB_IDENTITY_TOKEN_FILE}"
+                  echo "AWS_STS_REGIONAL_ENDPOINTS=$AWS_STS_REGIONAL_ENDPOINTS" | tee -a "$GITHUB_ENV"
+                  echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION" | tee -a "$GITHUB_ENV"
+                  echo "AWS_REGION=$AWS_REGION" | tee -a "$GITHUB_ENV"
+                  echo "AWS_ROLE_ARN=$AWS_ROLE_ARN" | tee -a "$GITHUB_ENV"
+                  echo "AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE" | tee -a "$GITHUB_ENV"
 
             - name: Compute Ubuntu variables
               if: startsWith(matrix.runner_desc.runner, 'ubuntu')
@@ -377,9 +416,9 @@ jobs:
                   set -euo pipefail
 
                   if (( "${{ matrix.runner_desc.postgres_replicas }}" < 1 )); then
-                    echo "compose_keycloak_depends_on=" >> "$GITHUB_ENV"
+                    echo "compose_keycloak_depends_on=" | tee -a "$GITHUB_ENV"
                   else
-                    echo "compose_keycloak_depends_on=postgres" >> "$GITHUB_ENV"
+                    echo "compose_keycloak_depends_on=postgres" | tee -a "$GITHUB_ENV"
                   fi
 
                   : # ensure uniqueness of the db name
@@ -394,13 +433,11 @@ jobs:
                     | awk -F'[><]' '/<postgresql.version>/{print $3}'
                   )
 
-                  echo "postgres_version=${postgres_version}" >> "$GITHUB_ENV"
-                  echo "postgres_version=${postgres_version}"
+                  echo "postgres_version=${postgres_version}" | tee -a "$GITHUB_ENV"
 
                   : # apply template on the address
                   postgres_host=$(echo "${{ matrix.runner_desc.keycloak_db_host_template }}" | sed "s/{{ postgres_version }}/${postgres_version}/g")
-                  echo "postgres_host=${postgres_host}" >> "$GITHUB_ENV"
-                  echo "postgres_host=${postgres_host}"
+                  echo "postgres_host=${postgres_host}" | tee -a "$GITHUB_ENV"
 
             # The self-hosted runner doesn't provide a postgres client and the prerequisites for make,
             # so we need to install them manually
@@ -456,10 +493,22 @@ jobs:
                   : # Since a password was generated in the previous steps, we need to ensure it is empty.
                   echo "postgres_password=" >> "$GITHUB_ENV"
 
+            - name: Set compose file based on image type
+              id: set-compose-file
+              run: |
+                  set -euo pipefail
+
+                  if [[ "${{ steps.version-vars.outputs.base_type }}" == "quay" ]]; then
+                    echo "compose_file=docker-compose.quay.yml" | tee -a "$GITHUB_OUTPUT"
+                  else
+                    echo "compose_file=docker-compose.yml" | tee -a "$GITHUB_OUTPUT"
+                  fi
+
             - name: Start Test Environment
               uses: ./.github/actions/compose
               with:
                   project_name: keycloak
+                  compose_file: ${{ steps.set-compose-file.outputs.compose_file }}
               env:
 
                   POSTGRES_DB: ${{ env.postgres_database }}
@@ -473,7 +522,24 @@ jobs:
                   KEYCLOAK_DATABASE_PORT: ${{ matrix.runner_desc.keycloak_db_port }}
                   KEYCLOAK_JDBC_DRIVER: ${{ matrix.runner_desc.keycloak_jdbc_driver }}
                   KEYCLOAK_JDBC_PARAMS: ${{ matrix.runner_desc.keycloak_db_jdbc_query }}
+                  KC_DB: postgres
                   KC_DB_DRIVER: ${{ matrix.runner_desc.keycloak_db_driver }}
+                  KC_TRANSACTION_XA_ENABLED: false
+                  KC_HEALTH_ENABLED: true
+                  KC_METRICS_ENABLED: true
+
+                  # Disable HTTPS for tests - force HTTP mode
+                  KC_HTTP_ENABLED: true
+                  KC_HOSTNAME_STRICT_HTTPS: false
+                  KC_HOSTNAME_STRICT: false
+
+                  # Bootstrap admin user for Quay images
+                  KC_BOOTSTRAP_ADMIN_USERNAME: admin
+                  KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+
+                  # Alternative admin user variables (for compatibility, KC_BOOTSTRAP is not sufficient)
+                  KEYCLOAK_ADMIN: admin
+                  KEYCLOAK_ADMIN_PASSWORD: admin
 
                   KEYCLOAK_LOG_LEVEL: INFO,software.amazon.jdbc:INFO
 
@@ -564,25 +630,44 @@ jobs:
                   username: ${{ steps.secrets.outputs.MACHINE_USR }}
                   password: ${{ steps.secrets.outputs.MACHINE_PWD }}
 
+            - name: Extract version variables
+              id: version-vars
+              run: |
+                  set -euo pipefail
+
+                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", or "24-quay"
+                  base_version="${version_name%-*}"                   # e.g. "24"
+                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", or "quay"
+
+                  echo "version_name=$version_name" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
+                  echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
+
             - name: Set registry credentials based on keycloak_version
               id: publishing-registry
               run: |
                   version="${{ matrix.keycloak_version }}"
 
-                  if [[ "$version" == *-hub ]]; then
+                  if [[ "${{ steps.version-vars.outputs.base_type }}" == "hub" ]]; then
                     echo "publishing_registry=${{ env.CONTAINER_REGISTRY_HUB }}" | tee -a "$GITHUB_OUTPUT"
                     echo "publishing_registry_username=${{ steps.secrets.outputs.DOCKERHUB_USER }}" | tee -a "$GITHUB_OUTPUT"
                     echo "publishing_registry_password=${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}" | tee -a "$GITHUB_OUTPUT"
                     # Image target for Hub
                     echo "publishing_image_name=${{ env.CONTAINER_IMAGE_NAME_HUB }}" | tee -a "$GITHUB_OUTPUT"
-                  elif [[ "$version" == *-prem ]]; then
+                  elif [[ "${{ steps.version-vars.outputs.base_type }}" == "prem" ]]; then
                     echo "publishing_registry=${{ env.CONTAINER_REGISTRY_CAMUNDA }}" | tee -a "$GITHUB_OUTPUT"
                     echo "publishing_registry_username=${{ steps.secrets.outputs.MACHINE_USR }}" | tee -a "$GITHUB_OUTPUT"
                     echo "publishing_registry_password=${{ steps.secrets.outputs.MACHINE_PWD }}" | tee -a "$GITHUB_OUTPUT"
                     # Image target for Camunda
                     echo "publishing_image_name=${{ env.CONTAINER_IMAGE_NAME_CAMUNDA }}" | tee -a "$GITHUB_OUTPUT"
+                  elif [[ "${{ steps.version-vars.outputs.base_type }}" == "quay" ]]; then
+                    echo "publishing_registry=${{ env.CONTAINER_REGISTRY_HUB }}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_registry_username=${{ steps.secrets.outputs.DOCKERHUB_USER }}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_registry_password=${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}" | tee -a "$GITHUB_OUTPUT"
+                    # Image target for Hub with quay- prefix in tags
+                    echo "publishing_image_name=${{ env.CONTAINER_IMAGE_NAME_HUB }}" | tee -a "$GITHUB_OUTPUT"
                   else
-                    echo "❌ Error: Unsupported version suffix in '$version'. Expected '-hub' or '-prem'."
+                    echo "❌ Error: Unsupported version suffix in '$version'. Expected '-hub', '-prem', or '-quay'."
                     exit 1
                   fi
 
@@ -615,33 +700,80 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub" or "24-prem"
-                  base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub" or "prem"
-                  base_path="keycloak-${base_version}"                # e.g. "keycloak-24"
+                  base_path="keycloak-${{ steps.version-vars.outputs.base_version }}"                # e.g. "keycloak-24"
 
-                  # e.g. base_image_tag=23.0.7-debian-12-r5
-                  base_image_tag=$(yq e ".sources.${base_type}.image.tag" "${base_path}/bases.yml" | cut -d@ -f1)
+                  # e.g. base_image_tag=23.0.7-debian-12-r5 or 23.0.7 for quay
+                  base_image_tag=$(yq e ".sources.${{ steps.version-vars.outputs.base_type }}.image.tag" "${base_path}/bases.yml" | cut -d@ -f1)
                   echo "base_image_tag=${base_image_tag}"
 
                   : # version of keycloak (e.g.: 23.0.1)
-                  semver_tag=$(echo "${base_image_tag}"  | awk -F'-' '{print $1}')
+                  # For quay images, the tag is just the semver, for bitnami it includes extra suffix
+                  if [[ "${{ steps.version-vars.outputs.base_type }}" == "quay" ]]; then
+                    semver_tag=$(echo "${base_image_tag}"  | awk -F'-' '{print $1}')
+                    tag_prefix="quay-"
+                  elif [[ "${{ steps.version-vars.outputs.base_type }}" == "hub" ]]; then
+                    semver_tag=$(echo "${base_image_tag}"  | awk -F'-' '{print $1}')
+                    tag_prefix="bitnami-"
+                  elif [[ "${{ steps.version-vars.outputs.base_type }}" == "prem" ]]; then
+                    semver_tag=$(echo "${base_image_tag}"  | awk -F'-' '{print $1}')
+                    tag_prefix="bitnami-ee-"
+                  else
+                    echo "❌ Error: Unsupported base_type '${{ steps.version-vars.outputs.base_type }}'. Expected 'hub', 'prem', or 'quay'."
+                    exit 1
+                  fi
 
                   : # remove keycloak- prefix
                   suffix_version=$(echo '${{ github.ref_name }}' | sed 's/keycloak-[0-9]*-//')
 
-                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_version}" \
+                  # Create tags with appropriate prefix
+                  docker buildx imagetools create \
+                    -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${tag_prefix}${{ steps.version-vars.outputs.base_version }}" \
                     "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
-                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_image_tag}" \
+                  docker buildx imagetools create \
+                    -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${tag_prefix}${base_image_tag}" \
                     "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
-                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_image_tag}-${suffix_version}" \
+                  docker buildx imagetools create \
+                    -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${tag_prefix}${base_image_tag}-${suffix_version}" \
                     "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
-                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${semver_tag}" \
+                  docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${tag_prefix}${semver_tag}" \
                     "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
 
-                  if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${base_version}" ]; then
-                    docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:latest" \
+                  # For backward compatibility, also publish bitnami images without prefix
+                  base_type="${{ steps.version-vars.outputs.base_type }}"
+                  if [[ "$base_type" == "hub" || "$base_type" == "prem" ]]; then
+                    docker buildx imagetools create \
+                      -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${{ steps.version-vars.outputs.base_version }}" \
                       "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                    docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_image_tag}" \
+                      "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                    docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${base_image_tag}-${suffix_version}" \
+                      "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                    docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${semver_tag}" \
+                      "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                  fi
+
+                  # Make Quay the default latest, keep latest for non-quay as well for backward compatibility
+                  if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${{ steps.version-vars.outputs.base_version }}" ]; then
+                    if [[ "${{ steps.version-vars.outputs.base_type }}" == "quay" ]]; then
+                      # Quay becomes the main latest
+                      docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:latest" \
+                        "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                    fi
+
+                    # Create prefixed latest tags for all types
+                    docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${tag_prefix}latest" \
+                      "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+
+                    # For backward compatibility, also create non-prefixed latest for bitnami hub images
+                    # (prem images are in a different registry so no conflict with quay)
+                    if [[ "${{ steps.version-vars.outputs.base_type }}" == "hub" ]]; then
+                      docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:latest-bitnami" \
+                        "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                    elif [[ "${{ steps.version-vars.outputs.base_type }}" == "prem" ]]; then
+                      # Prem images are in separate registry, so they can have their own latest
+                      docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:latest" \
+                        "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
+                    fi
                   fi
 
     # Rerun failed jobs running on self-hosted runners in case of network issues or node preemption
