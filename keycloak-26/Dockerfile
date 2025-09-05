@@ -22,7 +22,7 @@ USER 0
 
 # install maven (silence alert about version pinning of maven)
 # hadolint ignore=DL3008
-RUN mkdir /home/keycloak && chown keycloak /home/keycloak && \
+RUN mkdir /home/keycloak && chown 1001:1000 /home/keycloak && \
     apt-get update && apt-get install maven -y --no-install-recommends
 
 COPY --from=identity /app/keycloak-theme/ /opt/bitnami/keycloak/themes/identity
@@ -36,15 +36,14 @@ WORKDIR /home/keycloak
 # download the wrapper from github, then fetch the dependencies from maven
 RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" \
     -o /home/keycloak/pom.xml \
-    && chown 1001:1000 /home/keycloak/pom.xml \
     && chmod 0644 /home/keycloak/pom.xml && \
+    mkdir -p /home/keycloak/.m2 && \
 
-    cat /home/keycloak/pom.xml && mvn install && \
+    cat /home/keycloak/pom.xml && mvn install -Dmaven.repo.local=/home/keycloak/.m2/repository && \
     cp /home/keycloak/.m2/repository/software/amazon/*/*/*/*.jar /opt/bitnami/keycloak/providers/ && \
 
     curl -fL "https://github.com/aws/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" \
     -o /opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar \
-    && chown 1001:1000 /opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar \
     && chmod 0644 /opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar && \
 
     ls -alh /opt/bitnami/keycloak/providers/
