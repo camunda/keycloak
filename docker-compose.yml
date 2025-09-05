@@ -29,6 +29,9 @@ services:
             KEYCLOAK_ADMIN: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
             KEYCLOAK_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
 
+            # required since bitnami 26.3.3
+            KC_CACHE: local
+
             # bitnami specifics
             KEYCLOAK_DATABASE_HOST: ${KEYCLOAK_DATABASE_HOST:-postgres}
             KEYCLOAK_DATABASE_PORT: ${KEYCLOAK_DATABASE_PORT:-5432}
