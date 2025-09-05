@@ -26,7 +26,6 @@ RUN mkdir /home/keycloak && chown keycloak:keycloak /home/keycloak && \
     apt-get update && apt-get install maven -y --no-install-recommends
 
 COPY --from=identity /app/keycloak-theme/ /opt/bitnami/keycloak/themes/identity
-RUN chown keycloak:keycloak -R /opt/bitnami/keycloak/themes
 
 USER keycloak
 
@@ -68,6 +67,12 @@ COPY --chown=keycloak:keycloak --from=builder /opt/bitnami/keycloak/ /opt/bitnam
 
 COPY --chown=keycloak:keycloak --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
 
+USER 0
+
+RUN chown keycloak:keycloak -R /opt/bitnami/keycloak/ && \
+    chmod +x /opt/bitnami/scripts/*.sh
+
+USER keycloak
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
