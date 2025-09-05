@@ -30,6 +30,7 @@ services:
             KEYCLOAK_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
 
             # required since bitnami 26.3.3
+            KC_HTTP_RELATIVE_PATH: /
             KC_CACHE: local
 
             # bitnami specifics
