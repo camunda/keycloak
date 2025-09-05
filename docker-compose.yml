@@ -31,7 +31,8 @@ services:
 
             # required since bitnami 26.3.3
             KC_HTTP_RELATIVE_PATH: /
-            KC_CACHE: local
+            KC_CACHE: ispn
+            KC_PROXY_HEADERS:
 
             # bitnami specifics
             KEYCLOAK_DATABASE_HOST: ${KEYCLOAK_DATABASE_HOST:-postgres}
