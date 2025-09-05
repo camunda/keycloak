@@ -237,7 +237,7 @@ jobs:
                   username: ${{ steps.secrets.outputs.MACHINE_USR }}
                   password: ${{ steps.secrets.outputs.MACHINE_PWD }}
 
-            - name: KeyCloak Show-Config
+            - name: Check Keycloak Providers/Config
               run: |
                   set -euo pipefail
 
@@ -245,17 +245,12 @@ jobs:
                   base_type="${version_name##*-}"                     # e.g. "hub", "prem", or "quay"
 
                   if [[ "$base_type" == "quay" ]]; then
-                    docker run "${{ env.keycloak_image_name }}" show-config >> docker.log
+                    image_type="quay"
                   else
-                    docker run "${{ env.keycloak_image_name }}" /opt/bitnami/keycloak/bin/kc.sh show-config >> docker.log
+                    image_type="bitnami"
                   fi
 
-                  echo "config=$(< docker.log tr '\n' ' ')" >> "$GITHUB_ENV"
-
-            - name: Assert Config
-              env:
-                  CONFIG: ${{ env.config }}
-              run: python3 ./.github/scripts/build-check/main.py
+                  python3 ./.github/scripts/build-check/check_providers.py "${{ env.keycloak_image_name }}" "$image_type"
 
     test-postgres-integ:
         strategy:
