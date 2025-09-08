@@ -4,7 +4,7 @@ sources:
         # List of all available images with associated sha:
         # skopeo --override-os linux inspect  docker://docker.io/bitnamilegacy/keycloak
         # Note: use the global index image digest to make this image platform agnostic
-        # skopeo --override-os linux inspect docker://docker.io/bitnamilegacy/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
+        # skopeo --override-os linux inspect docker://docker.io/bitnamilegacy/keycloak:<tag> --raw | jq '.Digest'
         image:
             repository: docker.io/bitnamilegacy/keycloak
             tag: 26.3.2-debian-12-r0@sha256:7c534a00285e6029f1f0a5a951f6254dea8a78ad73d05380c35100d6c7fb31e2
@@ -13,7 +13,7 @@ sources:
         # List of all available images with associated sha:
         # skopeo --override-os linux inspect docker://registry.camunda.cloud/vendor-ee/keycloak
         # Note: use the global index image digest to make this image platform agnostic
-        # skopeo --override-os linux inspect docker://registry.camunda.cloud/vendor-ee/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
+        # skopeo --override-os linux inspect docker://registry.camunda.cloud/vendor-ee/keycloak:<tag> --raw | jq '.Digest'
         image:
             repository: registry.camunda.cloud/vendor-ee/keycloak
             tag: 26.3.2-debian-12-r0@sha256:7c534a00285e6029f1f0a5a951f6254dea8a78ad73d05380c35100d6c7fb31e2
@@ -22,7 +22,7 @@ sources:
         # List of all available images with associated sha:
         # skopeo --override-os linux inspect docker://quay.io/keycloak/keycloak
         # Note: use the global index image digest to make this image platform agnostic
-        # skopeo --override-os linux inspect docker://quay.io/keycloak/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
+        # skopeo --override-os linux inspect docker://quay.io/keycloak/keycloak:<tag> --raw | jq '.Digest'
         image:
             repository: quay.io/keycloak/keycloak
             tag: 26.0.0-1@sha256:db0d0f2c2eee8618a37a50e04affb69823e56687b4d1b676a847a4b85de62178
