@@ -33,7 +33,8 @@
       "matchDatasources": ["docker"],
       "matchFileNames": ["keycloak-*/bases.yml"],
       "enabled": true,
-      "addLabels": ["dependencies", "docker", "minor", "patch"],
+      "addLabels": ["dependencies", "docker"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
     },
     {
       "matchManagers": ["helm-values"],
