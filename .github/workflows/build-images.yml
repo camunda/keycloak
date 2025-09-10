@@ -502,7 +502,7 @@ jobs:
                     echo "compose_file=docker-compose.quay.yml" | tee -a "$GITHUB_OUTPUT"
                   else
                     # For Bitnami images: use bitnamiold compose file for versions < 26
-                    version_number=${{ steps.version-vars.outputs.keycloak_version }}
+                    version_number=${{ steps.version-vars.outputs.base_version }}
                     if [[ "$version_number" -lt 26 ]]; then
                       echo "compose_file=docker-compose.bitnamiold.yml" | tee -a "$GITHUB_OUTPUT"
                     else
