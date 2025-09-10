@@ -26,13 +26,24 @@ services:
         environment:
             KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
             KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
-            KEYCLOAK_ADMIN: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
-            KEYCLOAK_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
 
             # required since bitnami 26.3.3
             KC_HTTP_RELATIVE_PATH: /
-            KC_CACHE: ispn
-            KC_PROXY_HEADERS:
+            KC_CACHE: ${KC_CACHE:-ispn}
+            KC_PROXY_HEADERS: xforwarded
+
+            # Health and statistics (native KC_* variables)
+            KC_HEALTH_ENABLED: ${KC_HEALTH_ENABLED:-true}
+            KC_METRICS_ENABLED: ${KC_METRICS_ENABLED:-true}
+
+            # Hostname configuration (native KC_* variables)
+            KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
+            KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT:-false}
+            KC_HOSTNAME_STRICT_HTTPS: ${KC_HOSTNAME_STRICT_HTTPS:-false}
+            KC_HTTP_ENABLED: ${KC_HTTP_ENABLED:-true}
+
+            # Logging configuration (native KC_* variables)
+            KC_LOG_LEVEL: ${KC_LOG_LEVEL:-INFO}
 
             # bitnami specifics
             KEYCLOAK_DATABASE_HOST: ${KEYCLOAK_DATABASE_HOST:-postgres}
@@ -45,17 +56,6 @@ services:
             KEYCLOAK_EXTRA_ARGS: >-
                 --db-driver=${KC_DB_DRIVER:-software.amazon.jdbc.Driver}
                 --transaction-xa-enabled=${KC_TRANSACTION_XA_ENABLED:-false}
-                --log-level=${KEYCLOAK_LOG_LEVEL:-INFO}
-
-            KEYCLOAK_ENABLE_STATISTICS: ${KEYCLOAK_ENABLE_STATISTICS:-true}
-            KEYCLOAK_ENABLE_HEALTH_ENDPOINTS: ${KEYCLOAK_ENABLE_HEALTH_ENDPOINTS:-true}
-
-            # Production configuration (see https://github.com/bitnami/containers/issues/85301#issuecomment-3245394996)
-            KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
-            KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT:-false}
-            KC_HOSTNAME_STRICT_HTTPS: ${KC_HOSTNAME_STRICT_HTTPS:-false}
-            KC_HTTP_ENABLED: ${KC_HTTP_ENABLED:-true}
-
 
             # AWS specifics variables
             AWS_STS_REGIONAL_ENDPOINTS: ${AWS_STS_REGIONAL_ENDPOINTS:-}

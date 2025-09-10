@@ -7,7 +7,7 @@ sources:
         # skopeo --override-os linux inspect docker://docker.io/bitnamilegacy/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
         image:
             repository: docker.io/bitnamilegacy/keycloak
-            tag: 26.3.3-debian-12-r0@sha256:da3df0976a9f9a664bdbde6cb5308b78f03ac94d0abf33b2df355bbb06cbc5b9
+            tag: 26.3.3-debian-12-r1@sha256:f5727c6357f947beda242391a9c6add244b50d5b179687e6c6d1a919f9f5293e
 
     prem:
         # List of all available images with associated sha:
@@ -16,7 +16,7 @@ sources:
         # skopeo --override-os linux inspect docker://registry.camunda.cloud/vendor-ee/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
         image:
             repository: registry.camunda.cloud/vendor-ee/keycloak
-            tag: 26.1.4-debian-12-r4@sha256:cfbcd98a0032cf82dcf53a3565dd3800af1ca20444d81186869ed2038b8a5a74
+            tag: 26.3.3-debian-12-r1@sha256:a5b0d5e5a6309e5cacd52995a7aef3dadc808532c1995613c8095c7bfae9c090
 
     quay:
         # List of all available images with associated sha:
