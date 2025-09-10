@@ -506,7 +506,8 @@ jobs:
                     if [[ "$version_number" -lt 26 ]]; then
                       echo "compose_file=docker-compose.bitnamiold.yml" | tee -a "$GITHUB_OUTPUT"
                     else
-                      echo "compose_file=docker-compose.bitnami.yml" | tee -a "$GITHUB_OUTPUT"
+                      # TODO: revert
+                      echo "compose_file=docker-compose.bitnamiold.yml" | tee -a "$GITHUB_OUTPUT"
                     fi
                   fi
 
