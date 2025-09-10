@@ -9,7 +9,7 @@ ARG BASE_IMAGE_TAG=""
 ARG BASE_IMAGE_DIGEST=""
 
 # We use the identity image to copy the keycloak theme
-FROM docker.io/camunda/identity:latest@sha256:c63263df40ee3e7db9e989efc5ebb96010651566d6d4399c0385329b6d0102a3 AS identity
+FROM docker.io/camunda/identity:latest@sha256:4f94a3dadf7a2900df0e5b88b107e25f6cda00f9ca0e2b8886df21c3cc7919f2 AS identity
 
 # Building builder image
 # hadolint ignore=DL3006
@@ -32,6 +32,7 @@ USER 1001
 
 WORKDIR /home/keycloak
 
+# download the wrapper from github, then fetch the dependencies from maven
 # Install the custom providers
 # download the wrapper from github, then fetch the dependencies from maven
 RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" \
@@ -49,10 +50,9 @@ RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-j
 
     ls -alh /opt/bitnami/keycloak/providers/
 
-
 RUN /opt/bitnami/keycloak/bin/kc.sh build
 
-##### FINAL Keycloak IMAGE # ####
+##### FINAL Keycloak IMAGE #####
 
 # hadolint ignore=DL3006
 FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST}
@@ -65,10 +65,9 @@ ARG BASE_IMAGE_DIGEST
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 
 # Copy the previously built aws jdbc drivers
-COPY --chown=1001:1000 --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
+COPY --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
 
-COPY --chown=1001:1000 --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
-
+COPY --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md

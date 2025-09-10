@@ -112,6 +112,32 @@ For **Quay-based images** (with `quay-` prefix):
 ### Bitnami-based Images
 Bitnami Keycloak container image configuration is available at [hub.docker.com/bitnami/keycloak](https://hub.docker.com/r/bitnami/keycloak).
 
+#### Version-specific Configuration Files
+
+**For Keycloak 26 and later:**
+- Use `docker-compose.bitnami.yml` which supports native KC_* environment variables
+- Example: `docker-compose -f docker-compose.bitnami.yml up -d`
+
+**For Keycloak 25 and earlier:**
+- Use `docker-compose.bitnamiold.yml` which supports legacy KEYCLOAK_* environment variables
+- Example: `docker-compose -f docker-compose.bitnamiold.yml up -d`
+
+#### Environment Variable Migration (Bitnami 26+)
+
+Starting with Keycloak 26, the following legacy environment variables have been deprecated in favor of native KC_* equivalents:
+
+| Legacy Variable (Pre-26) | Native Variable (26+) |
+|--------------------------|----------------------|
+| `KEYCLOAK_ADMIN_USER` | `KC_BOOTSTRAP_ADMIN_USERNAME` |
+| `KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD` | `KC_BOOTSTRAP_ADMIN_PASSWORD` |
+| `KEYCLOAK_CACHE_TYPE` | `KC_CACHE` |
+| `KEYCLOAK_ENABLE_STATISTICS` | `KC_METRICS_ENABLED` |
+| `KEYCLOAK_ENABLE_HEALTH_ENDPOINTS` | `KC_HEALTH_ENABLED` |
+| `KEYCLOAK_HOSTNAME` | `KC_HOSTNAME` |
+| `KEYCLOAK_HOSTNAME_STRICT` | `KC_HOSTNAME_STRICT` |
+| `KEYCLOAK_LOG_LEVEL` | `KC_LOG_LEVEL` |
+| `KEYCLOAK_PROXY_HEADERS` | `KC_PROXY_HEADERS` |
+
 ### Quay-based Images
 Official Keycloak container configuration is documented at [keycloak.org/server/containers](https://www.keycloak.org/server/containers).
 
@@ -125,14 +151,39 @@ Since Keycloak version 21 and onwards, you can utilize the AWS Advanced JDBC Wra
 
 For Kubernetes with IRSA, configure the following environment variables:
 
+**For Keycloak 26 and later (using native KC_* variables):**
+
 ```yaml
+- name: KC_BOOTSTRAP_ADMIN_USERNAME
+  value: admin
+- name: KC_BOOTSTRAP_ADMIN_PASSWORD
+  value: change_me
+- name: KC_HTTP_RELATIVE_PATH
+  value: /
+- name: KC_CACHE
+  value: ispn
+- name: KC_PROXY_HEADERS
+  value: xforwarded
+- name: KC_HEALTH_ENABLED
+  value: "true"
+- name: KC_METRICS_ENABLED
+  value: "true"
+- name: KC_HOSTNAME
+  value: localhost
+- name: KC_HOSTNAME_STRICT
+  value: "false"
+- name: KC_HTTP_ENABLED
+  value: "true"
+- name: KC_LOG_LEVEL
+  value: INFO
+
+# Database and AWS configuration (compatible with all versions)
 - name: KEYCLOAK_EXTRA_ARGS
   value: "--db-driver=software.amazon.jdbc.Driver --transaction-xa-enabled=false --log-level=INFO,software.amazon.jdbc:INFO"
 - name: KEYCLOAK_JDBC_PARAMS
   value: "wrapperPlugins=iam"
 - name: KEYCLOAK_JDBC_DRIVER
   value: "aws-wrapper:postgresql"
-
 - name: KEYCLOAK_DATABASE_USER
   value: db-user-name
 - name: KEYCLOAK_DATABASE_NAME
@@ -140,12 +191,48 @@ For Kubernetes with IRSA, configure the following environment variables:
 - name: KEYCLOAK_DATABASE_HOST
   value: db-host
 - name: KEYCLOAK_DATABASE_PORT
-  value: 5432
+  value: "5432"
+```
 
+**For Keycloak 25 and earlier (using legacy KEYCLOAK_* variables):**
+
+```yaml
+- name: KEYCLOAK_ADMIN_USER
+  value: admin
+- name: KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD
+  value: change_me
+- name: KEYCLOAK_CACHE_TYPE
+  value: ispn
+- name: KEYCLOAK_PROXY_HEADERS
+  value: xforwarded
 - name: KEYCLOAK_ENABLE_STATISTICS
   value: "true"
 - name: KEYCLOAK_ENABLE_HEALTH_ENDPOINTS
   value: "true"
+- name: KEYCLOAK_HOSTNAME
+  value: localhost
+- name: KEYCLOAK_HOSTNAME_STRICT
+  value: "false"
+- name: KEYCLOAK_HTTP_ENABLED
+  value: "true"
+- name: KEYCLOAK_LOG_LEVEL
+  value: INFO
+
+# Database and AWS configuration (same as above)
+- name: KEYCLOAK_EXTRA_ARGS
+  value: "--db-driver=software.amazon.jdbc.Driver --transaction-xa-enabled=false --log-level=INFO,software.amazon.jdbc:INFO"
+- name: KEYCLOAK_JDBC_PARAMS
+  value: "wrapperPlugins=iam"
+- name: KEYCLOAK_JDBC_DRIVER
+  value: "aws-wrapper:postgresql"
+- name: KEYCLOAK_DATABASE_USER
+  value: db-user-name
+- name: KEYCLOAK_DATABASE_NAME
+  value: db-name
+- name: KEYCLOAK_DATABASE_HOST
+  value: db-host
+- name: KEYCLOAK_DATABASE_PORT
+  value: "5432"
 ```
 
 #### Quay-based Images
