@@ -70,7 +70,8 @@ COPY --chown=keycloak:keycloak --from=builder /opt/bitnami/keycloak/themes/ident
 USER 0
 
 RUN chown keycloak:keycloak -R /opt/bitnami/keycloak/ && \
-    chmod +x /opt/bitnami/scripts/*.sh
+    chmod +x /opt/bitnami/scripts/*.sh && \
+    rm -f /opt/bitnami/keycloak/conf/cache-ispn.xml
 
 USER keycloak
 

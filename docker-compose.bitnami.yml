@@ -30,7 +30,7 @@ services:
 
             # required since bitnami 26.3.3
             KC_HTTP_RELATIVE_PATH: /
-            KC_CACHE: ${KC_CACHE:-ispn}
+            KC_CACHE: ${KC_CACHE:-local}
             KC_PROXY_HEADERS: xforwarded
 
             # Health and statistics (native KC_* variables)
