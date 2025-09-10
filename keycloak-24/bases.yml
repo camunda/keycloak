@@ -4,7 +4,7 @@ sources:
         # List of all available images with associated sha:
         # skopeo --override-os linux inspect  docker://docker.io/bitnamilegacy/keycloak
         # Note: use the global index image digest to make this image platform agnostic
-        # skopeo --override-os linux inspect docker://docker.io/bitnamilegacy/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
+        # skopeo --override-os linux inspect docker://docker.io/bitnamilegacy/keycloak:<tag> --raw | jq '.Digest'
         image:
             repository: docker.io/bitnamilegacy/keycloak
             tag: 24.0.5-debian-12-r8@sha256:4751a8e76af19343068f141c5d2adbba9e4e7d7476874f89cdb0cd61c922e277
@@ -13,7 +13,7 @@ sources:
         # List of all available images with associated sha:
         # skopeo --override-os linux inspect docker://registry.camunda.cloud/vendor-ee/keycloak
         # Note: use the global index image digest to make this image platform agnostic
-        # skopeo --override-os linux inspect docker://registry.camunda.cloud/vendor-ee/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
+        # skopeo --override-os linux inspect docker://registry.camunda.cloud/vendor-ee/keycloak:<tag> --raw | jq '.Digest'
         image:
             repository: registry.camunda.cloud/vendor-ee/keycloak
             tag: 24.0.5-debian-12-r8@sha256:4751a8e76af19343068f141c5d2adbba9e4e7d7476874f89cdb0cd61c922e277
@@ -22,7 +22,7 @@ sources:
         # List of all available images with associated sha:
         # skopeo --override-os linux inspect docker://quay.io/keycloak/keycloak
         # Note: use the global index image digest to make this image platform agnostic
-        # skopeo --override-os linux inspect docker://quay.io/keycloak/keycloak:<tag> --raw | skopeo manifest-digest /dev/stdin
+        # skopeo --override-os linux inspect docker://quay.io/keycloak/keycloak:<tag> --raw | jq '.Digest'
         image:
             repository: quay.io/keycloak/keycloak
             tag: 24.0.5-1@sha256:f8ade94c1d0ad2f2fa7734a455fee5392764f402c43ca35e9af6bf63a2541dc9
