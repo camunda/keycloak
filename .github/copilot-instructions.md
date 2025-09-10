@@ -23,38 +23,8 @@ This repository builds and maintains containerized Keycloak images for Camunda w
 ## Important Configuration Patterns
 
 ### Docker Compose Files
-- `docker-compose.bitnami.yml`: For Bitnami-based images version 26+ using native KC_* environment variables
-- `docker-compose.bitnamiold.yml`: For Bitnami-based images before version 26 using legacy KEYCLOAK_* environment variables
+- `docker-compose.yml`: For Bitnami-based images with runtime driver flexibility
 - `docker-compose.quay.yml`: For Quay-based images with runtime AWS wrapper configuration
-
-### Environment Variables (Bitnami images 26+)
-```yaml
-KC_BOOTSTRAP_ADMIN_USERNAME: admin
-KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-KC_HTTP_RELATIVE_PATH: /
-KC_CACHE: ispn
-KC_PROXY_HEADERS: xforwarded
-KC_HEALTH_ENABLED: true
-KC_METRICS_ENABLED: true
-KC_HOSTNAME: localhost
-KC_HOSTNAME_STRICT: false
-KC_HTTP_ENABLED: true
-KC_LOG_LEVEL: INFO
-```
-
-### Environment Variables (Bitnami images <26 - Legacy)
-```yaml
-KEYCLOAK_ADMIN_USER: admin
-KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD: admin
-KEYCLOAK_CACHE_TYPE: ispn
-KEYCLOAK_PROXY_HEADERS: xforwarded
-KEYCLOAK_ENABLE_STATISTICS: true
-KEYCLOAK_ENABLE_HEALTH_ENDPOINTS: true
-KEYCLOAK_HOSTNAME: localhost
-KEYCLOAK_HOSTNAME_STRICT: false
-KEYCLOAK_HTTP_ENABLED: true
-KEYCLOAK_LOG_LEVEL: INFO
-```
 
 ### Environment Variables (Quay images)
 ```yaml
@@ -106,15 +76,7 @@ docker build \
 
 ### Testing Locally
 ```bash
-# Test Bitnami 26+ with native KC_* variables
-COMPOSE_KEYCLOAK_IMAGE=camunda/keycloak:local-bitnami-26 \
-docker-compose up -d
-
-# Test Bitnami <26 with legacy KEYCLOAK_* variables
-COMPOSE_KEYCLOAK_IMAGE=camunda/keycloak:local-bitnami-25 \
-docker-compose -f docker-compose.bitnamiold.yml up -d
-
-# Test Quay with runtime AWS wrapper configuration
+# Test with local PostgreSQL
 COMPOSE_KEYCLOAK_IMAGE=camunda/keycloak:local-quay-26 \
 docker-compose -f docker-compose.quay.yml up -d
 
@@ -132,9 +94,7 @@ docker-compose -f docker-compose.quay.yml config
 - `bases.yml`: Contains base image references with digest pinning
 - `.github/workflows/build-images.yml`: CI/CD pipeline with matrix strategy
 - `.github/scripts/integration/`: Python-based integration tests
-- `docker-compose.yml`: For Bitnami 26+ with native KC_* variables
-- `docker-compose.bitnamiold.yml`: For Bitnami <26 with legacy KEYCLOAK_* variables
-- `docker-compose.quay.yml`: For Quay-based images
+- `docker-compose*.yml`: Different compose files for different image types
 
 ## Current Development Focus
 The repository is actively transitioning to recommend Quay-based images as the primary solution while maintaining backward compatibility with Bitnami-based images for existing users.

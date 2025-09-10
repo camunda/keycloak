@@ -493,7 +493,7 @@ jobs:
                   : # Since a password was generated in the previous steps, we need to ensure it is empty.
                   echo "postgres_password=" >> "$GITHUB_ENV"
 
-            - name: Set compose file based on image type and version
+            - name: Set compose file based on image type
               id: set-compose-file
               run: |
                   set -euo pipefail
@@ -501,13 +501,7 @@ jobs:
                   if [[ "${{ steps.version-vars.outputs.base_type }}" == "quay" ]]; then
                     echo "compose_file=docker-compose.quay.yml" | tee -a "$GITHUB_OUTPUT"
                   else
-                    # For Bitnami images: use bitnamiold compose file for versions < 26
-                    version_number=${{ steps.version-vars.outputs.base_version }}
-                    if [[ "$version_number" -lt 26 ]]; then
-                      echo "compose_file=docker-compose.bitnamiold.yml" | tee -a "$GITHUB_OUTPUT"
-                    else
-                      echo "compose_file=docker-compose.bitnami.yml" | tee -a "$GITHUB_OUTPUT"
-                    fi
+                    echo "compose_file=docker-compose.yml" | tee -a "$GITHUB_OUTPUT"
                   fi
 
             - name: Start Test Environment
