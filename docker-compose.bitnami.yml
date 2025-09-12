@@ -31,7 +31,7 @@ services:
             # required since bitnami 26.3.3
             KC_HTTP_RELATIVE_PATH: /
             KC_CACHE: ispn
-            KC_CACHE_CONFIG_FILE: /opt/bitnami/keycloak/conf.default/cache-ispn.xml
+            KC_CACHE_CONFIG_FILE: cache-ispn.xml
             KC_PROXY_HEADERS: xforwarded
 
             # Health and statistics (native KC_* variables)
