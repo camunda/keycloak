@@ -31,7 +31,7 @@ services:
             # required since bitnami 26.3.3
             KC_HTTP_RELATIVE_PATH: /
             KC_CACHE: ispn
-            KC_CACHE_CONFIG_FILE: /opt/bitnami/keycloak/conf/cache-ispn.xml
+            KC_CACHE_CONFIG_FILE: /opt/bitnami/keycloak/conf.default/cache-ispn.xml
             KC_PROXY_HEADERS: xforwarded
 
             # Health and statistics (native KC_* variables)
@@ -67,10 +67,11 @@ services:
             AWS_WEB_IDENTITY_TOKEN_FILE: ${AWS_WEB_IDENTITY_TOKEN_FILE:-}
 
         healthcheck:
-            test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1
-            interval: 15s
-            timeout: 5s
-            retries: 5
+            test: curl -f "http://localhost:8080/health/ready"
+            interval: 2s
+            timeout: 10s
+            retries: 30
+            start_period: 10s
         ports:
             - 8080:8080
         depends_on:
