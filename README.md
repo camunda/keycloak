@@ -112,6 +112,34 @@ For **Quay-based images** (with `quay-` prefix):
 ### Bitnami-based Images
 Bitnami Keycloak container image configuration is available at [hub.docker.com/bitnami/keycloak](https://hub.docker.com/r/bitnami/keycloak).
 
+#### Version-specific Configuration Files
+
+**For Keycloak 26.3.3 and later:**
+
+* Use `docker-compose.bitnami.yml` which supports native KC_* environment variables
+
+**For Keycloak 26.3.2 and earlier:**
+
+* Use `docker-compose.bitnamiold.yml` which supports legacy KEYCLOAK_* environment variables
+
+#### Environment Variable Migration (Bitnami 26.3.3+)
+
+Starting with Keycloak 26.3.2, the following legacy environment variables have been deprecated in favor of native KC_* equivalents:
+
+| Legacy Variable (Pre-26.3.2) | Native Variable (26.3.3+) |
+|--------------------------|----------------------|
+| `KEYCLOAK_ADMIN_USER` | `KC_BOOTSTRAP_ADMIN_USERNAME` |
+| `KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD` | `KC_BOOTSTRAP_ADMIN_PASSWORD` |
+| `KEYCLOAK_CACHE_TYPE` | `KC_CACHE` |
+| `KEYCLOAK_ENABLE_STATISTICS` | `KC_METRICS_ENABLED` |
+| `KEYCLOAK_ENABLE_HEALTH_ENDPOINTS` | `KC_HEALTH_ENABLED` |
+| `KEYCLOAK_HOSTNAME` | `KC_HOSTNAME` |
+| `KEYCLOAK_HOSTNAME_STRICT` | `KC_HOSTNAME_STRICT` |
+| `KEYCLOAK_LOG_LEVEL` | `KC_LOG_LEVEL` |
+| `KEYCLOAK_PROXY_HEADERS` | `KC_PROXY_HEADERS` |
+
+You can find more information and environment variables on the [Bitnami Keycloak image](https://github.com/bitnami/containers/blob/main/bitnami/keycloak/README.md).
+
 ### Quay-based Images
 Official Keycloak container configuration is documented at [keycloak.org/server/containers](https://www.keycloak.org/server/containers).
 

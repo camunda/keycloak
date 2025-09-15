@@ -101,3 +101,10 @@ LABEL maintainer="Camunda" \
       io.openshift.tags="bpmn,identity,keycloak,camunda,bitnami" \
       io.openshift.min-memory="1Gi" \
       io.openshift.min-cpu="1"
+
+# Bake defaults into image
+# It's already default of the premium image
+# They don't update the legacy one anymore but this is the missing default
+ENV KC_HTTP_RELATIVE_PATH="/" \
+    KC_CACHE="ispn" \
+    KC_CACHE_CONFIG_FILE="cache-ispn.xml"
