@@ -22,13 +22,12 @@ USER 0
 
 # install maven (silence alert about version pinning of maven)
 # hadolint ignore=DL3008
-RUN mkdir /home/keycloak && chown keycloak /home/keycloak && \
+RUN mkdir /home/keycloak && chown keycloak:keycloak /home/keycloak && \
     apt-get update && apt-get install maven -y --no-install-recommends
 
 COPY --from=identity /app/keycloak-theme/ /opt/bitnami/keycloak/themes/identity
-RUN chown 1001:1000 -R /opt/bitnami/keycloak/themes
 
-USER 1001
+USER keycloak
 
 WORKDIR /home/keycloak
 
@@ -36,7 +35,6 @@ WORKDIR /home/keycloak
 # download the wrapper from github, then fetch the dependencies from maven
 RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" \
     -o /home/keycloak/pom.xml \
-    && chown 1001:1000 /home/keycloak/pom.xml \
     && chmod 0644 /home/keycloak/pom.xml && \
 
     cat /home/keycloak/pom.xml && mvn install && \
@@ -44,7 +42,6 @@ RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-j
 
     curl -fL "https://github.com/aws/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" \
     -o /opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar \
-    && chown 1001:1000 /opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar \
     && chmod 0644 /opt/bitnami/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar && \
 
     ls -alh /opt/bitnami/keycloak/providers/
@@ -65,10 +62,16 @@ ARG BASE_IMAGE_DIGEST
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 
 # Copy the previously built aws jdbc drivers
-COPY --chown=1001:1000 --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
+COPY --chown=keycloak:keycloak --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
 
-COPY --chown=1001:1000 --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
+COPY --chown=keycloak:keycloak --from=builder /opt/bitnami/keycloak/themes/identity /opt/bitnami/keycloak/themes/identity
 
+USER 0
+
+RUN chown keycloak:keycloak -R /opt/bitnami/keycloak/ && \
+    chmod +x /opt/bitnami/scripts/*.sh
+
+USER keycloak
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
@@ -98,3 +101,10 @@ LABEL maintainer="Camunda" \
       io.openshift.tags="bpmn,identity,keycloak,camunda,bitnami" \
       io.openshift.min-memory="1Gi" \
       io.openshift.min-cpu="1"
+
+# Bake defaults into image
+# It's already default of the premium image
+# They don't update the legacy one anymore but this is the missing default
+ENV KC_HTTP_RELATIVE_PATH="/" \
+    KC_CACHE="ispn" \
+    KC_CACHE_CONFIG_FILE="cache-ispn.xml"

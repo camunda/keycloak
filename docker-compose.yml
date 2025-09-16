@@ -24,8 +24,17 @@ services:
     keycloak:
         image: ${COMPOSE_KEYCLOAK_IMAGE:-camunda/keycloak:bitnami-latest}
         environment:
+            # Bitnami >= 26.3.3
+            KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
+            KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
+            KC_METRICS_ENABLED: ${KC_METRICS_ENABLED:-true}
+            KC_HEALTH_ENABLED: ${KC_HEALTH_ENABLED:-true}
+
+            # Bitnami Legacy < 26.3.3
             KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
             KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+            KEYCLOAK_ENABLE_STATISTICS: ${KEYCLOAK_ENABLE_STATISTICS:-true}
+            KEYCLOAK_ENABLE_HEALTH_ENDPOINTS: ${KEYCLOAK_ENABLE_HEALTH_ENDPOINTS:-true}
 
             # bitnami specifics
             KEYCLOAK_DATABASE_HOST: ${KEYCLOAK_DATABASE_HOST:-postgres}
@@ -39,9 +48,6 @@ services:
                 --db-driver=${KC_DB_DRIVER:-software.amazon.jdbc.Driver}
                 --transaction-xa-enabled=${KC_TRANSACTION_XA_ENABLED:-false}
                 --log-level=${KEYCLOAK_LOG_LEVEL:-INFO}
-
-            KEYCLOAK_ENABLE_STATISTICS: ${KEYCLOAK_ENABLE_STATISTICS:-true}
-            KEYCLOAK_ENABLE_HEALTH_ENDPOINTS: ${KEYCLOAK_ENABLE_HEALTH_ENDPOINTS:-true}
 
             # AWS specifics variables
             AWS_STS_REGIONAL_ENDPOINTS: ${AWS_STS_REGIONAL_ENDPOINTS:-}
