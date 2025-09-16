@@ -112,16 +112,6 @@ For **Quay-based images** (with `quay-` prefix):
 ### Bitnami-based Images
 Bitnami Keycloak container image configuration is available at [hub.docker.com/bitnami/keycloak](https://hub.docker.com/r/bitnami/keycloak).
 
-#### Version-specific Configuration Files
-
-**For Keycloak 26.3.3 and later:**
-
-* Use `docker-compose.bitnami.yml` which supports native KC_* environment variables
-
-**For Keycloak 26.3.2 and earlier:**
-
-* Use `docker-compose.bitnamiold.yml` which supports legacy KEYCLOAK_* environment variables
-
 #### Environment Variable Migration (Bitnami 26.3.3+)
 
 Starting with Keycloak 26.3.2, the following legacy environment variables have been deprecated in favor of native KC_* equivalents:
