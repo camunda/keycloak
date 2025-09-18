@@ -105,6 +105,9 @@ For **Quay-based images** (with `quay-` prefix):
 - `:quay-<base image version>-<yyyy-mm-dd>-<iteration>`: e.g., `quay-24-2024-03-04-004` 🏷️
 - `:quay-<base image version>`: e.g., `quay-24.0.1`
 - `:quay-<major keycloak version>`: e.g., `quay-24`
+- `:quay-optimized-<base image version>-<yyyy-mm-dd>-<iteration>`: e.g., `quay-optimized-24-2024-03-04-004` 🏷️
+- `:quay-optimized-<base image version>`: e.g., `quay-optimized-24.0.1`
+- `:quay-optimized-<major keycloak version>`: e.g., `quay-optimized-24`
 - `:latest`: Corresponds to the latest stable build of the most recent Keycloak version from Quay (Quay is now the default latest)
 
 ## Configuration
@@ -132,6 +135,23 @@ You can find more information and environment variables on the [Bitnami Keycloak
 
 ### Quay-based Images
 Official Keycloak container configuration is documented at [keycloak.org/server/containers](https://www.keycloak.org/server/containers).
+
+#### Image Sub-types
+
+Quay-based images are available in two sub-types:
+
+**Standard Images (`quay-<version>`)**
+- Runtime-configurable via environment variables
+- Full flexibility for all Keycloak configuration options
+- Ideal for development and custom configurations
+
+**Optimized Images (`quay-optimized-<version>`)**
+- Pre-built configuration for faster startup times
+- AWS JDBC wrapper and common settings baked into the image
+- Recommended for production deployments, especially with Keycloak Operator
+- Reduced runtime environment variables needed
+
+For technical details on build arguments and configuration differences, see [DEVELOPER.md](DEVELOPER.md).
 
 ## IAM Roles for Service Accounts (IRSA) Support
 
@@ -170,6 +190,7 @@ For Kubernetes with IRSA, configure the following environment variables:
 
 For Kubernetes with IRSA, configure the following environment variables:
 
+**Standard Images (`quay-<version>`)**
 ```yaml
 - name: KC_DB
   value: postgres
@@ -185,6 +206,15 @@ For Kubernetes with IRSA, configure the following environment variables:
   value: "true"
 - name: KC_METRICS_ENABLED
   value: "true"
+```
+
+**Optimized Images (`quay-optimized-<version>`)**
+```yaml
+- name: KC_DB_URL
+  value: "jdbc:aws-wrapper:postgresql://db-host:5432/db-name?wrapperPlugins=iam"
+- name: KC_DB_USERNAME
+  value: db-user-name
+# Note: Database driver, health/metrics, and XA settings are pre-configured
 ```
 
 Don't forget to set the `serviceAccountName` of the deployment/statefulset to point to the created service account with the IRSA annotation.
@@ -236,7 +266,7 @@ metadata:
   name: keycloak
   namespace: keycloak
 spec:
-  image: docker.io/camunda/keycloak:quay-26
+  image: docker.io/camunda/keycloak:quay-optimized-26
   instances: 3
   db:
     vendor: postgres
@@ -247,13 +277,6 @@ spec:
       name: keycloak-db-secret
       key: username
     # For IRSA, omit passwordSecret to use IAM authentication
-  additionalOptions:
-    - name: db-driver
-      value: software.amazon.jdbc.Driver
-    - name: transaction-xa-enabled
-      value: "false"
-    - name: log-level
-      value: "INFO,software.amazon.jdbc:INFO"
   # For IRSA support
   unsupported:
     podTemplate:

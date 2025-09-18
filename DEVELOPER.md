@@ -74,14 +74,54 @@ BASE_IMAGE_DIGEST="$(yq e ".sources.$BASE_SOURCE.image.tag" bases.yml | cut -d@ 
 KEYCLOAK_VERSION="$BASE_IMAGE_TAG"
 echo "Using Keycloak version: $KEYCLOAK_VERSION"
 
-# Build the image using the Quay Dockerfile
+# Build standard runtime-configurable image
 docker build \
   --build-arg BASE_IMAGE_NAME="$BASE_IMAGE_NAME" \
   --build-arg BASE_IMAGE_TAG="$BASE_IMAGE_TAG" \
   --build-arg BASE_IMAGE_DIGEST="$BASE_IMAGE_DIGEST" \
+  --build-arg BUILD_OPTIMIZED=false \
   -f Dockerfile.quay \
   -t "docker.io/camunda/keycloak:quay-$KEYCLOAK_VERSION" .
+
+# Build optimized image (recommended for production)
+docker build \
+  --build-arg BASE_IMAGE_NAME="$BASE_IMAGE_NAME" \
+  --build-arg BASE_IMAGE_TAG="$BASE_IMAGE_TAG" \
+  --build-arg BASE_IMAGE_DIGEST="$BASE_IMAGE_DIGEST" \
+  --build-arg BUILD_OPTIMIZED=true \
+  -f Dockerfile.quay \
+  -t "docker.io/camunda/keycloak:quay-optimized-$KEYCLOAK_VERSION" .
 ```
+
+#### Quay Image Build Modes
+
+Quay-based images support two build modes controlled by the `BUILD_OPTIMIZED` build argument:
+
+**Standard Mode (`BUILD_OPTIMIZED=false`)**
+- Full runtime configuration flexibility
+- All Keycloak options configurable via environment variables
+- Ideal for development and custom configurations
+- Produces `quay-<version>` tagged images
+
+**Optimized Mode (`BUILD_OPTIMIZED=true`, default)**
+- Pre-built configuration using `kc.sh build` for faster startup
+- AWS JDBC wrapper, database settings, health/metrics baked into image
+- Reduced runtime environment variables needed
+- Required for Keycloak Operator deployments
+- Produces `quay-optimized-<version>` tagged images
+
+The optimized build runs the following command during image construction:
+```bash
+/opt/keycloak/bin/kc.sh build \
+    --db=postgres \
+    --db-driver=software.amazon.jdbc.Driver \
+    --features=docker \
+    --health-enabled=true \
+    --metrics-enabled=true \
+    --transaction-xa-enabled=false
+```
+
+For more information, see the [official Keycloak documentation on optimized builds](https://www.keycloak.org/server/configuration#_optimize_the_keycloak_startup).
 
 Both Dockerfiles include the necessary dependencies and configurations for the **AWS Advanced JDBC Wrapper** and custom Keycloak themes.
 
@@ -137,11 +177,15 @@ When adding a new version of Keycloak, follow these steps:
          - `keycloak-ee/keycloak:24.0.1-1-${date in yyyy-mm-dd-xxx format}` (immutable - backward compatible)
          - `keycloak-ee/keycloak:latest` (latest bitnami enterprise version - no conflict with quay)
      - **Quay-based public images (`docker.io/camunda/keycloak`)**:
-       - `camunda/keycloak:latest` (latest quay version - this is now the default latest)
-       - `camunda/keycloak:quay-24` (mutable - triggered by any change in the base image of Keycloak)
-       - `camunda/keycloak:quay-24.0.5-1` (mutable - triggered by any change part of the base image of Keycloak)
-       - `camunda/keycloak:quay-24.0.5-1-${date in yyyy-mm-dd-xxx format}` (immutable, recommended for production usage)
-       - `camunda/keycloak:quay-24.0.5` (mutable - semver tag without suffix)
-       - `camunda/keycloak:quay-latest` (latest quay version - same as `latest`)
+       - `camunda/keycloak:latest` (latest quay optimized version - this is now the default latest)
+       - `camunda/keycloak:quay-24` (standard runtime-configurable image, mutable)
+       - `camunda/keycloak:quay-24.0.5-1` (standard runtime-configurable image, mutable)
+       - `camunda/keycloak:quay-24.0.5-1-${date in yyyy-mm-dd-xxx format}` (standard image, immutable)
+       - `camunda/keycloak:quay-24.0.5` (standard image, mutable semver tag)
+       - `camunda/keycloak:quay-optimized-24` (optimized image, mutable)
+       - `camunda/keycloak:quay-optimized-24.0.5-1` (optimized image, mutable)
+       - `camunda/keycloak:quay-optimized-24.0.5-1-${date in yyyy-mm-dd-xxx format}` (optimized image, immutable, **recommended for production**)
+       - `camunda/keycloak:quay-optimized-24.0.5` (optimized image, mutable semver tag)
+       - `camunda/keycloak:quay-latest` (latest quay optimized version)
 
 Following these steps ensures a smooth integration of new Keycloak versions, consistent testing across the development environment, and easy access to the latest version. Happy coding!

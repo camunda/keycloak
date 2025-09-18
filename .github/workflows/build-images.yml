@@ -60,12 +60,12 @@ jobs:
                   : # if we release a specified version of keycloak, the matrix should only contain it
                   if [[ $GITHUB_REF =~ ^refs/tags/keycloak-([0-9]+)- ]]; then
                     keycloak_version=${BASH_REMATCH[1]}
-                    matrix_json=$(jq -n --arg v "$keycloak_version" '["\($v)-prem", "\($v)-hub", "\($v)-quay"]')
+                    matrix_json=$(jq -n --arg v "$keycloak_version" '["\($v)-prem", "\($v)-hub", "\($v)-quay", "\($v)-quay-optimized"]')
                   else
                     : # List folders matching the pattern keycloak-*
                     : # Export the list as an output in JSON format
                     versions=$(printf "%s\n" keycloak-*/ | sed 's/\/$//' | sed 's/keycloak-//')
-                    matrix_json=$(echo "$versions" | jq -R -s -c 'split("\n")[:-1] | map("\(.)-prem", "\(.)-hub", "\(.)-quay") | flatten')
+                    matrix_json=$(echo "$versions" | jq -R -s -c 'split("\n")[:-1] | map("\(.)-prem", "\(.)-hub", "\(.)-quay", "\(.)-quay-optimized") | flatten')
                   fi
 
                   echo "matrix_keycloak_versions=${matrix_json}" | tee -a "$GITHUB_OUTPUT"
@@ -116,13 +116,25 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", or "24-quay"
+                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
                   base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", or "quay"
+                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay", or "optimized"
+
+                  # Handle quay-optimized case
+                  if [[ "$version_name" == *"-quay-optimized" ]]; then
+                    base_type="quay"
+                    is_optimized="true"
+                    image_variant="optimized"
+                  else
+                    is_optimized="false"
+                    image_variant="standard"
+                  fi
 
                   echo "version_name=$version_name" | tee -a "$GITHUB_OUTPUT"
                   echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
                   echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
+                  echo "is_optimized=$is_optimized" | tee -a "$GITHUB_OUTPUT"
+                  echo "image_variant=$image_variant" | tee -a "$GITHUB_OUTPUT"
 
             - name: Compute build image variables
               id: compute-build-image-name-step
@@ -166,6 +178,7 @@ jobs:
                       BASE_IMAGE_NAME=${{ steps.compute-build-image-name-step.outputs.base_image_name }}
                       BASE_IMAGE_TAG=${{ steps.compute-build-image-name-step.outputs.base_image_tag }}
                       BASE_IMAGE_DIGEST=${{ steps.compute-build-image-name-step.outputs.base_image_digest }}
+                      BUILD_OPTIMIZED=${{ steps.version-vars.outputs.is_optimized }}
                   extra_tags: |
                       type=sha,enable=true,priority=1000,prefix=ci-${{ matrix.keycloak_version }}-sha-,suffix=,format=short
 
@@ -252,11 +265,15 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", or "24-quay"
+                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
                   base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", or "quay"
+                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay", or "optimized"
 
-                  if [[ "$base_type" == "quay" ]]; then
+                  # Handle quay-optimized case
+                  if [[ "$version_name" == *"-quay-optimized" ]]; then
+                    base_type="quay"
+                    image_type="quay"
+                  elif [[ "$base_type" == "quay" ]]; then
                     image_type="quay"
                   else
                     image_type="bitnami"
@@ -375,9 +392,14 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", or "24-quay"
+                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
                   base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", or "quay"
+                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay", or "optimized"
+
+                  # Handle quay-optimized case
+                  if [[ "$version_name" == *"-quay-optimized" ]]; then
+                    base_type="quay"
+                  fi
 
                   echo "version_name=$version_name" | tee -a "$GITHUB_OUTPUT"
                   echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
@@ -635,13 +657,25 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", or "24-quay"
+                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
                   base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", or "quay"
+                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay", or "optimized"
+
+                  # Handle quay-optimized case
+                  if [[ "$version_name" == *"-quay-optimized" ]]; then
+                    base_type="quay"
+                    is_optimized="true"
+                    image_variant="optimized"
+                  else
+                    is_optimized="false"
+                    image_variant="standard"
+                  fi
 
                   echo "version_name=$version_name" | tee -a "$GITHUB_OUTPUT"
                   echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
                   echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
+                  echo "is_optimized=$is_optimized" | tee -a "$GITHUB_OUTPUT"
+                  echo "image_variant=$image_variant" | tee -a "$GITHUB_OUTPUT"
 
             - name: Set registry credentials based on keycloak_version
               id: publishing-registry
@@ -710,7 +744,11 @@ jobs:
                   # For quay images, the tag is just the semver, for bitnami it includes extra suffix
                   if [[ "${{ steps.version-vars.outputs.base_type }}" == "quay" ]]; then
                     semver_tag=$(echo "${base_image_tag}"  | awk -F'-' '{print $1}')
-                    tag_prefix="quay-"
+                    if [[ "${{ steps.version-vars.outputs.is_optimized }}" == "true" ]]; then
+                      tag_prefix="quay-optimized-"
+                    else
+                      tag_prefix="quay-"
+                    fi
                   elif [[ "${{ steps.version-vars.outputs.base_type }}" == "hub" ]]; then
                     semver_tag=$(echo "${base_image_tag}"  | awk -F'-' '{print $1}')
                     tag_prefix="bitnami-"
@@ -752,10 +790,10 @@ jobs:
                       "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
                   fi
 
-                  # Make Quay the default latest, keep latest for non-quay as well for backward compatibility
+                  # Make Quay optimized the default latest, keep latest for non-quay as well for backward compatibility
                   if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${{ steps.version-vars.outputs.base_version }}" ]; then
-                    if [[ "${{ steps.version-vars.outputs.base_type }}" == "quay" ]]; then
-                      # Quay becomes the main latest
+                    if [[ "${{ steps.version-vars.outputs.base_type }}" == "quay" && "${{ steps.version-vars.outputs.is_optimized }}" == "true" ]]; then
+                      # Quay optimized becomes the main latest
                       docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:latest" \
                         "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
                     fi
