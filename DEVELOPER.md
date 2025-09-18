@@ -121,6 +121,19 @@ The optimized build runs the following command during image construction:
     --transaction-xa-enabled=false
 ```
 
+**Why AWS JDBC Driver as Default for Optimized Images?**
+
+In optimized images, we use the AWS Advanced JDBC Wrapper (`software.amazon.jdbc.Driver`) as the default database driver for the following reasons:
+
+- **Single Driver Limitation**: Keycloak's optimized build process only allows one database driver to be pre-configured at build time
+- **Backward Compatibility**: The AWS JDBC wrapper is fully backward-compatible with standard PostgreSQL connections
+- **Versatility**: This choice enables both scenarios:
+  - Standard PostgreSQL: Works transparently without AWS-specific features
+  - AWS Aurora with IRSA: Enables advanced features like IAM authentication and failover
+- **Production Focus**: Optimized images target production deployments where AWS integration is common
+
+When using standard PostgreSQL (non-AWS), the AWS wrapper behaves identically to the native PostgreSQL driver, ensuring seamless operation across all deployment scenarios.
+
 For more information, see the [official Keycloak documentation on optimized builds](https://www.keycloak.org/server/configuration#_optimize_the_keycloak_startup).
 
 Both Dockerfiles include the necessary dependencies and configurations for the **AWS Advanced JDBC Wrapper** and custom Keycloak themes.
