@@ -117,15 +117,16 @@ jobs:
                   set -euo pipefail
 
                   version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
-                  base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay", or "optimized"
 
-                  # Handle quay-optimized case
+                  # Handle quay-optimized case first
                   if [[ "$version_name" == *"-quay-optimized" ]]; then
+                    base_version="${version_name%-quay-optimized}"     # e.g. "24"
                     base_type="quay"
                     is_optimized="true"
                     image_variant="optimized"
                   else
+                    base_version="${version_name%-*}"                   # e.g. "24"
+                    base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
                     is_optimized="false"
                     image_variant="standard"
                   fi
@@ -266,17 +267,20 @@ jobs:
                   set -euo pipefail
 
                   version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
-                  base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay", or "optimized"
 
-                  # Handle quay-optimized case
+                  # Handle quay-optimized case first
                   if [[ "$version_name" == *"-quay-optimized" ]]; then
+                    base_version="${version_name%-quay-optimized}"     # e.g. "24"
                     base_type="quay"
                     image_type="quay"
-                  elif [[ "$base_type" == "quay" ]]; then
-                    image_type="quay"
                   else
-                    image_type="bitnami"
+                    base_version="${version_name%-*}"                   # e.g. "24"
+                    base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
+                    if [[ "$base_type" == "quay" ]]; then
+                      image_type="quay"
+                    else
+                      image_type="bitnami"
+                    fi
                   fi
 
                   echo "version_name=$version_name" | tee -a "$GITHUB_OUTPUT"
@@ -393,12 +397,14 @@ jobs:
                   set -euo pipefail
 
                   version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
-                  base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay", or "optimized"
 
-                  # Handle quay-optimized case
+                  # Handle quay-optimized case first
                   if [[ "$version_name" == *"-quay-optimized" ]]; then
+                    base_version="${version_name%-quay-optimized}"     # e.g. "24"
                     base_type="quay"
+                  else
+                    base_version="${version_name%-*}"                   # e.g. "24"
+                    base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
                   fi
 
                   echo "version_name=$version_name" | tee -a "$GITHUB_OUTPUT"
@@ -658,15 +664,16 @@ jobs:
                   set -euo pipefail
 
                   version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
-                  base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay", or "optimized"
 
-                  # Handle quay-optimized case
+                  # Handle quay-optimized case first
                   if [[ "$version_name" == *"-quay-optimized" ]]; then
+                    base_version="${version_name%-quay-optimized}"     # e.g. "24"
                     base_type="quay"
                     is_optimized="true"
                     image_variant="optimized"
                   else
+                    base_version="${version_name%-*}"                   # e.g. "24"
+                    base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
                     is_optimized="false"
                     image_variant="standard"
                   fi
