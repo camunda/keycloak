@@ -156,6 +156,7 @@ Quay-based images are available in two sub-types:
 - Pre-built configuration for faster startup times
 - AWS JDBC wrapper and common settings baked into the image
 - **Camunda-compatible path configuration** with `/auth` base path
+- **AWS wrapper required**: Must use `jdbc:aws-wrapper:postgresql://...` URLs for all database connections
 - Recommended for production deployments, especially with Keycloak Operator
 - Reduced runtime environment variables needed
 
@@ -232,11 +233,25 @@ For Kubernetes with IRSA, configure the following environment variables:
 ```
 
 **Optimized Images (`quay-optimized-<version>`)**
+
+Since the AWS JDBC wrapper driver is pre-configured in optimized images, you **must** use the `aws-wrapper` URL format even for non-IRSA deployments:
+
 ```yaml
+# For IRSA (IAM authentication)
 - name: KC_DB_URL
   value: "jdbc:aws-wrapper:postgresql://db-host:5432/db-name?wrapperPlugins=iam"
 - name: KC_DB_USERNAME
   value: db-user-name
+# No KC_DB_PASSWORD needed for IRSA
+
+# For traditional username/password authentication
+- name: KC_DB_URL
+  value: "jdbc:aws-wrapper:postgresql://db-host:5432/db-name"
+- name: KC_DB_USERNAME
+  value: db-user-name
+- name: KC_DB_PASSWORD
+  value: db-password
+
 # Note: Database driver, health/metrics, and XA settings are pre-configured
 ```
 
