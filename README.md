@@ -25,6 +25,13 @@ Based on the [official Keycloak image from Quay.io](https://quay.io/repository/k
 
 **✅ Recommended**: These images are actively maintained and recommended for production use.
 
+#### 🚀 Optimized Images (`docker.io/camunda/keycloak:quay-optimized-*`)
+Pre-built configuration variant of Quay-based images with optimized startup times and Camunda-compatible settings:
+- **Faster startup**: Configuration is baked into the image during build time
+- **Camunda-compatible**: Pre-configured with `/auth` base path for seamless Camunda integration
+- **Production-ready**: Includes AWS JDBC wrapper, health/metrics endpoints, and XA transactions disabled
+- **Reduced configuration**: Fewer runtime environment variables needed
+
 ### 🐳 Bitnami-based Images (`docker.io/camunda/keycloak:bitnami-*`)
 Based on the [Bitnami Legacy Keycloak image](https://hub.docker.com/r/bitnamilegacy/keycloak), these images use Bitnami's environment variable conventions and are well-suited for users already familiar with Bitnami's ecosystem. They use the `bitnami-` prefix in their tags and are publicly available on Docker Hub. For backward compatibility, these images are also available without the prefix.
 
@@ -148,8 +155,24 @@ Quay-based images are available in two sub-types:
 **Optimized Images (`quay-optimized-<version>`)**
 - Pre-built configuration for faster startup times
 - AWS JDBC wrapper and common settings baked into the image
+- **Camunda-compatible path configuration** with `/auth` base path
 - Recommended for production deployments, especially with Keycloak Operator
 - Reduced runtime environment variables needed
+
+**Camunda Path Configuration (`--http-relative-path=/auth`)**
+
+The `/auth` path is pre-configured for seamless integration with Camunda Platform 8, which expects Keycloak to be accessible at this base path. This configuration:
+- ✅ Ensures compatibility with Camunda's authentication flows
+- ✅ Matches the default path expected by Camunda components
+- ⚠️ **Important**: All Keycloak endpoints will be prefixed with `/auth` (e.g., `/auth/realms/master`)
+- ⚠️ If deploying without Camunda, consider using standard images for root path access
+
+**XA Transactions Disabled (`--transaction-xa-enabled=false`)**
+
+XA transactions are disabled in optimized images because:
+- AWS Aurora PostgreSQL doesn't support distributed transactions
+- Improves performance and reduces complexity
+- Recommended configuration for cloud-native deployments
 
 For technical details on build arguments and configuration differences, see [DEVELOPER.md](DEVELOPER.md).
 

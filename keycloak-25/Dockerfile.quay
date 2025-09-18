@@ -70,7 +70,8 @@ RUN if [ "$BUILD_OPTIMIZED" = "true" ]; then \
             --features=docker \
             --health-enabled=true \
             --metrics-enabled=true \
-            --transaction-xa-enabled=false; \
+            --transaction-xa-enabled=false \
+            --http-relative-path=/auth ; \
     else \
         echo "Skipping optimized build - runtime configuration will be used"; \
     fi
