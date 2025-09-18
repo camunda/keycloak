@@ -120,22 +120,20 @@ jobs:
 
                   # Handle quay-optimized case first
                   if [[ "$version_name" == *"-quay-optimized" ]]; then
-                    base_version="${version_name%-quay-optimized}"     # e.g. "24"
-                    base_type="quay"
+                    version_name="${version_name%-optimized}"          # Convert "24-quay-optimized" → "24-quay"
                     is_optimized="true"
-                    image_variant="optimized"
                   else
-                    base_version="${version_name%-*}"                   # e.g. "24"
-                    base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
                     is_optimized="false"
-                    image_variant="standard"
                   fi
 
-                  echo "version_name=$version_name" | tee -a "$GITHUB_OUTPUT"
+                  # Now extract normally
+                  base_version="${version_name%-*}"                   # e.g. "24"
+                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
+
+                  echo "version_name=${{ matrix.keycloak_version }}" | tee -a "$GITHUB_OUTPUT"
                   echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
                   echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
                   echo "is_optimized=$is_optimized" | tee -a "$GITHUB_OUTPUT"
-                  echo "image_variant=$image_variant" | tee -a "$GITHUB_OUTPUT"
 
             - name: Compute build image variables
               id: compute-build-image-name-step
@@ -270,20 +268,21 @@ jobs:
 
                   # Handle quay-optimized case first
                   if [[ "$version_name" == *"-quay-optimized" ]]; then
-                    base_version="${version_name%-quay-optimized}"     # e.g. "24"
-                    base_type="quay"
-                    image_type="quay"
-                  else
-                    base_version="${version_name%-*}"                   # e.g. "24"
-                    base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
-                    if [[ "$base_type" == "quay" ]]; then
-                      image_type="quay"
-                    else
-                      image_type="bitnami"
-                    fi
+                    version_name="${version_name%-optimized}"          # Convert "24-quay-optimized" → "24-quay"
                   fi
 
-                  echo "version_name=$version_name" | tee -a "$GITHUB_OUTPUT"
+                  # Now extract normally
+                  base_version="${version_name%-*}"                   # e.g. "24"
+                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
+
+                  # Set image_type for provider check
+                  if [[ "$base_type" == "quay" ]]; then
+                    image_type="quay"
+                  else
+                    image_type="bitnami"
+                  fi
+
+                  echo "version_name=${{ matrix.keycloak_version }}" | tee -a "$GITHUB_OUTPUT"
                   echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
                   echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
                   echo "image_type=$image_type" | tee -a "$GITHUB_OUTPUT"
@@ -400,14 +399,14 @@ jobs:
 
                   # Handle quay-optimized case first
                   if [[ "$version_name" == *"-quay-optimized" ]]; then
-                    base_version="${version_name%-quay-optimized}"     # e.g. "24"
-                    base_type="quay"
-                  else
-                    base_version="${version_name%-*}"                   # e.g. "24"
-                    base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
+                    version_name="${version_name%-optimized}"          # Convert "24-quay-optimized" → "24-quay"
                   fi
 
-                  echo "version_name=$version_name" | tee -a "$GITHUB_OUTPUT"
+                  # Now extract normally
+                  base_version="${version_name%-*}"                   # e.g. "24"
+                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
+
+                  echo "version_name=${{ matrix.keycloak_version }}" | tee -a "$GITHUB_OUTPUT"
                   echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
                   echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
 
@@ -667,22 +666,20 @@ jobs:
 
                   # Handle quay-optimized case first
                   if [[ "$version_name" == *"-quay-optimized" ]]; then
-                    base_version="${version_name%-quay-optimized}"     # e.g. "24"
-                    base_type="quay"
+                    version_name="${version_name%-optimized}"          # Convert "24-quay-optimized" → "24-quay"
                     is_optimized="true"
-                    image_variant="optimized"
                   else
-                    base_version="${version_name%-*}"                   # e.g. "24"
-                    base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
                     is_optimized="false"
-                    image_variant="standard"
                   fi
 
-                  echo "version_name=$version_name" | tee -a "$GITHUB_OUTPUT"
+                  # Now extract normally
+                  base_version="${version_name%-*}"                   # e.g. "24"
+                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
+
+                  echo "version_name=${{ matrix.keycloak_version }}" | tee -a "$GITHUB_OUTPUT"
                   echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
                   echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
                   echo "is_optimized=$is_optimized" | tee -a "$GITHUB_OUTPUT"
-                  echo "image_variant=$image_variant" | tee -a "$GITHUB_OUTPUT"
 
             - name: Set registry credentials based on keycloak_version
               id: publishing-registry
