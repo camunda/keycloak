@@ -113,27 +113,9 @@ jobs:
 
             - name: Extract version variables
               id: version-vars
-              run: |
-                  set -euo pipefail
-
-                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
-
-                  # Handle quay-optimized case first
-                  if [[ "$version_name" == *"-quay-optimized" ]]; then
-                    version_name="${version_name%-optimized}"          # Convert "24-quay-optimized" → "24-quay"
-                    is_optimized="true"
-                  else
-                    is_optimized="false"
-                  fi
-
-                  # Now extract normally
-                  base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
-
-                  echo "version_name=${{ matrix.keycloak_version }}" | tee -a "$GITHUB_OUTPUT"
-                  echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
-                  echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
-                  echo "is_optimized=$is_optimized" | tee -a "$GITHUB_OUTPUT"
+              uses: ./.github/actions/extract-version-vars
+              with:
+                  keycloak_version: ${{ matrix.keycloak_version }}
 
             - name: Compute build image variables
               id: compute-build-image-name-step
@@ -261,31 +243,11 @@ jobs:
 
             - name: Extract version variables
               id: version-vars
-              run: |
-                  set -euo pipefail
-
-                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
-
-                  # Handle quay-optimized case first
-                  if [[ "$version_name" == *"-quay-optimized" ]]; then
-                    version_name="${version_name%-optimized}"          # Convert "24-quay-optimized" → "24-quay"
-                  fi
-
-                  # Now extract normally
-                  base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
-
-                  # Set image_type for provider check
-                  if [[ "$base_type" == "quay" ]]; then
-                    image_type="quay"
-                  else
-                    image_type="bitnami"
-                  fi
-
-                  echo "version_name=${{ matrix.keycloak_version }}" | tee -a "$GITHUB_OUTPUT"
-                  echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
-                  echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
-                  echo "image_type=$image_type" | tee -a "$GITHUB_OUTPUT"
+              uses: ./.github/actions/extract-version-vars
+              with:
+                  keycloak_version: ${{ matrix.keycloak_version }}
+                  include_optimized: 'false'
+                  include_image_type: 'true'
 
             - name: Check Keycloak Providers/Config
               run: |
@@ -392,23 +354,10 @@ jobs:
 
             - name: Extract version variables
               id: version-vars
-              run: |
-                  set -euo pipefail
-
-                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
-
-                  # Handle quay-optimized case first
-                  if [[ "$version_name" == *"-quay-optimized" ]]; then
-                    version_name="${version_name%-optimized}"          # Convert "24-quay-optimized" → "24-quay"
-                  fi
-
-                  # Now extract normally
-                  base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
-
-                  echo "version_name=${{ matrix.keycloak_version }}" | tee -a "$GITHUB_OUTPUT"
-                  echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
-                  echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
+              uses: ./.github/actions/extract-version-vars
+              with:
+                  keycloak_version: ${{ matrix.keycloak_version }}
+                  include_optimized: 'false'
 
             - name: Compute AWS variables
               if: startsWith(matrix.runner_desc.runner, 'aws')
@@ -659,27 +608,9 @@ jobs:
 
             - name: Extract version variables
               id: version-vars
-              run: |
-                  set -euo pipefail
-
-                  version_name="${{ matrix.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
-
-                  # Handle quay-optimized case first
-                  if [[ "$version_name" == *"-quay-optimized" ]]; then
-                    version_name="${version_name%-optimized}"          # Convert "24-quay-optimized" → "24-quay"
-                    is_optimized="true"
-                  else
-                    is_optimized="false"
-                  fi
-
-                  # Now extract normally
-                  base_version="${version_name%-*}"                   # e.g. "24"
-                  base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
-
-                  echo "version_name=${{ matrix.keycloak_version }}" | tee -a "$GITHUB_OUTPUT"
-                  echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
-                  echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
-                  echo "is_optimized=$is_optimized" | tee -a "$GITHUB_OUTPUT"
+              uses: ./.github/actions/extract-version-vars
+              with:
+                  keycloak_version: ${{ matrix.keycloak_version }}
 
             - name: Set registry credentials based on keycloak_version
               id: publishing-registry
