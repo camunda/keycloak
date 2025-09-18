@@ -7,7 +7,6 @@
 ARG BASE_IMAGE_NAME=""
 ARG BASE_IMAGE_TAG=""
 ARG BASE_IMAGE_DIGEST=""
-ARG BUILD_OPTIMIZED="true"
 
 # We use the identity image to copy the keycloak theme
 FROM docker.io/camunda/identity:latest@sha256:4f94a3dadf7a2900df0e5b88b107e25f6cda00f9ca0e2b8886df21c3cc7919f2 AS identity
@@ -39,6 +38,23 @@ RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-j
 # Copy the identity theme
 COPY --from=identity /app/keycloak-theme/ /opt/keycloak/themes/identity
 
+##### FINAL Keycloak IMAGE ####
+
+# hadolint ignore=DL3006
+FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST}
+# leave the values below unset to use the default value at the top of the file
+ARG BASE_IMAGE_NAME
+ARG BASE_IMAGE_TAG
+ARG BASE_IMAGE_DIGEST
+ARG BUILD_OPTIMIZED="true"
+
+# renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
+ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
+
+# Copy the AWS JDBC drivers and theme from minimal-build stage
+COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/providers/ /opt/keycloak/providers/
+COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/themes/identity /opt/keycloak/themes/identity
+
 # Conditionally pre-build Keycloak for optimized startup (optimized mode)
 # This step pre-configures Keycloak with the features and providers we need
 # Set BUILD_OPTIMIZED=false to disable optimized build (useful for runtime configuration flexibility)
@@ -58,22 +74,6 @@ RUN if [ "$BUILD_OPTIMIZED" = "true" ]; then \
     else \
         echo "Skipping optimized build - runtime configuration will be used"; \
     fi
-
-##### FINAL Keycloak IMAGE ####
-
-# hadolint ignore=DL3006
-FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST}
-# leave the values below unset to use the default value at the top of the file
-ARG BASE_IMAGE_NAME
-ARG BASE_IMAGE_TAG
-ARG BASE_IMAGE_DIGEST
-
-# renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
-ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
-
-# Copy the AWS JDBC drivers and theme from minimal-build stage
-COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/providers/ /opt/keycloak/providers/
-COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/themes/identity /opt/keycloak/themes/identity
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
