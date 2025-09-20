@@ -1,0 +1,76 @@
+---
+name: Extract Version Variables
+description: Extract and parse Keycloak version variables from matrix version string
+inputs:
+    keycloak_version:
+        description: The Keycloak version string (e.g., "24-hub", "24-quay-optimized")
+        required: true
+    include_optimized:
+        description: 'Whether to include is_optimized output (default: true)'
+        required: false
+        default: 'true'
+    include_image_type:
+        description: 'Whether to include image_type output for provider checks (default: false)'
+        required: false
+        default: 'false'
+outputs:
+    version_name:
+        description: Original version name from matrix
+        value: ${{ steps.parse.outputs.version_name }}
+    base_version:
+        description: Base version number (e.g., "24")
+        value: ${{ steps.parse.outputs.base_version }}
+    base_type:
+        description: Base type (e.g., "hub", "prem", "quay")
+        value: ${{ steps.parse.outputs.base_type }}
+    is_optimized:
+        description: Whether this is an optimized build (true/false)
+        value: ${{ steps.parse.outputs.is_optimized }}
+    image_type:
+        description: Image type for provider checks ("quay" or "bitnami")
+        value: ${{ steps.parse.outputs.image_type }}
+runs:
+    using: composite
+    steps:
+        - name: Parse version variables
+          id: parse
+          shell: bash
+          run: |
+              set -euo pipefail
+
+              version_name="${{ inputs.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
+
+              # Handle quay-optimized case first
+              if [[ "$version_name" == *"-quay-optimized" ]]; then
+                version_name="${version_name%-optimized}"          # Convert "24-quay-optimized" → "24-quay"
+                is_optimized="true"
+              else
+                is_optimized="false"
+              fi
+
+              # Now extract normally
+              base_version="${version_name%-*}"                   # e.g. "24"
+              base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
+
+              # Set image_type for provider check if requested
+              if [[ "${{ inputs.include_image_type }}" == "true" ]]; then
+                if [[ "$base_type" == "quay" ]]; then
+                  image_type="quay"
+                else
+                  image_type="bitnami"
+                fi
+              else
+                image_type=""
+              fi
+
+              echo "version_name=${{ inputs.keycloak_version }}" | tee -a "$GITHUB_OUTPUT"
+              echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
+              echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
+
+              if [[ "${{ inputs.include_optimized }}" == "true" ]]; then
+                echo "is_optimized=$is_optimized" | tee -a "$GITHUB_OUTPUT"
+              fi
+
+              if [[ "${{ inputs.include_image_type }}" == "true" ]]; then
+                echo "image_type=$image_type" | tee -a "$GITHUB_OUTPUT"
+              fi
