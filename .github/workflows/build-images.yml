@@ -725,10 +725,10 @@ jobs:
                       "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
                   fi
 
-                  # Make Quay optimized the default latest, keep latest for non-quay as well for backward compatibility
+                  # Make Quay standard (non-optimized) the default latest
                   if [ "$(./.github/scripts/utils/find_latest_keycloak.sh)" = "${{ steps.version-vars.outputs.base_version }}" ]; then
-                    if [[ "${{ steps.version-vars.outputs.base_type }}" == "quay" && "${{ steps.version-vars.outputs.is_optimized }}" == "true" ]]; then
-                      # Quay optimized becomes the main latest
+                    if [[ "${{ steps.version-vars.outputs.base_type }}" == "quay" && "${{ steps.version-vars.outputs.is_optimized }}" == "false" ]]; then
+                      # Quay standard becomes the main latest
                       docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:latest" \
                         "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
                     fi

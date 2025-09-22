@@ -115,7 +115,8 @@ For **Quay-based images** (with `quay-` prefix):
 - `:quay-optimized-<base image version>-<yyyy-mm-dd>-<iteration>`: e.g., `quay-optimized-24-2024-03-04-004` 🏷️
 - `:quay-optimized-<base image version>`: e.g., `quay-optimized-24.0.1`
 - `:quay-optimized-<major keycloak version>`: e.g., `quay-optimized-24`
-- `:latest`: Corresponds to the latest stable build of the most recent Keycloak version from Quay (Quay is now the default latest)
+- `:quay-optimized-latest`: Latest optimized Quay-based image
+- `:latest`: Corresponds to the latest stable standard (non-optimized) Quay-based image
 
 ## Configuration
 
@@ -315,7 +316,7 @@ spec:
       name: keycloak-db-secret
       key: username
     # For IRSA, omit passwordSecret to use IAM authentication
-  # For IRSA support
+  # For IRSA support, only with optimized images
   unsupported:
     podTemplate:
       spec:
@@ -326,6 +327,16 @@ spec:
               - name: KC_DB_URL
                 value: "jdbc:aws-wrapper:postgresql://aurora.rds.your.domain:5432/keycloak?wrapperPlugins=iam"
 ```
+
+> **⚠️ Important Note for Keycloak Operator**
+>
+> When using **standard images** (`quay-<version>` or `latest`) with the Keycloak Operator, you **must** set `startOptimized: false` in your Keycloak custom resource:
+> ```yaml
+> spec:
+>   image: docker.io/camunda/keycloak:quay-26  # Standard non-optimized image
+>   startOptimized: false  # Required for non-optimized images
+> ```
+> For more details, see the [official documentation](https://www.keycloak.org/operator/customizing-keycloak#_non_optimized_custom_image).
 
 Feel free to adjust the values according to your actual configuration.
 

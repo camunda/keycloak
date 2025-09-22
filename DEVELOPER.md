@@ -190,15 +190,16 @@ When adding a new version of Keycloak, follow these steps:
          - `keycloak-ee/keycloak:24.0.1-1-${date in yyyy-mm-dd-xxx format}` (immutable - backward compatible)
          - `keycloak-ee/keycloak:latest` (latest bitnami enterprise version - no conflict with quay)
      - **Quay-based public images (`docker.io/camunda/keycloak`)**:
-       - `camunda/keycloak:latest` (latest quay optimized version - this is now the default latest)
+       - `camunda/keycloak:latest` (latest standard non-optimized Quay-based image)
        - `camunda/keycloak:quay-24` (standard runtime-configurable image, mutable)
        - `camunda/keycloak:quay-24.0.5-1` (standard runtime-configurable image, mutable)
        - `camunda/keycloak:quay-24.0.5-1-${date in yyyy-mm-dd-xxx format}` (standard image, immutable)
        - `camunda/keycloak:quay-24.0.5` (standard image, mutable semver tag)
+       - `camunda/keycloak:quay-latest` (latest standard non-optimized Quay-based image)
        - `camunda/keycloak:quay-optimized-24` (optimized image, mutable)
        - `camunda/keycloak:quay-optimized-24.0.5-1` (optimized image, mutable)
        - `camunda/keycloak:quay-optimized-24.0.5-1-${date in yyyy-mm-dd-xxx format}` (optimized image, immutable, **recommended for production**)
        - `camunda/keycloak:quay-optimized-24.0.5` (optimized image, mutable semver tag)
-       - `camunda/keycloak:quay-latest` (latest quay optimized version)
+       - `camunda/keycloak:quay-optimized-latest` (latest optimized Quay-based image)
 
 Following these steps ensures a smooth integration of new Keycloak versions, consistent testing across the development environment, and easy access to the latest version. Happy coding!
