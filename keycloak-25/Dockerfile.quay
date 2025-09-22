@@ -46,6 +46,7 @@ FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST}
 ARG BASE_IMAGE_NAME
 ARG BASE_IMAGE_TAG
 ARG BASE_IMAGE_DIGEST
+ARG BUILD_OPTIMIZED="true"
 
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
@@ -53,6 +54,27 @@ ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
 # Copy the AWS JDBC drivers and theme from minimal-build stage
 COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/providers/ /opt/keycloak/providers/
 COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/themes/identity /opt/keycloak/themes/identity
+
+# Conditionally pre-build Keycloak for optimized startup (optimized mode)
+# This step pre-configures Keycloak with the features and providers we need
+# Set BUILD_OPTIMIZED=false to disable optimized build (useful for runtime configuration flexibility)
+#
+# Official Keycloak documentation: https://www.keycloak.org/server/configuration#_optimize_the_keycloak_startup
+# Note: The official Keycloak Operator only supports optimized images and requires pre-built configuration
+# For operator deployments, always use BUILD_OPTIMIZED=true (default)
+RUN if [ "$BUILD_OPTIMIZED" = "true" ]; then \
+        echo "Building optimized Keycloak image..."; \
+        /opt/keycloak/bin/kc.sh build \
+            --db=postgres \
+            --db-driver=software.amazon.jdbc.Driver \
+            --features=docker \
+            --health-enabled=true \
+            --metrics-enabled=true \
+            --transaction-xa-enabled=false \
+            --http-relative-path=/auth ; \
+    else \
+        echo "Skipping optimized build - runtime configuration will be used"; \
+    fi
 
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md

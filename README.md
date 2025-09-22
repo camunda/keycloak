@@ -25,6 +25,13 @@ Based on the [official Keycloak image from Quay.io](https://quay.io/repository/k
 
 **✅ Recommended**: These images are actively maintained and recommended for production use.
 
+#### 🚀 Optimized Images (`docker.io/camunda/keycloak:quay-optimized-*`)
+Pre-built configuration variant of Quay-based images with optimized startup times and Camunda-compatible settings:
+- **Faster startup**: Configuration is baked into the image during build time
+- **Camunda-compatible**: Pre-configured with `/auth` base path for seamless Camunda integration
+- **Production-ready**: Includes AWS JDBC wrapper, health/metrics endpoints, and XA transactions disabled
+- **Reduced configuration**: Fewer runtime environment variables needed
+
 ### 🐳 Bitnami-based Images (`docker.io/camunda/keycloak:bitnami-*`)
 Based on the [Bitnami Legacy Keycloak image](https://hub.docker.com/r/bitnamilegacy/keycloak), these images use Bitnami's environment variable conventions and are well-suited for users already familiar with Bitnami's ecosystem. They use the `bitnami-` prefix in their tags and are publicly available on Docker Hub. For backward compatibility, these images are also available without the prefix.
 
@@ -105,7 +112,11 @@ For **Quay-based images** (with `quay-` prefix):
 - `:quay-<base image version>-<yyyy-mm-dd>-<iteration>`: e.g., `quay-24-2024-03-04-004` 🏷️
 - `:quay-<base image version>`: e.g., `quay-24.0.1`
 - `:quay-<major keycloak version>`: e.g., `quay-24`
-- `:latest`: Corresponds to the latest stable build of the most recent Keycloak version from Quay (Quay is now the default latest)
+- `:quay-optimized-<base image version>-<yyyy-mm-dd>-<iteration>`: e.g., `quay-optimized-24-2024-03-04-004` 🏷️
+- `:quay-optimized-<base image version>`: e.g., `quay-optimized-24.0.1`
+- `:quay-optimized-<major keycloak version>`: e.g., `quay-optimized-24`
+- `:quay-optimized-latest`: Latest optimized Quay-based image
+- `:latest`: Corresponds to the latest stable standard (non-optimized) Quay-based image
 
 ## Configuration
 
@@ -132,6 +143,40 @@ You can find more information and environment variables on the [Bitnami Keycloak
 
 ### Quay-based Images
 Official Keycloak container configuration is documented at [keycloak.org/server/containers](https://www.keycloak.org/server/containers).
+
+#### Image Sub-types
+
+Quay-based images are available in two sub-types:
+
+**Standard Images (`quay-<version>`)**
+- Runtime-configurable via environment variables
+- Full flexibility for all Keycloak configuration options
+- Ideal for development and custom configurations
+
+**Optimized Images (`quay-optimized-<version>`)**
+- Pre-built configuration for faster startup times
+- AWS JDBC wrapper and common settings baked into the image
+- **Camunda-compatible path configuration** with `/auth` base path
+- **AWS wrapper required**: Must use `jdbc:aws-wrapper:postgresql://...` URLs for all database connections
+- Recommended for production deployments, especially with Keycloak Operator
+- Reduced runtime environment variables needed
+
+**Camunda Path Configuration (`--http-relative-path=/auth`)**
+
+The `/auth` path is pre-configured for seamless integration with Camunda Platform 8, which expects Keycloak to be accessible at this base path. This configuration:
+- ✅ Ensures compatibility with Camunda's authentication flows
+- ✅ Matches the default path expected by Camunda components
+- ⚠️ **Important**: All Keycloak endpoints will be prefixed with `/auth` (e.g., `/auth/realms/master`)
+- ⚠️ If deploying without Camunda, consider using standard images for root path access
+
+**XA Transactions Disabled (`--transaction-xa-enabled=false`)**
+
+XA transactions are disabled in optimized images because:
+- AWS Aurora PostgreSQL doesn't support distributed transactions
+- Improves performance and reduces complexity
+- Recommended configuration for cloud-native deployments
+
+For technical details on build arguments and configuration differences, see [DEVELOPER.md](DEVELOPER.md).
 
 ## IAM Roles for Service Accounts (IRSA) Support
 
@@ -170,6 +215,7 @@ For Kubernetes with IRSA, configure the following environment variables:
 
 For Kubernetes with IRSA, configure the following environment variables:
 
+**Standard Images (`quay-<version>`)**
 ```yaml
 - name: KC_DB
   value: postgres
@@ -185,6 +231,29 @@ For Kubernetes with IRSA, configure the following environment variables:
   value: "true"
 - name: KC_METRICS_ENABLED
   value: "true"
+```
+
+**Optimized Images (`quay-optimized-<version>`)**
+
+Since the AWS JDBC wrapper driver is pre-configured in optimized images, you **must** use the `aws-wrapper` URL format even for non-IRSA deployments:
+
+```yaml
+# For IRSA (IAM authentication)
+- name: KC_DB_URL
+  value: "jdbc:aws-wrapper:postgresql://db-host:5432/db-name?wrapperPlugins=iam"
+- name: KC_DB_USERNAME
+  value: db-user-name
+# No KC_DB_PASSWORD needed for IRSA
+
+# For traditional username/password authentication
+- name: KC_DB_URL
+  value: "jdbc:aws-wrapper:postgresql://db-host:5432/db-name"
+- name: KC_DB_USERNAME
+  value: db-user-name
+- name: KC_DB_PASSWORD
+  value: db-password
+
+# Note: Database driver, health/metrics, and XA settings are pre-configured
 ```
 
 Don't forget to set the `serviceAccountName` of the deployment/statefulset to point to the created service account with the IRSA annotation.
@@ -236,7 +305,7 @@ metadata:
   name: keycloak
   namespace: keycloak
 spec:
-  image: docker.io/camunda/keycloak:quay-26
+  image: docker.io/camunda/keycloak:quay-optimized-26
   instances: 3
   db:
     vendor: postgres
@@ -247,14 +316,7 @@ spec:
       name: keycloak-db-secret
       key: username
     # For IRSA, omit passwordSecret to use IAM authentication
-  additionalOptions:
-    - name: db-driver
-      value: software.amazon.jdbc.Driver
-    - name: transaction-xa-enabled
-      value: "false"
-    - name: log-level
-      value: "INFO,software.amazon.jdbc:INFO"
-  # For IRSA support
+  # For IRSA support, only with optimized images
   unsupported:
     podTemplate:
       spec:
@@ -265,6 +327,16 @@ spec:
               - name: KC_DB_URL
                 value: "jdbc:aws-wrapper:postgresql://aurora.rds.your.domain:5432/keycloak?wrapperPlugins=iam"
 ```
+
+> **⚠️ Important Note for Keycloak Operator**
+>
+> When using **standard images** (`quay-<version>` or `latest`) with the Keycloak Operator, you **must** set `startOptimized: false` in your Keycloak custom resource:
+> ```yaml
+> spec:
+>   image: docker.io/camunda/keycloak:quay-26  # Standard non-optimized image
+>   startOptimized: false  # Required for non-optimized images
+> ```
+> For more details, see the [official documentation](https://www.keycloak.org/operator/customizing-keycloak#_non_optimized_custom_image).
 
 Feel free to adjust the values according to your actual configuration.
 
