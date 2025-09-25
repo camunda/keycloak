@@ -307,28 +307,23 @@ metadata:
 spec:
   image: docker.io/camunda/keycloak:quay-optimized-26
   instances: 3
-  additionalOptions:
-    - name: http-relative-path
-      value: /auth
   db:
-    vendor: postgres
-    host: aurora.rds.your.domain
-    port: 5432
-    database: keycloak
+    # Use the URL parameter for direct database connection configuration
+    # AWS wrapper is required for optimized images (works transparently with standard PostgreSQL)
+    # For IRSA authentication,add '?wrapperPlugins=iam' to URL
+    url: jdbc:aws-wrapper:postgresql://aurora.rds.your.domain:5432/keycloak
     usernameSecret:
       name: keycloak-db-secret
       key: username
-    # For IRSA, omit passwordSecret to use IAM authentication
-  # For IRSA support, only with optimized images
-  unsupported:
-    podTemplate:
-      spec:
-        serviceAccountName: keycloak-service-account
-        containers:
-          - name: keycloak
-            env:
-              - name: KC_DB_URL
-                value: "jdbc:aws-wrapper:postgresql://aurora.rds.your.domain:5432/keycloak?wrapperPlugins=iam"
+    passwordSecret:
+      name: keycloak-db-secret
+      key: password
+    # For IRSA authentication, omit passwordSecret
+  additionalOptions:
+    - name: http-relative-path
+      value: /auth
+  hostname:
+    hostname: keycloak.your-domain.com
 ```
 
 > **⚠️ Keycloak Operator Configuration**
