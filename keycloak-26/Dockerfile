@@ -76,7 +76,7 @@ USER keycloak
 # common, k8s, openshift and OCI labels:
 # OCI: https://github.com/opencontainers/image-spec/blob/main/annotations.md
 # OCP: https://docs.openshift.com/container-platform/4.10/openshift_images/create-images.html#defining-image-metadata
-      # cpu and ram allocation reference: https://www.keycloak.org/high-availability/concepts-memory-and-cpu-sizing
+      # cpu and ram allocation reference: https://www.keycloak.org/high-availability/multi-cluster/concepts-memory-and-cpu-sizing
       # the following labels are generated at buildtime - see https://github.com/docker/metadata-action
       # org.opencontainers.image.title
       # org.opencontainers.image.description
