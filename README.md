@@ -346,7 +346,7 @@ Feel free to adjust the values according to your actual configuration.
 
 - [Keycloak Documentation](https://www.keycloak.org/documentation).
 - [Keycloak Documentation: Keycloak on Amazon EKS with IRSA](https://www.keycloak.org/server/db#preparing-keycloak-for-amazon-aurora-postgresql).
-- [Camunda Documentation: Keycloak on Amazon EKS with IRSA](https://docs.camunda.io/docs/self-managed/platform-deployment/helm-kubernetes/platforms/amazon-eks/irsa/).
+- [Camunda Documentation: Keycloak on Amazon EKS with IRSA](https://docs.camunda.io/docs/self-managed/operational-guides/troubleshooting/#irsa-configuration-check).
 - [Keycloak Documentation: Memory and CPU sizing](https://www.keycloak.org/high-availability/multi-cluster/concepts-memory-and-cpu-sizing).
 
 ## Contributions
