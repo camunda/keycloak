@@ -150,7 +150,7 @@ When adding a new version of Keycloak, follow these steps:
 
 2. **Major Version Considerations:**
    - Note that Keycloak supports only one version of Postgres per major release.
-   - Find the version in the `pom.xml` file of the project. You can locate it [here](https://github.com/keycloak/keycloak/blob/release/24.0/pom.xml).
+   - Find the version in the `pom.xml` file of the project. You can locate it [here](https://github.com/keycloak/keycloak/blob/archive/release/24.0/pom.xml).
    - The pipeline of tests will automatically fetch this file and use the referenced version. For example: `<postgresql.version>15</postgresql.version>` indicates the target test version.
    - Use this version locally for testing.
 

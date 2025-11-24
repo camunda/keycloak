@@ -1,6 +1,6 @@
 # Camunda Keycloak Container Image
 
-[![build-images](https://img.shields.io/badge/Camunda-FC5D0D)](https://www.camunda.com/)
+[![build-images](https://img.shields.io/badge/Camunda-FC5D0D)](https://camunda.com/)
 [![build-images](https://github.com/camunda/keycloak/actions/workflows/build-images.yml/badge.svg?branch=main)](https://github.com/camunda/keycloak/actions/workflows/build-images.yml)
 [![Docker image](https://img.shields.io/badge/docker.io%2Fcamunda%2Fkeycloak-e4f0fb?logo=docker&label=docker%20amd64,arm64)](https://hub.docker.com/r/camunda/keycloak/tags)
 [![Docker image Quay](https://img.shields.io/badge/docker.io%2Fcamunda%2Fkeycloak:quay--*-e4f0fb?logo=docker&label=docker%20amd64,arm64)](https://hub.docker.com/r/camunda/keycloak/tags)
@@ -8,7 +8,7 @@
 
 This Docker image provides a generic Keycloak setup based on [bitnami/keycloak](https://hub.docker.com/r/bitnami/keycloak) or the [official Keycloak image from Quay.io](https://quay.io/repository/keycloak/keycloak). It also includes:
 * an optional AWS wrapper, allowing for the use of AWS Identity and Access Management (IAM) Roles for Service Accounts (IRSA) for database authentication.
-* an optional [Camunda Identity](https://docs.camunda.io/docs/self-managed/identity/what-is-identity/) login theme
+* an optional [Camunda Identity](https://docs.camunda.io/docs/self-managed/components/management-identity/overview/) login theme
 
 ## Image Variants
 
@@ -357,4 +357,4 @@ We welcome contributions and enhancements to this Docker image. Feel free to joi
 
 **Keycloak is a Cloud Native Computing Foundation incubation project.**
 
-© Keycloak Authors 2023. © 2023 The Linux Foundation. All rights reserved. The Linux Foundation has registered trademarks and uses trademarks. For a list of trademarks of The Linux Foundation, please see our [Trademark Usage page](https://www.linuxfoundation.org/trademark-usage/).
+© Keycloak Authors 2023. © 2023 The Linux Foundation. All rights reserved. The Linux Foundation has registered trademarks and uses trademarks. For a list of trademarks of The Linux Foundation, please see our [Trademark Usage page](https://www.linuxfoundation.org/legal/trademark-usage).
