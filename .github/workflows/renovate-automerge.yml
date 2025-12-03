@@ -4,12 +4,17 @@ name: Renovate Auto Merge
 on:
     pull_request:
 
-# limit to a single execution per ref of this workflow
+# Ensure only one instance of this workflow runs per PR at a time.
+# With cancel-in-progress: false, new runs wait for previous ones to complete
+# instead of cancelling them. This prevents race conditions when multiple commits
+# are pushed quickly (e.g., by Renovate rebasing), ensuring each commit's checks
+# finish before the next automerge attempt starts.
+# See example: https://github.com/camunda/camunda-deployment-references/pull/1352
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+    cancel-in-progress: false
 
 jobs:
     renovate-automerge:
-        uses: camunda/infraex-common-config/.github/workflows/automerge-global.yml@eb9d51b4dc89deeda7fc160166f378725ee0f06a # 1.5.3
+        uses: camunda/infraex-common-config/.github/workflows/automerge-global.yml@e3c0265ea6dee906c0fbc78e94d8acf7ff23c08e # 1.5.5
         secrets: inherit
