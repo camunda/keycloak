@@ -9,7 +9,7 @@ ARG BASE_IMAGE_TAG=""
 ARG BASE_IMAGE_DIGEST=""
 
 # We use the identity image to copy the keycloak theme
-FROM docker.io/camunda/identity:latest@sha256:8efabbb777e6b112e222860df6a54d0cda6354a4080974d28489f37ba5226514 AS identity
+FROM docker.io/camunda/identity:latest@sha256:b13944af700c90610f945334950295d4491d2fa3e90e2ff272cfc70afdffc8aa AS identity
 
 # Building builder image
 # hadolint ignore=DL3006
