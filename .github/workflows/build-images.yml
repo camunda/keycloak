@@ -165,12 +165,13 @@ jobs:
 
             - name: Compute target built image fully qualified name from metadata
               id: compute-image-name-step
+              env:
+                  IMAGE_METADATA: ${{ steps.build-image-step.outputs.image_metadata }}
               run: |
                   set -euo pipefail
 
-                  image_metadata='${{ steps.build-image-step.outputs.image_metadata }}'
-                  image_name=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."image.name"' | tr ',' '\n' | head -n 1 | tr -d ' ')
-                  digest=$(echo "${image_metadata}" | tr -d '\n' | jq -r '."containerimage.digest"')
+                  image_name=$(echo "${IMAGE_METADATA}" | tr -d '\n' | jq -r '."image.name"' | tr ',' '\n' | head -n 1 | tr -d ' ')
+                  digest=$(echo "${IMAGE_METADATA}" | tr -d '\n' | jq -r '."containerimage.digest"')
                   full_image_name="${image_name}@${digest}"
                   echo "full_image_name=${full_image_name}" | tee -a "$GITHUB_OUTPUT"
 
