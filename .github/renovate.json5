@@ -43,6 +43,15 @@
       "matchUpdateTypes": ["major"],
       "enabled": false,
     },
+    // Quay images use X.Y.Z-N tags where -N is a build number, not a compatibility string.
+    // Without custom versioning, Renovate treats -0 and -1 as different compatibility groups
+    // and won't update across them (e.g. 26.3.2-1 → 26.5.4-0).
+    {
+      "matchManagers": ["helm-values"],
+      "matchPackageNames": ["quay.io/keycloak/keycloak"],
+      "matchFileNames": ["keycloak-*/bases.yml"],
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(-(?<build>\\d+))?$",
+    },
     // this applies the same mechanism but to Dockerfile (e.g. identity which uses latest)
     {
       "matchManagers": ["dockerfile"],
