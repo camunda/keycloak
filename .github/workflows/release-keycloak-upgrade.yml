@@ -19,7 +19,7 @@ permissions:
 
 jobs:
     check-changes:
-        runs-on: ubuntu-24.04
+        runs-on: ubuntu-latest
         outputs:
             has_changes: ${{ steps.check.outputs.has_changes }}
         steps:
@@ -49,7 +49,7 @@ jobs:
                   fi
 
     release:
-        runs-on: ubuntu-24.04
+        runs-on: ubuntu-latest
         needs:
             - check-changes
         if: needs.check-changes.outputs.has_changes == 'true'
@@ -80,7 +80,7 @@ jobs:
     report-failure:
         name: Report failures
         if: failure()
-        runs-on: ubuntu-24.04
+        runs-on: ubuntu-latest
         needs:
             - check-changes
             - release
