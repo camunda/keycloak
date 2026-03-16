@@ -1,0 +1,94 @@
+---
+# desc: create a GitHub release when Keycloak versions are upgraded by Renovate
+name: release-keycloak-upgrade
+
+on:
+    workflow_dispatch:
+    schedule:
+        - cron: 0 8 * * 1
+
+# Scheduled workflows run on the default branch only.
+# See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: false
+
+permissions:
+    contents: write
+
+jobs:
+    check-changes:
+        runs-on: ubuntu-latest
+        outputs:
+            has_changes: ${{ steps.check.outputs.has_changes }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+              with:
+                  fetch-depth: 0
+
+            - name: Check for relevant changes since last release
+              id: check
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  set -euo pipefail
+
+                  # Get the latest release tag
+                  last_tag=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // empty')
+
+                  echo "Checking changes since tag: ${last_tag}"
+                  changed_files=$(git diff --name-only "${last_tag}..HEAD")
+
+                  # Check if any keycloak bases.yml or Dockerfile* files were changed
+                  if echo "$changed_files" | grep -qE '^keycloak-[0-9]+/(bases\.yml|Dockerfile)'; then
+                    echo "has_changes=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "has_changes=false" >> "$GITHUB_OUTPUT"
+                  fi
+
+    release:
+        runs-on: ubuntu-latest
+        needs:
+            - check-changes
+        if: needs.check-changes.outputs.has_changes == 'true'
+        steps:
+            - name: Checkout
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+            - name: Create GitHub Release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  set -euo pipefail
+
+                  today="$(date -u +'%Y-%m-%d')"
+
+                  # Find the next incremental number for today's releases
+                  last_number=$(gh release list --json tagName,createdAt --jq \
+                    "[.[] | select(.createdAt | startswith(\"${today}\")) | .tagName | ltrimstr(\"${today}-\") | tonumber] | max // 0")
+
+                  release_tag="${today}-$(printf '%03d' $((last_number + 1)))"
+
+                  gh release create "${release_tag}" \
+                    --title "${release_tag}" \
+                    --generate-notes \
+                    --fail-on-no-commits \
+                    --target "${{ github.sha }}"
+
+    report-failure:
+        name: Report failures
+        if: failure()
+        runs-on: ubuntu-latest
+        needs:
+            - check-changes
+            - release
+        steps:
+            - name: Notify in Slack in case of failure
+              id: slack-notification
+              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@193a21e1e56c9a65517a822224ac3b4ffa4d6ae4 # 1.5.9
+              with:
+                  vault_addr: ${{ secrets.VAULT_ADDR }}
+                  vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
+                  vault_secret_id: ${{ secrets.VAULT_SECRET_ID }}
