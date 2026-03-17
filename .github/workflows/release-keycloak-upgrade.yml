@@ -83,9 +83,13 @@ jobs:
                     fi
                   fi
 
-                  # Create and push the tag via git to bypass API tag creation restrictions
-                  git tag "${release_tag}" "${{ github.sha }}"
-                  git push origin "${release_tag}"
+                  # If the tag already exists remotely (e.g. partial failure rerun), skip tag creation
+                  if git ls-remote --tags origin "refs/tags/${release_tag}" | grep -q "${release_tag}"; then
+                    echo "Tag ${release_tag} already exists remotely, reusing it."
+                  else
+                    git tag "${release_tag}" "${{ github.sha }}"
+                    git push origin "${release_tag}"
+                  fi
 
                   # Create the release from the existing tag
                   gh release create "${release_tag}" \
