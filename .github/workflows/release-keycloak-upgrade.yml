@@ -101,8 +101,7 @@ jobs:
                   # Verify there are commits since the last release
                   last_tag=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // empty')
                   if [ -n "${last_tag}" ]; then
-                    last_tag_sha=$(gh api "repos/${{ github.repository }}/git/ref/tags/${last_tag}" --jq '.object.sha' 2>/dev/null || true)
-                    if [ -z "${last_tag_sha}" ]; then
+                    if ! gh api "repos/${{ github.repository }}/git/ref/tags/${last_tag}" --jq '.object.sha' >/dev/null 2>&1; then
                       echo "::error::Last release tag ${last_tag} not found via API."
                       exit 1
                     fi
@@ -114,8 +113,7 @@ jobs:
                   fi
 
                   # If the tag already exists remotely (e.g. partial failure rerun), verify it points to the expected commit
-                  remote_tag_sha=$(gh api "repos/${{ github.repository }}/git/ref/tags/${release_tag}" --jq '.object.sha' 2>/dev/null || true)
-                  if [ -n "${remote_tag_sha}" ]; then
+                  if remote_tag_sha=$(gh api "repos/${{ github.repository }}/git/ref/tags/${release_tag}" --jq '.object.sha' 2>/dev/null); then
                     if [ "${remote_tag_sha}" = "${{ github.sha }}" ]; then
                       echo "Tag ${release_tag} already exists remotely and points to the expected commit, reusing it."
                     else
