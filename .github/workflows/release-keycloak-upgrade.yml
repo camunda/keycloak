@@ -56,6 +56,8 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+              with:
+                  fetch-depth: 0
 
             - name: Create GitHub Release
               env:
@@ -70,6 +72,16 @@ jobs:
                     "[.[] | select(.createdAt | startswith(\"${today}\")) | .tagName | ltrimstr(\"${today}-\") | tonumber] | max // 0")
 
                   release_tag="${today}-$(printf '%03d' $((last_number + 1)))"
+
+                  # Verify there are commits since the last release
+                  last_tag=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // empty')
+                  if [ -n "${last_tag}" ]; then
+                    commit_count=$(git rev-list --count "${last_tag}..HEAD" 2>/dev/null || echo "0")
+                    if [ "${commit_count}" -eq 0 ]; then
+                      echo "No new commits since last release ${last_tag}, skipping."
+                      exit 0
+                    fi
+                  fi
 
                   # Create and push the tag via git to bypass API tag creation restrictions
                   git tag "${release_tag}" "${{ github.sha }}"
