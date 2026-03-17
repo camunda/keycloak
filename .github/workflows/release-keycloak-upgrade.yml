@@ -115,26 +115,25 @@ jobs:
                     fi
                   fi
 
-                  # If the tag already exists remotely (e.g. partial failure rerun), verify it points to the expected commit
+                  # If the tag already exists without a release (e.g. partial failure rerun), verify it points to the expected commit
                   if remote_tag_sha=$(gh api "repos/${{ github.repository }}/git/ref/tags/${release_tag}" --jq '.object.sha' 2>/dev/null); then
-                    if [ "${remote_tag_sha}" = "${{ github.sha }}" ]; then
-                      echo "Tag ${release_tag} already exists remotely and points to the expected commit, reusing it."
-                    else
+                    if [ "${remote_tag_sha}" != "${{ github.sha }}" ]; then
                       echo "::error::Tag ${release_tag} exists remotely but points to ${remote_tag_sha}, expected ${{ github.sha }}."
                       exit 1
                     fi
+                    echo "Tag ${release_tag} already exists remotely and points to the expected commit, reusing it."
+                    # Create the release from the existing tag
+                    gh release create "${release_tag}" \
+                      --title "${release_tag}" \
+                      --generate-notes \
+                      --verify-tag
                   else
-                    # Create tag via GitHub API to bypass repository ruleset restrictions on git push
-                    gh api "repos/${{ github.repository }}/git/refs" \
-                      -f "ref=refs/tags/${release_tag}" \
-                      -f "sha=${{ github.sha }}"
+                    # Let gh release create handle tag creation via the Releases API
+                    gh release create "${release_tag}" \
+                      --title "${release_tag}" \
+                      --generate-notes \
+                      --target "${{ github.sha }}"
                   fi
-
-                  # Create the release from the existing tag
-                  gh release create "${release_tag}" \
-                    --title "${release_tag}" \
-                    --generate-notes \
-                    --verify-tag
 
     report-failure:
         name: Report failures
