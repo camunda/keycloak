@@ -67,25 +67,49 @@ jobs:
 
                   today="$(date -u +'%Y-%m-%d')"
 
-                  # Find the next incremental number for today's releases
-                  last_number=$(gh release list --json tagName,createdAt --jq \
+                  # Find the next unused tag for today, considering both releases and remote tags
+                  next_number=1
+                  # Account for existing releases
+                  last_release_number=$(gh release list --json tagName,createdAt --jq \
                     "[.[] | select(.createdAt | startswith(\"${today}\")) | .tagName | ltrimstr(\"${today}-\") | tonumber] | max // 0")
+                  if [ "${last_release_number}" -ge "${next_number}" ]; then
+                    next_number=$((last_release_number + 1))
+                  fi
+                  # Account for existing remote tags (e.g. from partial failures that pushed a tag but didn't create a release)
+                  existing_tags=$(git ls-remote --tags origin "refs/tags/${today}-*" | awk '{print $2}' | sed 's|refs/tags/||')
+                  for tag in ${existing_tags}; do
+                    tag_number=$(echo "${tag}" | sed "s/${today}-//" | sed 's/^0*//' )
+                    tag_number=${tag_number:-0}
+                    if [ "${tag_number}" -ge "${next_number}" ]; then
+                      next_number=$((tag_number + 1))
+                    fi
+                  done
 
-                  release_tag="${today}-$(printf '%03d' $((last_number + 1)))"
+                  release_tag="${today}-$(printf '%03d' "${next_number}")"
 
                   # Verify there are commits since the last release
                   last_tag=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // empty')
                   if [ -n "${last_tag}" ]; then
-                    commit_count=$(git rev-list --count "${last_tag}..HEAD" 2>/dev/null || echo "0")
+                    if ! git rev-parse --verify "${last_tag}^{commit}" >/dev/null 2>&1; then
+                      echo "::error::Last release tag ${last_tag} not found locally. Ensure fetch-depth: 0 is set."
+                      exit 1
+                    fi
+                    commit_count=$(git rev-list --count "${last_tag}..HEAD")
                     if [ "${commit_count}" -eq 0 ]; then
                       echo "No new commits since last release ${last_tag}, skipping."
                       exit 0
                     fi
                   fi
 
-                  # If the tag already exists remotely (e.g. partial failure rerun), skip tag creation
-                  if git ls-remote --tags origin "refs/tags/${release_tag}" | grep -q "${release_tag}"; then
-                    echo "Tag ${release_tag} already exists remotely, reusing it."
+                  # If the tag already exists remotely (e.g. partial failure rerun), verify it points to the expected commit
+                  remote_tag_sha=$(git ls-remote --tags origin "refs/tags/${release_tag}" | awk '{print $1}')
+                  if [ -n "${remote_tag_sha}" ]; then
+                    if [ "${remote_tag_sha}" = "${{ github.sha }}" ]; then
+                      echo "Tag ${release_tag} already exists remotely and points to the expected commit, reusing it."
+                    else
+                      echo "::error::Tag ${release_tag} exists remotely but points to ${remote_tag_sha}, expected ${{ github.sha }}."
+                      exit 1
+                    fi
                   else
                     git tag "${release_tag}" "${{ github.sha }}"
                     git push origin "${release_tag}"
