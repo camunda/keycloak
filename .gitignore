@@ -64,4 +64,7 @@ gradle-app.setting
 # VsCode
 .vscode/settings.json
 
+# actionlint binary
+actionlint
+
 # End of https://www.toptal.com/developers/gitignore/api/macos,gradle
