@@ -333,8 +333,8 @@ jobs:
                       secret/data/products/infrastructure-experience/ci/common MACHINE_PWD;
                       secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
 
-                      secret/data/products/infrastructure-experience/ci/common AURORA_POSTGRESQL_PASSWORD | postgres_superuser_password;
-                      secret/data/products/infrastructure-experience/ci/common AURORA_POSTGRESQL_USERNAME | postgres_superuser;
+                      secret/data/products/infrastructure-experience/aurorapg AURORA_POSTGRESQL_PASSWORD | postgres_superuser_password;
+                      secret/data/products/infrastructure-experience/aurorapg AURORA_POSTGRESQL_USERNAME | postgres_superuser;
 
                       secret/data/products/infrastructure-experience/ci/common DOCKERHUB_USER;
                       secret/data/products/infrastructure-experience/ci/common DOCKERHUB_PASSWORD;
