@@ -59,10 +59,7 @@ services:
         healthcheck:
             test:
                 - CMD-SHELL
-                - >
-                  exec 3<>/dev/tcp/127.0.0.1/8080 &&
-                  echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 &&
-                  timeout 5 cat <&3 | grep -q '200 OK'
+                - curl -fsS http://127.0.0.1:8080/health/ready > /dev/null
             interval: 15s
             timeout: 15s
             retries: 15
