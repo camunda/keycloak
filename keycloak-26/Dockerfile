@@ -79,7 +79,6 @@ USER keycloak
       # cpu and ram allocation reference: https://www.keycloak.org/high-availability/multi-cluster/concepts-memory-and-cpu-sizing
       # the following labels are generated at buildtime - see https://github.com/docker/metadata-action
       # org.opencontainers.image.title
-      # org.opencontainers.image.description
       # org.opencontainers.image.url
       # org.opencontainers.image.created
       # org.opencontainers.image.revision
@@ -91,6 +90,7 @@ LABEL maintainer="Camunda" \
       io.k8s.description="Keycloak bitnami with AWS wrapper." \
       io.k8s.display-name="keycloak-bitnami" \
       description="Keycloak bitnami with AWS JDBC wrapper." \
+      org.opencontainers.image.description="Camunda's Keycloak Docker image: AWS-wrapped and PostgreSQL-compatible" \
       jdbc.aws-jdbc-wrapper.version="${AWS_JDBC_WRAPPER_VERSION}" \
       org.opencontainers.image.authors="Camunda" \
       org.opencontainers.image.vendor="Camunda" \
