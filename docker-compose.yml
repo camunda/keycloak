@@ -57,10 +57,13 @@ services:
             AWS_WEB_IDENTITY_TOKEN_FILE: ${AWS_WEB_IDENTITY_TOKEN_FILE:-}
 
         healthcheck:
-            test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1
+            test:
+                - CMD-SHELL
+                - curl -fsS http://127.0.0.1:9000/health/ready > /dev/null 2>&1 || curl -fsS http://127.0.0.1:8080/health/ready > /dev/null 2>&1
             interval: 15s
-            timeout: 5s
-            retries: 5
+            timeout: 15s
+            retries: 15
+            start_period: 30s
         ports:
             - 8080:8080
         depends_on:
