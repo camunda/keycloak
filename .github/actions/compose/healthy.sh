@@ -1,18 +1,19 @@
 #!/bin/bash
 
-# docker compose --> v2 (GA)
-# docker-compose --> v1 (missing some newer flags)
-# Edge case; Self-hosted runners don't support "docker compose" yet even though on v2
-VERSION=$(docker-compose version --short)
-
-if [[ "$VERSION" =~ ^1\.[0-9]+\.[0-9]+ || -z "${VERSION}" ]]; then
-    # if docker-compose is v1, we're setting it to docker compose, which should be v2
-    echo "Deteceted v1, setting to v2"
-    DOCKER_COMMAND="docker compose -f ${FILE} ${COMPOSE_FLAGS}"
+# docker compose --> v2 (GA, plugin)
+# docker-compose --> v1/v2 (standalone binary, may not be installed)
+if command -v docker-compose &>/dev/null; then
+    VERSION=$(docker-compose version --short 2>/dev/null)
+    if [[ "$VERSION" =~ ^1\.[0-9]+\.[0-9]+ ]]; then
+        echo "Detected docker-compose v1, using docker compose (v2 plugin)"
+        DOCKER_COMMAND="docker compose -f ${FILE} ${COMPOSE_FLAGS}"
+    else
+        echo "Detected docker-compose v2"
+        DOCKER_COMMAND="docker-compose -f ${FILE} ${COMPOSE_FLAGS}"
+    fi
 else
-    # e.g. locally or on self-hosted runners docker-compose can be v2
-    echo "Detected v2"
-    DOCKER_COMMAND="docker-compose -f ${FILE} ${COMPOSE_FLAGS}"
+    echo "docker-compose not found, using docker compose (v2 plugin)"
+    DOCKER_COMMAND="docker compose -f ${FILE} ${COMPOSE_FLAGS}"
 fi
 
 eval $DOCKER_COMMAND ps
