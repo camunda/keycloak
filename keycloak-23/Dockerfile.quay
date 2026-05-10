@@ -9,10 +9,10 @@ ARG BASE_IMAGE_TAG=""
 ARG BASE_IMAGE_DIGEST=""
 
 # We use the identity image to copy the keycloak theme
-FROM docker.io/camunda/identity:latest@sha256:e87d39ee2e7dd60d19bcf5850f6f9fab858280d8634e3633410b5396a9838829 AS identity
+FROM docker.io/camunda/identity:latest@sha256:3f7dde6694666095d676845842b54327179cd4f215b79be471d45d623239fbc8 AS identity
 
 # see https://www.keycloak.org/server/containers#_installing_additional_rpm_packages
-FROM docker.io/almalinux:minimal@sha256:11fb643aaf8c78182a378ae0c7d2b3161ad8fbb9cc4b9fd4c917bbcd80f50cb4 AS minimal-build
+FROM docker.io/almalinux:minimal@sha256:0a5031f14cddcb70dd8ebdfed2e0cb5a56242653f50d430cbe083554a1154387 AS minimal-build
 
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
