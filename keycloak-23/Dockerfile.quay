@@ -12,7 +12,7 @@ ARG BASE_IMAGE_DIGEST=""
 FROM docker.io/camunda/identity:latest@sha256:3f7dde6694666095d676845842b54327179cd4f215b79be471d45d623239fbc8 AS identity
 
 # see https://www.keycloak.org/server/containers#_installing_additional_rpm_packages
-FROM docker.io/almalinux:minimal@sha256:0a5031f14cddcb70dd8ebdfed2e0cb5a56242653f50d430cbe083554a1154387 AS minimal-build
+FROM docker.io/almalinux:minimal@sha256:1843302c3d8256e51225513c0452938e57f80af025f1553ad7e2ddbb30a7931c AS minimal-build
 
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
 ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
