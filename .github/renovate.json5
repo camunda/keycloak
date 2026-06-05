@@ -76,7 +76,9 @@
       "enabled": true,
       "addLabels": ["dependencies", "docker"],
       // Same daily-update override as the bases.yml rule so CVE patches in the
-      // Keycloak Dockerfiles are not held back to Sundays by the shared preset.
+      // keycloak-*/Dockerfile files are not held back to Sundays by the shared
+      // preset. This rule only matches the exact keycloak-*/Dockerfile path via
+      // matchFileNames (Dockerfile.quay and other variants are not in scope).
       "schedule": ["at any time"],
     },
     {
