@@ -88,6 +88,20 @@
       "matchUpdateTypes": ["major"],
       "enabled": false,
     },
+    // The check-changes job of release-keycloak-upgrade triggers on any
+    // keycloak-*/Dockerfile* change (it greps the `Dockerfile` prefix, so
+    // Dockerfile.quay is included). Ensure digest/pin/patch updates in ALL of
+    // those files (e.g. the almalinux base OS and identity theme layers in
+    // Dockerfile.quay) are detected daily too, instead of the Sundays-only
+    // schedule from the shared preset. Schedule-only override: versioning and
+    // grouping for the plain Dockerfile are handled by the dedicated rule above.
+    {
+      "matchManagers": ["dockerfile"],
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["keycloak-*/Dockerfile*"],
+      "matchUpdateTypes": ["pin", "digest", "patch"],
+      "schedule": ["at any time"],
+    },
   ],
   hostRules: [
     {
