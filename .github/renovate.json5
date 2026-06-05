@@ -35,6 +35,10 @@
       "enabled": true,
       "addLabels": ["dependencies", "docker"],
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      // Override the shared preset which restricts patch/pin/digest updates to Sundays.
+      // Keycloak base image CVE patches must be picked up daily so the daily
+      // release-keycloak-upgrade workflow can publish them promptly.
+      "schedule": ["at any time"],
     },
     {
       "matchManagers": ["helm-values"],
@@ -71,6 +75,11 @@
       "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(:?-(?<compatibility>.+)(?<build>\\d+)-r(?<revision>\\d+))?$",
       "enabled": true,
       "addLabels": ["dependencies", "docker"],
+      // Same daily-update override as the bases.yml rule so CVE patches in the
+      // keycloak-*/Dockerfile files are not held back to Sundays by the shared
+      // preset. This rule only matches the exact keycloak-*/Dockerfile path via
+      // matchFileNames (Dockerfile.quay and other variants are not in scope).
+      "schedule": ["at any time"],
     },
     {
       "matchManagers": ["dockerfile"],
@@ -78,6 +87,20 @@
       "matchFileNames": ["keycloak-*/Dockerfile"],
       "matchUpdateTypes": ["major"],
       "enabled": false,
+    },
+    // The check-changes job of release-keycloak-upgrade triggers on any
+    // keycloak-*/Dockerfile* change (it greps the `Dockerfile` prefix, so
+    // Dockerfile.quay is included). Ensure digest/pin/patch updates in ALL of
+    // those files (e.g. the almalinux base OS and identity theme layers in
+    // Dockerfile.quay) are detected daily too, instead of the Sundays-only
+    // schedule from the shared preset. Schedule-only override: versioning and
+    // grouping for the plain Dockerfile are handled by the dedicated rule above.
+    {
+      "matchManagers": ["dockerfile"],
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["keycloak-*/Dockerfile*"],
+      "matchUpdateTypes": ["pin", "digest", "patch"],
+      "schedule": ["at any time"],
     },
   ],
   hostRules: [
