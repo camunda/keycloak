@@ -1,11 +1,13 @@
 ---
-# desc: create a GitHub release when Keycloak versions are upgraded by Renovate
+# desc: create a daily GitHub release when Keycloak base images change (e.g. CVE patches picked up by Renovate)
 name: release-keycloak-upgrade
 
 on:
     workflow_dispatch:
     schedule:
-        - cron: 0 8 * * 1
+        # Daily so CVE patches landing in keycloak-*/bases.yml or Dockerfile* are released promptly.
+        # The check-changes job guards against empty releases on days with no relevant change.
+        - cron: 0 8 * * *
 
 # Scheduled workflows run on the default branch only.
 # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
