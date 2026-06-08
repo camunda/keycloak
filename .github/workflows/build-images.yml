@@ -50,7 +50,7 @@ jobs:
             matrix_keycloak_versions: ${{ steps.set-matrix.outputs.matrix_keycloak_versions }}
         steps:
             - name: Checkout
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
             - name: List Keycloak Versions from repository's folders
               id: set-matrix
@@ -83,7 +83,7 @@ jobs:
                 keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
         steps:
             - name: Checkout
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
             - name: Install asdf tools with cache
               uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@ce8f360e366f900378c3d1531d1f278f3789f04b # 1.7.0
@@ -144,7 +144,7 @@ jobs:
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@0bdd5244414ef8e570fd279b2e97309fcd5ff313 # main
+              uses: camunda/infra-global-github-actions/build-docker-image@b4808875a583e71eff5b3dd07bb50dafb92694a6 # main
               with:
                   registry_host: ${{ env.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -208,7 +208,7 @@ jobs:
                 keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
         steps:
             - name: Checkout
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
             - name: Install asdf tools with cache
               uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@ce8f360e366f900378c3d1531d1f278f3789f04b # 1.7.0
@@ -295,7 +295,7 @@ jobs:
             - read-build-image-output
         steps:
             - name: Checkout
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
             - name: Install build-essentials for asdf
               run: |
@@ -570,10 +570,10 @@ jobs:
             - test-base-image
         steps:
             - name: Checkout
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+              uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
             - name: Install if required common software tooling
-              uses: camunda/infra-global-github-actions/common-tooling@0bdd5244414ef8e570fd279b2e97309fcd5ff313 # main
+              uses: camunda/infra-global-github-actions/common-tooling@b4808875a583e71eff5b3dd07bb50dafb92694a6 # main
               with:
                   node-enabled: false
                   java-enabled: false
@@ -758,7 +758,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Retrigger job
-              uses: camunda/infra-global-github-actions/rerun-failed-run@0bdd5244414ef8e570fd279b2e97309fcd5ff313 # main
+              uses: camunda/infra-global-github-actions/rerun-failed-run@b4808875a583e71eff5b3dd07bb50dafb92694a6 # main
               with:
                   error-messages: |
                       lost communication with the server
