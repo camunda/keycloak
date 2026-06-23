@@ -65,6 +65,17 @@
       "matchFileNames": ["keycloak-*/bases.yml"],
       "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(-(?<compatibility>debian-\\d+)-r(?<build>\\d+))?$",
     },
+    // The vendor-ee/keycloak (prem) base image is sourced from the
+    // bitnami-keycloak-camunda custom datasource (see customManagers below): the
+    // complete upstream tag list published by camunda-deployment-references, with
+    // no registry.camunda.cloud credentials needed. Disable the docker/helm-values
+    // tracking for it so it is not bumped twice.
+    {
+      "matchManagers": ["helm-values"],
+      "matchPackageNames": ["registry.camunda.cloud/vendor-ee/keycloak"],
+      "matchFileNames": ["keycloak-*/bases.yml"],
+      "enabled": false,
+    },
     // this applies the same mechanism but to Dockerfile (e.g. identity which uses latest)
     {
       "matchManagers": ["dockerfile"],
@@ -101,6 +112,24 @@
       "matchFileNames": ["keycloak-*/Dockerfile*"],
       "matchUpdateTypes": ["pin", "digest", "patch"],
       "schedule": ["at any time"],
+    },
+  ],
+  customManagers: [
+    {
+      // Source the Bitnami Premium Keycloak base image (vendor-ee) from the
+      // bitnami-keycloak-camunda custom datasource (defined in
+      // camunda/infraex-common-config, inherited via `extends`): the complete
+      // upstream tag list published by camunda-deployment-references, including
+      // tags from before the November 2025 vendor migration, with no registry
+      // credentials required. The feed exposes newDigest, so the @sha256 stays pinned.
+      customType: 'regex',
+      managerFilePatterns: ['/keycloak-.*/bases\\.ya?ml$/'],
+      matchStrings: [
+        'repository: registry\\.camunda\\.cloud/vendor-ee/keycloak\\s+tag: (?<currentValue>[^@\\s]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?',
+      ],
+      depNameTemplate: 'keycloak',
+      datasourceTemplate: 'custom.bitnami-keycloak-camunda',
+      versioningTemplate: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(-(?<compatibility>debian-\\d+)-r(?<build>\\d+))?$',
     },
   ],
   hostRules: [
