@@ -22,7 +22,7 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        '/(^|/)Dockerfile[^/]*$/',
+        '/(^|/)keycloak-[^/]+/Dockerfile[^/]*$/',
       ],
       "matchStrings": [
         '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( versioning=(?<versioning>\\S+))?\\s+ARG \\w+?_VERSION=(?<currentValue>\\S+)',
