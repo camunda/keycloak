@@ -95,10 +95,10 @@ def main():
         success = check_bitnami_config(args.image_name)
 
     if success:
-        print(f"✅ All required AWS components found in {args.image_type} image")
+        print(f"✅ Provider/config check passed for {args.image_type} image")
         sys.exit(0)
     else:
-        print(f"❌ Some required AWS components missing in {args.image_type} image")
+        print(f"❌ Provider/config check failed for {args.image_type} image (missing required or forbidden component present)")
         sys.exit(1)
 
 if __name__ == "__main__":
