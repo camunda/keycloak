@@ -25,13 +25,23 @@ RUN microdnf install -y maven && \
 # Create directories and download dependencies
 RUN mkdir -p /opt/keycloak/providers /opt/keycloak/themes/identity
 
-# Download and process Maven dependencies
+# Download and process Maven dependencies.
+#
+# The AWS Advanced JDBC Wrapper transitively pulls in the AWS SDK asynchronous HTTP client
+# (software.amazon.awssdk:netty-nio-client) and its Netty stack. Keycloak already bundles a
+# Vert.x-aligned Netty under /opt/keycloak/lib; this older copy in /opt/keycloak/providers
+# shadows it and breaks HTTP/2 cleartext (H2C) upgrades at runtime with
+# "NoSuchMethodError ...AbstractHttp2ConnectionHandlerBuilder". The wrapper only uses the
+# synchronous apache-client, so these Netty jars are unused and are removed to keep the
+# bundled, version-aligned Netty on the classpath.
+# See https://github.com/camunda/camunda-deployment-references/issues/2809
 # hadolint ignore=DL3003
 RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" \
     -o /tmp/pom.xml && \
     mkdir -p /tmp/.m2 && \
     cd /tmp && mvn -f pom.xml -Dmaven.repo.local=/tmp/.m2/repository dependency:copy-dependencies -DoutputDirectory=/opt/keycloak/providers && \
     cp /tmp/.m2/repository/software/amazon/*/*/*/*.jar /opt/keycloak/providers/ && \
+    rm -f /opt/keycloak/providers/netty-*.jar && \
     curl -fL "https://github.com/aws/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" \
     -o /opt/keycloak/providers/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar
 

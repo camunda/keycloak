@@ -10,6 +10,15 @@ REQUIRED_AWS_COMPONENTS = [
     "apache-client"
 ]
 
+# Components that must NOT ship in the Quay optimized providers directory.
+# The AWS SDK pulls in its own (older) Netty through netty-nio-client; if it lands in
+# /opt/keycloak/providers it shadows Keycloak's bundled, Vert.x-aligned Netty and breaks
+# HTTP/2 cleartext (H2C) upgrades at runtime with a NoSuchMethodError.
+# See https://github.com/camunda/camunda-deployment-references/issues/2809
+FORBIDDEN_QUAY_PROVIDERS = [
+    "netty"
+]
+
 def run_docker_command(image_name, command):
     """Run a docker command and return the output"""
     try:
@@ -40,6 +49,14 @@ def check_quay_providers(image_name):
         else:
             print(f"❌ {component} not found")
             all_found = False
+
+    # Ensure no conflicting components leaked into the providers directory
+    for component in FORBIDDEN_QUAY_PROVIDERS:
+        if component in output:
+            print(f"❌ forbidden component '{component}' found in providers (must be removed)")
+            all_found = False
+        else:
+            print(f"✅ {component} correctly absent")
 
     return all_found
 
