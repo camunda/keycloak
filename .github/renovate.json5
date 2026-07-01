@@ -14,6 +14,21 @@
       '/(^|/)bases\\.ya?ml$/',
     ],
   },
+  // The shared infraex-common-config customManager reads `# renovate:` annotations in
+  // yaml/sh/go/tf/tool-versions/justfile but NOT Dockerfiles, so annotated ARGs such as
+  // AWS_JDBC_WRAPPER_VERSION were never picked up and stayed frozen at their initial value.
+  // This repo-local customManager covers keycloak-*/Dockerfile* so those ARGs are tracked.
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        '/(^|/)Dockerfile[^/]*$/',
+      ],
+      "matchStrings": [
+        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( versioning=(?<versioning>\\S+))?\\s+ARG \\w+?_VERSION=(?<currentValue>\\S+)',
+      ],
+    },
+  ],
   "separateMajorMinor": true,
   "packageRules": [
     {
