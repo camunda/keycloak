@@ -16,7 +16,7 @@ FROM docker.io/camunda/identity:latest@sha256:21af2b5ffe2792ed035f6fa13238313369
 FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST} AS builder
 
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
-ARG AWS_JDBC_WRAPPER_VERSION=2.6.8
+ARG AWS_JDBC_WRAPPER_VERSION=4.1.0
 
 USER 0
 
@@ -59,7 +59,7 @@ ARG BASE_IMAGE_TAG
 ARG BASE_IMAGE_DIGEST
 
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
-ARG AWS_JDBC_WRAPPER_VERSION=2.6.8
+ARG AWS_JDBC_WRAPPER_VERSION=4.1.0
 
 # Copy the previously built aws jdbc drivers
 COPY --chown=keycloak:keycloak --from=builder /opt/bitnami/keycloak/ /opt/bitnami/keycloak/
