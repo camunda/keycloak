@@ -40,7 +40,7 @@ Based on the [Bitnami Legacy Keycloak image](https://hub.docker.com/r/bitnamileg
 ### 🏢 Bitnami Enterprise Images (`registry.camunda.cloud/keycloak-ee/keycloak:bitnami-ee-*`)
 Premium enterprise-grade images based on Bitnami's enterprise edition. They use the `bitnami-ee-` prefix in their tags and are available on the Camunda enterprise registry for licensed customers. For backward compatibility, these images are also available without the prefix in their own registry.
 
-All variants include the same AWS JDBC wrapper and Camunda Identity theme functionality.
+All variants include the AWS JDBC wrapper and the Camunda Identity theme functionality. Note that the wrapper version differs across variants: the deprecated Bitnami images are frozen at `2.6.8`, while the Quay images track newer releases.
 
 ## Getting Started
 
