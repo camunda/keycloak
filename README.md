@@ -35,7 +35,7 @@ Pre-built configuration variant of Quay-based images with optimized startup time
 ### 🐳 Bitnami-based Images (`docker.io/camunda/keycloak:bitnami-*`)
 Based on the [Bitnami Legacy Keycloak image](https://hub.docker.com/r/bitnamilegacy/keycloak), these images use Bitnami's environment variable conventions and are well-suited for users already familiar with Bitnami's ecosystem. They use the `bitnami-` prefix in their tags and are publicly available on Docker Hub. For backward compatibility, these images are also available without the prefix.
 
-**Note**: These images are based on `bitnamilegacy` repository and receive no further updates from Bitnami. Consider migrating to Quay-based images for production use.
+**Note**: These images are based on `bitnamilegacy` repository and receive no further updates from Bitnami. Their bundled AWS Advanced JDBC Wrapper is frozen at `2.3.9` and is no longer tracked by Renovate. Migrate to the Quay-based images for continued updates (including newer AWS Advanced JDBC Wrapper versions).
 
 ### 🏢 Bitnami Enterprise Images (`registry.camunda.cloud/keycloak-ee/keycloak:bitnami-ee-*`)
 Premium enterprise-grade images based on Bitnami's enterprise edition. They use the `bitnami-ee-` prefix in their tags and are available on the Camunda enterprise registry for licensed customers. For backward compatibility, these images are also available without the prefix in their own registry.
