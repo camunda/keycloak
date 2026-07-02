@@ -15,7 +15,7 @@ FROM docker.io/camunda/identity:latest@sha256:21af2b5ffe2792ed035f6fa13238313369
 FROM docker.io/almalinux:minimal@sha256:bafd259fb7b0475eed28376ddddea19f209e24efafc9eb21f4e9d5ed9825d2ef AS minimal-build
 
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
-ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
+ARG AWS_JDBC_WRAPPER_VERSION=2.6.8
 
 # Install required packages for building
 # hadolint ignore=DL3041
@@ -48,7 +48,7 @@ ARG BASE_IMAGE_TAG
 ARG BASE_IMAGE_DIGEST
 
 # renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
-ARG AWS_JDBC_WRAPPER_VERSION=2.3.9
+ARG AWS_JDBC_WRAPPER_VERSION=2.6.8
 
 # Copy the AWS JDBC drivers and theme from minimal-build stage
 COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/providers/ /opt/keycloak/providers/
