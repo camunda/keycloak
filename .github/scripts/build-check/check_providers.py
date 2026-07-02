@@ -3,12 +3,28 @@ import sys
 import subprocess
 import argparse
 
-# Required AWS components that must be present in all Keycloak images
+# Required AWS components that must be present in all Keycloak images.
+# Each entry is a group of acceptable names; at least one member must be present.
+# The AWS SDK renamed its synchronous HTTP client module `apache-client` ->
+# `apache5-client` (Apache HTTP 5.x) in newer releases, so both names are accepted.
 REQUIRED_AWS_COMPONENTS = [
-    "aws-advanced-jdbc-wrapper",
-    "sts",
-    "apache-client"
+    ["aws-advanced-jdbc-wrapper"],
+    ["sts"],
+    ["apache-client", "apache5-client"],
 ]
+
+
+def check_required_components(output, suffix=""):
+    """Return True if every required component group has a member present in output."""
+    all_found = True
+    for aliases in REQUIRED_AWS_COMPONENTS:
+        present = next((alias for alias in aliases if alias in output), None)
+        if present is not None:
+            print(f"✅ {present} found{suffix}")
+        else:
+            print(f"❌ {' / '.join(aliases)} not found{suffix}")
+            all_found = False
+    return all_found
 
 def run_docker_command(image_name, command):
     """Run a docker command and return the output"""
@@ -32,16 +48,7 @@ def check_quay_providers(image_name):
 
     print(f"Providers directory contents:\n{output}")
 
-    # Check for required components
-    all_found = True
-    for component in REQUIRED_AWS_COMPONENTS:
-        if component in output:
-            print(f"✅ {component} found")
-        else:
-            print(f"❌ {component} not found")
-            all_found = False
-
-    return all_found
+    return check_required_components(output)
 
 def check_bitnami_config(image_name):
     """Check configuration for Bitnami images using show-config"""
@@ -54,16 +61,7 @@ def check_bitnami_config(image_name):
 
     print(f"Keycloak configuration:\n{output}")
 
-    # Check for required components in config
-    all_found = True
-    for component in REQUIRED_AWS_COMPONENTS:
-        if component in output:
-            print(f"✅ {component} found in config")
-        else:
-            print(f"❌ {component} not found in config")
-            all_found = False
-
-    return all_found
+    return check_required_components(output, " in config")
 
 def main():
     parser = argparse.ArgumentParser(description='Check Keycloak image providers/configuration')
