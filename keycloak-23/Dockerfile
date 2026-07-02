@@ -8,6 +8,15 @@ ARG BASE_IMAGE_NAME=""
 ARG BASE_IMAGE_TAG=""
 ARG BASE_IMAGE_DIGEST=""
 
+# ============================================================================
+# DEPRECATED - Bitnami-based Keycloak image
+# The upstream Bitnami base has moved to docker.io/bitnamilegacy and receives no
+# further updates (see README). This variant is frozen: its AWS Advanced JDBC
+# Wrapper stays at 2.6.8 (the last 2.x release) and is no longer tracked by Renovate.
+# Use the Quay-based
+# image (Dockerfile.quay) for continued updates, including newer wrapper versions.
+# ============================================================================
+
 # We use the identity image to copy the keycloak theme
 FROM docker.io/camunda/identity:latest@sha256:21af2b5ffe2792ed035f6fa1323831336965a0e1c1146159c557d10ac5a68f26 AS identity
 
@@ -15,7 +24,8 @@ FROM docker.io/camunda/identity:latest@sha256:21af2b5ffe2792ed035f6fa13238313369
 # hadolint ignore=DL3006
 FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST} AS builder
 
-# renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
+# AWS Advanced JDBC Wrapper is frozen for this deprecated image (see banner above);
+# it is intentionally not tracked by Renovate.
 ARG AWS_JDBC_WRAPPER_VERSION=2.6.8
 
 USER 0
@@ -61,7 +71,8 @@ ARG BASE_IMAGE_NAME
 ARG BASE_IMAGE_TAG
 ARG BASE_IMAGE_DIGEST
 
-# renovate: datasource=github-tags depName=aws/aws-advanced-jdbc-wrapper
+# AWS Advanced JDBC Wrapper is frozen for this deprecated image (see banner above);
+# it is intentionally not tracked by Renovate.
 ARG AWS_JDBC_WRAPPER_VERSION=2.6.8
 
 # Copy the previously built aws jdbc drivers
