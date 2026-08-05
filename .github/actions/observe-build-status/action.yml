@@ -34,8 +34,8 @@ runs:
     steps:
         - name: Import Secrets
           id: secrets
-    # Composite actions cannot access the secrets context directly; callers must
-    # pass vault config as inputs so they resolve correctly here via inputs.*.
+          # Composite actions cannot access the secrets context directly; callers must
+          # pass vault config as inputs so they resolve correctly here via inputs.*.
           continue-on-error: true
           uses: hashicorp/vault-action@v4.0.0
           if: |
@@ -57,7 +57,7 @@ runs:
           shell: bash
           run: echo "::warning::Not sending any CI health metrics since no access to GHA secrets!"
 
-  ######################## Calculate build duration #########################
+        ######################## Calculate build duration #########################
         - name: Get build duration in milliseconds
           id: get-build-duration-millis
           if: ${{ steps.secrets.outputs.gcloud_sa_key != '' }}
@@ -80,7 +80,7 @@ runs:
                 echo "result=" >> $GITHUB_OUTPUT
               fi
 
-  ######################## Report build result #############################
+        ######################## Report build result #############################
         - uses: camunda/infra-global-github-actions/submit-build-status@main
           if: ${{ always() && steps.secrets.outputs.gcloud_sa_key != '' }}
           with:
