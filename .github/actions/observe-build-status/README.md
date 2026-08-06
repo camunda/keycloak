@@ -17,6 +17,7 @@ Records the build status remotely for analytic purposes
 | `secret_vault_jwt_role` | <p>Vault JWT auth role</p> | `false` | `""` |
 | `secret_vault_jwt_audience` | <p>Vault JWT GitHub audience</p> | `false` | `""` |
 
+
 ## Runs
 
 This action is a `composite` action.
@@ -27,7 +28,7 @@ This action is a `composite` action.
 - uses: ./.github/actions/observe-build-status
   with:
     build_status:
-    # The status of the job, one of: success, failure, aborted, cancelled
+    # The status of the job, one of: success, failure, cancelled
     #
     # Required: true
     # Default: ""
