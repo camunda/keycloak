@@ -8,7 +8,7 @@ Records the build status remotely for analytic purposes
 
 | name | description | required | default |
 | --- | --- | --- | --- |
-| `build_status` | <p>The status of the job, one of: success, failure, aborted, cancelled</p> | `true` | `""` |
+| `build_status` | <p>The status of the job, one of: success, failure, cancelled</p> | `true` | `""` |
 | `user_reason` | <p>Optional string (200 chars max) the user can submit to indicate the reason why a build ended with a certain status.</p> | `false` | `""` |
 | `user_description` | <p>Optional string (200 chars max) for the build entry.</p> | `false` | `""` |
 | `job_name` | <p>Optional string, the job whose status is being observed; defaults to $GITHUB_JOB when omitted</p> | `false` | `""` |
