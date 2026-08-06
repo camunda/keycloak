@@ -50,7 +50,7 @@ runs:
               jwtGithubAudience: ${{ inputs.secret_vault_jwt_audience }}
               exportEnv: false # we rely on step outputs, no need for environment variables
               secrets: |
-                  secret/data/products/infra/ci/ci-analytics gcloud_sa_key;
+                  secret/data/products/infrastructure-experience/ci/ci-analytics gcloud_sa_key;
 
         - name: Check secrets availability
           if: ${{ steps.secrets.outputs.gcloud_sa_key == '' }}
