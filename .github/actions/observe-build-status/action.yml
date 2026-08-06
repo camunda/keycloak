@@ -37,7 +37,7 @@ runs:
           # Composite actions cannot access the secrets context directly; callers must
           # pass vault config as inputs so they resolve correctly here via inputs.*.
           continue-on-error: true
-          uses: hashicorp/vault-action@v4.0.0
+          uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4.0.0
           if: |
               inputs.secret_vault_address != ''
               && inputs.secret_vault_jwt_path != ''
@@ -63,28 +63,31 @@ runs:
           if: ${{ steps.secrets.outputs.gcloud_sa_key != '' }}
           shell: bash
           run: |
-              # Prefer the start-build-monitor PID file mtime as the job-start anchor;
-              # fall back to the action directory mtime (roughly checkout time) if absent.
-              if [ -f /tmp/_monitor-start.pid ]; then
-                start=$(date -r /tmp/_monitor-start.pid +"%s")
-              else
-                start=$(date -r "$GITHUB_ACTION_PATH" +"%s")
+              set -euo pipefail
+
+              if [ ! -f /tmp/_monitor-start.pid ]; then
+                echo "::warning::Not sending build duration because start-build-monitor did not create /tmp/_monitor-start.pid."
+                echo "result=" >> "$GITHUB_OUTPUT"
+                exit 0
               fi
+
+              start=$(date -r /tmp/_monitor-start.pid +"%s")
               now=$(date +'%s')
               duration=$(( now - start ))
 
               # only submit plausible durations between 0 and 72 hours
               if (( duration >= 0 && duration <= 259200 )); then
-                echo "result=$(( duration * 1000 ))" >> $GITHUB_OUTPUT
+                echo "result=$(( duration * 1000 ))" >> "$GITHUB_OUTPUT"
               else
-                echo "result=" >> $GITHUB_OUTPUT
+                echo "::warning::Not sending build duration because the calculated duration is outside the expected range."
+                echo "result=" >> "$GITHUB_OUTPUT"
               fi
 
         ######################## Report build result #############################
-        - uses: camunda/infra-global-github-actions/submit-build-status@main
+        - uses: camunda/infra-global-github-actions/submit-build-status@e6bf8b7ee0c9ce3e851c0be09fef57c4f4d647db # main
           if: ${{ always() && steps.secrets.outputs.gcloud_sa_key != '' }}
           with:
-              job_name_override: ${{ inputs.job_name || github.job }}
+              job_name_override: ${{ inputs.job_name }}
               build_status: ${{ inputs.build_status }}
               build_duration_millis: ${{ steps.get-build-duration-millis.outputs.result }}
               user_reason: ${{ inputs.user_reason }}
