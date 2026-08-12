@@ -37,6 +37,12 @@ RUN mkdir /home/keycloak && chown keycloak:keycloak /home/keycloak && \
 
 COPY --from=identity /app/keycloak-theme/ /opt/bitnami/keycloak/themes/identity
 
+# The keycloak user id is not stable across the three bases this image is built from,
+# so it is referenced by name rather than by number. Verified on the pinned digests:
+# keycloak-25's bitnami base has keycloak=1001, while all three 26 bases -- bitnami,
+# vendor-ee and quay -- have keycloak=1000. Hardcoding a number here would run as a
+# uid that does not exist in at least one of them.
+# hadolint ignore=DL3066
 USER keycloak
 
 WORKDIR /home/keycloak
@@ -82,6 +88,12 @@ USER 0
 RUN chown keycloak:keycloak -R /opt/bitnami/keycloak/ && \
     chmod +x /opt/bitnami/scripts/*.sh
 
+# The keycloak user id is not stable across the three bases this image is built from,
+# so it is referenced by name rather than by number. Verified on the pinned digests:
+# keycloak-25's bitnami base has keycloak=1001, while all three 26 bases -- bitnami,
+# vendor-ee and quay -- have keycloak=1000. Hardcoding a number here would run as a
+# uid that does not exist in at least one of them.
+# hadolint ignore=DL3066
 USER keycloak
 
 # common, k8s, openshift and OCI labels:
