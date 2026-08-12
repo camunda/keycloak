@@ -85,7 +85,7 @@ jobs:
             matrix:
                 keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
         steps:
-            - uses: camunda/infra-global-github-actions/start-build-monitor@02b3f0e49b00b98fffc76af690ebc83c28f24dae # main
+            - uses: camunda/infra-global-github-actions/start-build-monitor@66bf6e260f2beb42a83284fef490bb96672e8f36 # main
 
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -314,7 +314,7 @@ jobs:
             - build-image
             - read-build-image-output
         steps:
-            - uses: camunda/infra-global-github-actions/start-build-monitor@02b3f0e49b00b98fffc76af690ebc83c28f24dae # main
+            - uses: camunda/infra-global-github-actions/start-build-monitor@66bf6e260f2beb42a83284fef490bb96672e8f36 # main
 
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
