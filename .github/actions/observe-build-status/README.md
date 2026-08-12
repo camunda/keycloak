@@ -25,7 +25,7 @@ This action is a `composite` action.
 ## Usage
 
 ```yaml
-- uses: ./.github/actions/observe-build-status
+- uses: camunda/keycloak/.github/actions/observe-build-status@main
   with:
     build_status:
     # The status of the job, one of: success, failure, cancelled

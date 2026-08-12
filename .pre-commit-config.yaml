@@ -49,12 +49,6 @@ repos:
 
     - repo: local
       hooks:
-          - id: update-action-readmes
-            name: Update GitHub Action READMEs
-            entry: .pre-commit-hooks/update_action_readmes.sh
-            language: script
-            files: ^\.github/actions/.+\.(yml|yaml)$
-            pass_filenames: false # ensure single run
           - id: update-readme-version
             name: update-readme-version
             language: script
