@@ -18,9 +18,16 @@ repos:
           - id: detect-private-key
 
     - repo: https://github.com/hadolint/hadolint
-      rev: v2.14.0
+      rev: v2.15.1
       hooks:
+          # The upstream hook entry is `ghcr.io/hadolint/hadolint hadolint`, with no tag,
+          # so it resolves to :latest and the linter version drifts away from the `rev`
+          # above. That is how 2.15.1 arrived unannounced and turned every branch red
+          # without a commit: it enables DL3066, which 2.14.0 did not report.
+          # Pinning the image by digest keeps the linter on the version this `rev` names,
+          # and lets Renovate move both together.
           - id: hadolint-docker
+            entry: ghcr.io/hadolint/hadolint@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d hadolint
 
     - repo: https://github.com/rhysd/actionlint
       rev: v1.7.12
