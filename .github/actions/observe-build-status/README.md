@@ -2,7 +2,10 @@
 
 ## Description
 
-Records the build status remotely for analytic purposes
+Records the build status remotely for analytic purposes.
+This action isn't meant to be copy-pasted to other repositories.
+Each repository should vendor its own version of this action.
+
 
 ## Inputs
 
