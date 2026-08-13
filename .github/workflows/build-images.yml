@@ -87,6 +87,9 @@ jobs:
 
     build-image:
         runs-on: ubuntu-24.04
+        permissions:
+            contents: read
+            id-token: write
         outputs:
             full_image_name: ${{ steps.compute-image-name-step.outputs.full_image_name }}
         needs:
@@ -96,6 +99,8 @@ jobs:
             matrix:
                 keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
         steps:
+            - uses: camunda/infra-global-github-actions/start-build-monitor@66bf6e260f2beb42a83284fef490bb96672e8f36 # main
+
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
               with:
@@ -199,6 +204,18 @@ jobs:
                   matrix-key: ${{ matrix.keycloak_version }}
                   outputs: |-
                       full_image_name: ${{ steps.compute-image-name-step.outputs.full_image_name }}
+
+            - name: Observe build status
+              if: always()
+              continue-on-error: true
+              uses: ./.github/actions/observe-build-status
+              with:
+                  job_name: ${{ github.job }}/${{ matrix.keycloak_version }}
+                  build_status: ${{ job.status }}
+                  secret_vault_address: ${{ secrets.VAULT_ADDR }}
+                  secret_vault_jwt_path: ${{ secrets.VAULT_JWT_PATH }}
+                  secret_vault_jwt_role: ${{ secrets.VAULT_JWT_ROLE }}
+                  secret_vault_jwt_audience: ${{ secrets.VAULT_JWT_AUDIENCE }}
 
     ## Read matrix outputs
     read-build-image-output:
@@ -307,11 +324,16 @@ jobs:
 
                 keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
         runs-on: ${{ matrix.runner_desc.runner }}
+        permissions:
+            contents: read
+            id-token: write
         needs:
             - list-keycloak-versions
             - build-image
             - read-build-image-output
         steps:
+            - uses: camunda/infra-global-github-actions/start-build-monitor@66bf6e260f2beb42a83284fef490bb96672e8f36 # main
+
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
               with:
@@ -573,6 +595,18 @@ jobs:
                   PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
                   PGPASSWORD: ${{ env.postgres_superuser_password }}
                   PGUSER: ${{ env.postgres_superuser }}
+
+            - name: Observe build status
+              if: always()
+              continue-on-error: true
+              uses: ./.github/actions/observe-build-status
+              with:
+                  job_name: ${{ github.job }}/${{ matrix.runner_desc.runner }}/${{ matrix.keycloak_version }}
+                  build_status: ${{ job.status }}
+                  secret_vault_address: ${{ secrets.VAULT_ADDR }}
+                  secret_vault_jwt_path: ${{ secrets.VAULT_JWT_PATH }}
+                  secret_vault_jwt_role: ${{ secrets.VAULT_JWT_ROLE }}
+                  secret_vault_jwt_audience: ${{ secrets.VAULT_JWT_AUDIENCE }}
 
     publish-image:
         runs-on: ubuntu-24.04
