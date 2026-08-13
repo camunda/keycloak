@@ -39,6 +39,7 @@ jobs:
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
               with:
+                  persist-credentials: false
                   fetch-depth: 0
 
             # A release tag is created before the images it names exist: `build-images.yml` only
@@ -140,6 +141,10 @@ jobs:
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
               with:
+                  # The App token still authenticates the fetch; it is simply not written to
+                  # `.git/config` afterwards. Nothing here talks to git over the network: the
+                  # release is created through the API, with the same token passed as GH_TOKEN.
+                  persist-credentials: false
                   fetch-depth: 0
                   token: ${{ steps.generate-github-token.outputs.token }}
 
