@@ -431,10 +431,17 @@ jobs:
 
             - name: Declare test recipe variables
               shell: bash
+              # Matrix values reach the script through the environment: `${{ }}` is expanded
+              # before bash parses the line, so an interpolated value is script text rather than
+              # data. `github.sha` is read from GITHUB_SHA, which the runner already exports.
+              env:
+                  POSTGRES_REPLICAS: ${{ matrix.runner_desc.postgres_replicas }}
+                  KEYCLOAK_VERSION: ${{ matrix.keycloak_version }}
+                  DB_HOST_TEMPLATE: ${{ matrix.runner_desc.keycloak_db_host_template }}
               run: |
                   set -euo pipefail
 
-                  if (( "${{ matrix.runner_desc.postgres_replicas }}" < 1 )); then
+                  if (( POSTGRES_REPLICAS < 1 )); then
                     echo "compose_keycloak_depends_on=" | tee -a "$GITHUB_ENV"
                   else
                     echo "compose_keycloak_depends_on=postgres" | tee -a "$GITHUB_ENV"
@@ -442,11 +449,17 @@ jobs:
 
                   : # ensure uniqueness of the db name
                   uuid="$(cat /proc/sys/kernel/random/uuid)"
-                  postgres_database="infex-keycloak-db-${uuid}-${{ github.sha }}"
+                  postgres_database="infex-keycloak-db-${uuid}-${GITHUB_SHA}"
                   echo "postgres_database=${postgres_database}" | tee -a "$GITHUB_ENV"
 
-                  : # get the postgres version to test
-                  keycloak_version_git="$(echo '${{ matrix.keycloak_version }}' | sed -E 's/^([0-9]+)\.?(.*)$/\1.0/g')" # make sure to have a major.0 format
+                  : # get the postgres version to test, from the major only: keycloak release
+                  : # branches are named `<major>.0`, e.g. `24-quay-optimized` -> `24.0`
+                  if [[ ! "${KEYCLOAK_VERSION}" =~ ^([0-9]+) ]]; then
+                    echo "::error::Expected keycloak_version to start with a major number, got: ${KEYCLOAK_VERSION}"
+                    exit 1
+                  fi
+                  keycloak_version_git="${BASH_REMATCH[1]}.0"
+
                   postgres_version=$(
                     curl -s "https://raw.githubusercontent.com/keycloak/keycloak/release/${keycloak_version_git}/pom.xml" \
                     | awk -F'[><]' '/<postgresql.version>/{print $3}'
@@ -455,7 +468,7 @@ jobs:
                   echo "postgres_version=${postgres_version}" | tee -a "$GITHUB_ENV"
 
                   : # apply template on the address
-                  postgres_host=$(echo "${{ matrix.runner_desc.keycloak_db_host_template }}" | sed "s/{{ postgres_version }}/${postgres_version}/g")
+                  postgres_host="${DB_HOST_TEMPLATE//\{\{ postgres_version \}\}/${postgres_version}}"
                   echo "postgres_host=${postgres_host}" | tee -a "$GITHUB_ENV"
 
             # The self-hosted runner doesn't provide a postgres client and the prerequisites for make,
@@ -671,29 +684,40 @@ jobs:
 
             - name: Set registry credentials based on keycloak_version
               id: publishing-registry
+              # Everything the script reads comes from the environment. Besides keeping the matrix
+              # value out of the script text, this stops the two registry passwords from being
+              # interpolated into it: they are written to the step output, not printed, so a `set
+              # -x` or a shell error message cannot echo them back before the runner masks them.
+              env:
+                  KEYCLOAK_VERSION: ${{ matrix.keycloak_version }}
+                  BASE_TYPE: ${{ steps.version-vars.outputs.base_type }}
+                  DOCKERHUB_USER: ${{ steps.secrets.outputs.DOCKERHUB_USER }}
+                  DOCKERHUB_PASSWORD: ${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}
+                  MACHINE_USR: ${{ steps.secrets.outputs.MACHINE_USR }}
+                  MACHINE_PWD: ${{ steps.secrets.outputs.MACHINE_PWD }}
               run: |
-                  version="${{ matrix.keycloak_version }}"
+                  set -euo pipefail
 
-                  if [[ "${{ steps.version-vars.outputs.base_type }}" == "hub" ]]; then
-                    echo "publishing_registry=${{ env.CONTAINER_REGISTRY_HUB }}" | tee -a "$GITHUB_OUTPUT"
-                    echo "publishing_registry_username=${{ steps.secrets.outputs.DOCKERHUB_USER }}" | tee -a "$GITHUB_OUTPUT"
-                    echo "publishing_registry_password=${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}" | tee -a "$GITHUB_OUTPUT"
+                  if [[ "${BASE_TYPE}" == "hub" ]]; then
+                    echo "publishing_registry=${CONTAINER_REGISTRY_HUB}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_registry_username=${DOCKERHUB_USER}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_registry_password=${DOCKERHUB_PASSWORD}" >> "$GITHUB_OUTPUT"
                     # Image target for Hub
-                    echo "publishing_image_name=${{ env.CONTAINER_IMAGE_NAME_HUB }}" | tee -a "$GITHUB_OUTPUT"
-                  elif [[ "${{ steps.version-vars.outputs.base_type }}" == "prem" ]]; then
-                    echo "publishing_registry=${{ env.CONTAINER_REGISTRY_CAMUNDA }}" | tee -a "$GITHUB_OUTPUT"
-                    echo "publishing_registry_username=${{ steps.secrets.outputs.MACHINE_USR }}" | tee -a "$GITHUB_OUTPUT"
-                    echo "publishing_registry_password=${{ steps.secrets.outputs.MACHINE_PWD }}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_image_name=${CONTAINER_IMAGE_NAME_HUB}" | tee -a "$GITHUB_OUTPUT"
+                  elif [[ "${BASE_TYPE}" == "prem" ]]; then
+                    echo "publishing_registry=${CONTAINER_REGISTRY_CAMUNDA}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_registry_username=${MACHINE_USR}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_registry_password=${MACHINE_PWD}" >> "$GITHUB_OUTPUT"
                     # Image target for Camunda
-                    echo "publishing_image_name=${{ env.CONTAINER_IMAGE_NAME_CAMUNDA }}" | tee -a "$GITHUB_OUTPUT"
-                  elif [[ "${{ steps.version-vars.outputs.base_type }}" == "quay" ]]; then
-                    echo "publishing_registry=${{ env.CONTAINER_REGISTRY_HUB }}" | tee -a "$GITHUB_OUTPUT"
-                    echo "publishing_registry_username=${{ steps.secrets.outputs.DOCKERHUB_USER }}" | tee -a "$GITHUB_OUTPUT"
-                    echo "publishing_registry_password=${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_image_name=${CONTAINER_IMAGE_NAME_CAMUNDA}" | tee -a "$GITHUB_OUTPUT"
+                  elif [[ "${BASE_TYPE}" == "quay" ]]; then
+                    echo "publishing_registry=${CONTAINER_REGISTRY_HUB}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_registry_username=${DOCKERHUB_USER}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_registry_password=${DOCKERHUB_PASSWORD}" >> "$GITHUB_OUTPUT"
                     # Image target for Hub with quay- prefix in tags
-                    echo "publishing_image_name=${{ env.CONTAINER_IMAGE_NAME_HUB }}" | tee -a "$GITHUB_OUTPUT"
+                    echo "publishing_image_name=${CONTAINER_IMAGE_NAME_HUB}" | tee -a "$GITHUB_OUTPUT"
                   else
-                    echo "❌ Error: Unsupported version suffix in '$version'. Expected '-hub', '-prem', or '-quay'."
+                    echo "❌ Error: Unsupported version suffix in '${KEYCLOAK_VERSION}'. Expected '-hub', '-prem', or '-quay'."
                     exit 1
                   fi
 
