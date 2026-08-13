@@ -32,6 +32,14 @@ env:
     CONTAINER_REGISTRY_CI: registry.camunda.cloud
     CONTAINER_IMAGE_NAME_CI: team-infrastructure-experience/keycloak
 
+# The repository default is `default_workflow_permissions: write`, so without this block every
+# job below runs with a read/write GITHUB_TOKEN. None of them needs it: the registry logins use
+# Vault AppRole credentials, the matrix outputs travel as artifacts (ACTIONS_RUNTIME_TOKEN, not
+# GITHUB_TOKEN) and `rerun-failed-jobs` dispatches with a dedicated GitHub App token.
+# Jobs that need more than this escalate individually.
+permissions:
+    contents: read
+
 jobs:
     triage:
         runs-on: ubuntu-24.04
@@ -772,6 +780,12 @@ jobs:
 
     notify-on-failure:
         runs-on: ubuntu-latest
+        # `report-failure-on-slack` reads the open `silence: <workflow>` issues of this repository
+        # to decide whether the alert is muted. Without `issues: read` it warns and alerts anyway,
+        # which silently defeats the silencing mechanism.
+        permissions:
+            contents: read
+            issues: read
         if: failure() && (fromJSON(github.run_attempt) >= 3 || inputs.notify_back_error_message != '') && github.event_name == 'schedule'
         needs:
             - publish-image

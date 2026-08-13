@@ -17,8 +17,12 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: false
 
+# The `release` job never writes through GITHUB_TOKEN: both the checkout and every `gh` call
+# there run with the GitHub App token minted from Vault, which is also what lets the pushed tag
+# trigger `build-images.yml` (GITHUB_TOKEN-created refs do not trigger workflows).
+# `check-changes` only reads, so a read-only GITHUB_TOKEN is enough for the whole workflow.
 permissions:
-    contents: write
+    contents: read
 
 jobs:
     check-changes:
@@ -142,6 +146,12 @@ jobs:
         name: Report failures
         if: failure()
         runs-on: ubuntu-latest
+        # `report-failure-on-slack` reads the open `silence: <workflow>` issues of this repository
+        # to decide whether the alert is muted. Without `issues: read` it warns and alerts anyway,
+        # which silently defeats the silencing mechanism.
+        permissions:
+            contents: read
+            issues: read
         needs:
             - check-changes
             - release
