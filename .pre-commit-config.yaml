@@ -34,6 +34,29 @@ repos:
       hooks:
           - id: actionlint-docker
 
+    - repo: https://github.com/zizmorcore/zizmor-pre-commit
+      rev: v1.29.0
+      hooks:
+          # Static analysis of GitHub Actions workflows and actions, mirroring the hook adopted
+          # in camunda/infraex-common-config#551. It covers what actionlint does not: injection
+          # through template expansion, excessive GITHUB_TOKEN permissions, credential
+          # persistence and unpinned action references. actionlint also only reads
+          # `.github/workflows/`, so `.github/actions/` was linted by nothing until now.
+          #
+          # Threshold is `high` because the repository still carries medium and low findings
+          # (mostly `artipacked` and `${{ steps.*.outputs }}` interpolation); `high` is clean as
+          # of this commit and is what keeps it that way.
+          #
+          # Without GH_TOKEN zizmor runs offline, which skips known-vulnerable-actions,
+          # impostor-commit, ref-confusion, ref-version-mismatch and stale-action-refs.
+          # None of those currently report anything at `high`.
+          #
+          # --config makes the pinning policy explicit in .github/zizmor.yml rather than leaving
+          # it to zizmor's defaults, so a future default change cannot silently drop
+          # `unpinned-uses` below the threshold above.
+          - id: zizmor
+            args: [--no-progress, --min-severity=high, --config=.github/zizmor.yml]
+
     - repo: https://github.com/renovatebot/pre-commit-hooks
       rev: 44.27.0
       hooks:

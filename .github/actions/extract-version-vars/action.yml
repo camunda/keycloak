@@ -35,10 +35,17 @@ runs:
         - name: Parse version variables
           id: parse
           shell: bash
+          # Inputs are read through the environment rather than interpolated into the script:
+          # `${{ }}` is expanded before bash sees the line, so a value carrying a quote or a
+          # command substitution would be executed as code instead of compared as a string.
+          env:
+              KEYCLOAK_VERSION: ${{ inputs.keycloak_version }}
+              INCLUDE_OPTIMIZED: ${{ inputs.include_optimized }}
+              INCLUDE_IMAGE_TYPE: ${{ inputs.include_image_type }}
           run: |
               set -euo pipefail
 
-              version_name="${{ inputs.keycloak_version }}"       # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
+              version_name="${KEYCLOAK_VERSION}"                  # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
 
               # Handle quay-optimized case first
               if [[ "$version_name" == *"-quay-optimized" ]]; then
@@ -53,7 +60,7 @@ runs:
               base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
 
               # Set image_type for provider check if requested
-              if [[ "${{ inputs.include_image_type }}" == "true" ]]; then
+              if [[ "${INCLUDE_IMAGE_TYPE}" == "true" ]]; then
                 if [[ "$base_type" == "quay" ]]; then
                   image_type="quay"
                 else
@@ -63,14 +70,14 @@ runs:
                 image_type=""
               fi
 
-              echo "version_name=${{ inputs.keycloak_version }}" | tee -a "$GITHUB_OUTPUT"
+              echo "version_name=${KEYCLOAK_VERSION}" | tee -a "$GITHUB_OUTPUT"
               echo "base_version=$base_version" | tee -a "$GITHUB_OUTPUT"
               echo "base_type=$base_type" | tee -a "$GITHUB_OUTPUT"
 
-              if [[ "${{ inputs.include_optimized }}" == "true" ]]; then
+              if [[ "${INCLUDE_OPTIMIZED}" == "true" ]]; then
                 echo "is_optimized=$is_optimized" | tee -a "$GITHUB_OUTPUT"
               fi
 
-              if [[ "${{ inputs.include_image_type }}" == "true" ]]; then
+              if [[ "${INCLUDE_IMAGE_TYPE}" == "true" ]]; then
                 echo "image_type=$image_type" | tee -a "$GITHUB_OUTPUT"
               fi
