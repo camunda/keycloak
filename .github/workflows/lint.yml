@@ -9,5 +9,11 @@ on:
 
 jobs:
     lint:
-        uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@4e5ecdb4100b2a50e46b3517cc8c285c80f7ccd5 # 2.0.1
-        secrets: inherit
+        uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@6aec6cec54de76653072d6c30792437995a07128 # 2.3.1
+        # Explicit rather than `secrets: inherit`, which hands every secret this repository holds
+        # to a workflow whose main job installs and executes third-party pre-commit hook code.
+        # These three are all it reads, and only on the auto-fix path.
+        secrets:
+            VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+            VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+            VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
