@@ -10,12 +10,23 @@ on:
         paths:
             - .github/workflows/links.yml
 
+permissions:
+    contents: read
+
 jobs:
     lint:
         name: links-check
         runs-on: ubuntu-latest
+        # `issues: write` is for the scheduled failure path only: `create-issue-from-file` opens the
+        # "Link Checker Report" issue, and `report-failure-on-slack` reads the `silence: <workflow>`
+        # issues of this repository to decide whether the alert is muted.
+        permissions:
+            contents: read
+            issues: write
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  persist-credentials: false
 
             - name: Get Current Timestamp
               id: timestamp

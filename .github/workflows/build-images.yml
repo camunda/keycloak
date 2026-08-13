@@ -32,14 +32,26 @@ env:
     CONTAINER_REGISTRY_CI: registry.camunda.cloud
     CONTAINER_IMAGE_NAME_CI: team-infrastructure-experience/keycloak
 
+# The repository default is `default_workflow_permissions: write`, so without this block every
+# job below runs with a read/write GITHUB_TOKEN. None of them needs it: the registry logins use
+# Vault AppRole credentials, the matrix outputs travel as artifacts (ACTIONS_RUNTIME_TOKEN, not
+# GITHUB_TOKEN) and `rerun-failed-jobs` dispatches with a dedicated GitHub App token.
+# Jobs that need more than this escalate individually.
+permissions:
+    contents: read
+
 jobs:
     triage:
         runs-on: ubuntu-24.04
         steps:
             - name: Display notify_back_error_message if present
               if: ${{ inputs.notify_back_error_message != '' }}
+              # The message is forwarded by `rerun-failed-run` from the logs of the failed run,
+              # so its content is not ours. Interpolating it into the script would run it as code.
+              env:
+                  NOTIFY_BACK_ERROR_MESSAGE: ${{ inputs.notify_back_error_message }}
               run: |
-                  echo "A previous workflow failed but has attempted to retry: ${{ inputs.notify_back_error_message }}"
+                  echo "A previous workflow failed but has attempted to retry: ${NOTIFY_BACK_ERROR_MESSAGE}"
                   exit 1
 
     list-keycloak-versions:
@@ -51,6 +63,8 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  persist-credentials: false
 
             - name: List Keycloak Versions from repository's folders
               id: set-matrix
@@ -89,6 +103,8 @@ jobs:
 
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  persist-credentials: false
 
             - name: Install asdf tools with cache
               uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@4e5ecdb4100b2a50e46b3517cc8c285c80f7ccd5 # 2.0.1
@@ -226,6 +242,8 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  persist-credentials: false
 
             - name: Install asdf tools with cache
               uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@4e5ecdb4100b2a50e46b3517cc8c285c80f7ccd5 # 2.0.1
@@ -318,6 +336,8 @@ jobs:
 
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  persist-credentials: false
 
             - name: Install build-essentials for asdf
               run: |
@@ -605,6 +625,8 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  persist-credentials: false
 
             - name: Install if required common software tooling
               uses: camunda/infra-global-github-actions/common-tooling@66bf6e260f2beb42a83284fef490bb96672e8f36 # main
@@ -701,6 +723,11 @@ jobs:
 
             - name: Retag and push the image
               shell: bash
+              # `github.ref_name` is the tag that triggered the run. It reaches the script through
+              # the environment because a tag name is free-form text: interpolated, a quote in it
+              # would close the string below and the rest would run as code.
+              env:
+                  REF_NAME: ${{ github.ref_name }}
               run: |
                   set -euo pipefail
 
@@ -731,7 +758,9 @@ jobs:
                   fi
 
                   : # remove keycloak- prefix
-                  suffix_version=$(echo '${{ github.ref_name }}' | sed 's/keycloak-[0-9]*-//')
+                  : # shortest-prefix removal, so `keycloak-23-2026-08-13-001` becomes
+                  : # `2026-08-13-001` and a tag without the prefix is left untouched
+                  suffix_version="${REF_NAME#keycloak-*-}"
 
                   # Create tags with appropriate prefix
                   docker buildx imagetools create \
@@ -806,6 +835,12 @@ jobs:
 
     notify-on-failure:
         runs-on: ubuntu-latest
+        # `report-failure-on-slack` reads the open `silence: <workflow>` issues of this repository
+        # to decide whether the alert is muted. Without `issues: read` it warns and alerts anyway,
+        # which silently defeats the silencing mechanism.
+        permissions:
+            contents: read
+            issues: read
         if: failure() && (fromJSON(github.run_attempt) >= 3 || inputs.notify_back_error_message != '') && github.event_name == 'schedule'
         needs:
             - publish-image

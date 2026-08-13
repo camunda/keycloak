@@ -1,0 +1,45 @@
+---
+# =============================================================================
+# zizmor.yml — GitHub Actions supply-chain policy for camunda/keycloak
+#
+# Consumed by the `zizmor` pre-commit hook (see .pre-commit-config.yaml), which
+# runs locally on `pre-commit run -a` and in CI through lint-global.
+#
+# Mirrors the policy adopted in camunda/infraex-common-config#562, itself
+# mirroring camunda/infra-global-github-actions#781.
+#
+# The binding constraint is not our own threat model but GitHub's `Require
+# actions to be pinned to a full-length commit SHA` setting, which this
+# repository enforces and which grants no exemption:
+#
+#   "all actions must be pinned to a full-length commit SHA to be used. This
+#    includes actions from your organization and actions authored by GitHub.
+#    Reusable workflows can still be referenced by tag."
+#
+# https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository
+#
+# That check is evaluated over the whole dependency tree at `Set up job`, so a
+# tag left inside a third-party composite action refuses the job before any step
+# runs. That is exactly how `build-images.yml` was blocked twice this month, at
+# `rerun-failed-jobs` and then at `read-build-image-output` (fixed by #629, #630
+# and #632): both times the offending reference was two levels down, inside an
+# action this repository already pins by SHA.
+#
+# Docs: https://docs.zizmor.sh/configuration/
+# =============================================================================
+
+rules:
+    unpinned-uses:
+        config:
+            # `policies` maps action-owner globs to a pinning level.
+            #
+            #   any       — no constraint; any ref (SHA, tag, branch) is accepted.
+            #   ref-pin   — must carry an explicit ref, symbolic (tag/branch) or SHA.
+            #   hash-pin  — must be a 40-character commit SHA. Tags and branches fail.
+            #
+            # Local references (`uses: ./.github/actions/...`) are same-repo and are
+            # skipped by this audit entirely, so they need no policy entry.
+            policies:
+                # Everything is hash-pinned, with no namespace exemption, including
+                # `actions/*` and this organisation's own repositories.
+                '*': hash-pin
