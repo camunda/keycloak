@@ -9,6 +9,12 @@ on:
 
 jobs:
     lint:
+        # A caller-level block is not additive: the called workflow's jobs get the intersection
+        # of what the caller grants and what they declare. `contents: read` is exactly what
+        # lint-global declares for itself, so this states the grant without narrowing it -- and
+        # stops the job inheriting the repository default, which is write.
+        permissions:
+            contents: read
         uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@887ed647c59e94535464fdfe2cfa0f33cffee468 # 2.3.3
         # Explicit rather than `secrets: inherit`, which hands every secret this repository holds
         # to a workflow whose main job installs and executes third-party pre-commit hook code.
