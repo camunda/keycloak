@@ -99,7 +99,7 @@ jobs:
             matrix:
                 keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
         steps:
-            - uses: camunda/infra-global-github-actions/start-build-monitor@66bf6e260f2beb42a83284fef490bb96672e8f36 # main
+            - uses: camunda/infra-global-github-actions/start-build-monitor@32a6e03de12f6c9c08a2e0590bb5aef2d69e9d6c # main
 
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -126,7 +126,7 @@ jobs:
                       secret/data/products/infrastructure-experience/ci/common DOCKERHUB_PASSWORD;
 
             - name: Login to the dockerhub registry # prevents pull limit rate
-              uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
               with:
                   registry: ${{ env.CONTAINER_REGISTRY_HUB }}
                   username: ${{ steps.secrets.outputs.DOCKERHUB_USER }}
@@ -165,7 +165,7 @@ jobs:
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@66bf6e260f2beb42a83284fef490bb96672e8f36 # main
+              uses: camunda/infra-global-github-actions/build-docker-image@32a6e03de12f6c9c08a2e0590bb5aef2d69e9d6c # main
               with:
                   registry_host: ${{ env.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -271,7 +271,7 @@ jobs:
                       secret/data/products/infrastructure-experience/ci/common MACHINE_USR;
 
             - name: Login to the registry
-              uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
               with:
                   registry: ${{ env.CONTAINER_REGISTRY_CI }}
                   username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -332,7 +332,7 @@ jobs:
             - build-image
             - read-build-image-output
         steps:
-            - uses: camunda/infra-global-github-actions/start-build-monitor@66bf6e260f2beb42a83284fef490bb96672e8f36 # main
+            - uses: camunda/infra-global-github-actions/start-build-monitor@32a6e03de12f6c9c08a2e0590bb5aef2d69e9d6c # main
 
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -382,14 +382,14 @@ jobs:
                       secret/data/products/infrastructure-experience/ci/common DOCKERHUB_PASSWORD;
 
             - name: Login to the dockerhub registry # prevents pull limit rate
-              uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
               with:
                   registry: ${{ env.CONTAINER_REGISTRY_HUB }}
                   username: ${{ steps.secrets.outputs.DOCKERHUB_USER }}
                   password: ${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}
 
             - name: Login to the registry
-              uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
               with:
                   registry: ${{ env.CONTAINER_REGISTRY_CI }}
                   username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -642,7 +642,7 @@ jobs:
                   persist-credentials: false
 
             - name: Install if required common software tooling
-              uses: camunda/infra-global-github-actions/common-tooling@66bf6e260f2beb42a83284fef490bb96672e8f36 # main
+              uses: camunda/infra-global-github-actions/common-tooling@32a6e03de12f6c9c08a2e0590bb5aef2d69e9d6c # main
               with:
                   node-enabled: false
                   java-enabled: false
@@ -670,7 +670,7 @@ jobs:
                       secret/data/products/infrastructure-experience/ci/common DOCKERHUB_PASSWORD;
 
             - name: Login to the registry
-              uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
               with:
                   registry: ${{ env.CONTAINER_REGISTRY_CI }}
                   username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -722,7 +722,7 @@ jobs:
                   fi
 
             - name: Login to the publishing registry
-              uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
               with:
                   registry: ${{ steps.publishing-registry.outputs.publishing_registry }}
                   username: ${{ steps.publishing-registry.outputs.publishing_registry_username }}
@@ -845,7 +845,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Retrigger job
-              uses: camunda/infra-global-github-actions/rerun-failed-run@66bf6e260f2beb42a83284fef490bb96672e8f36 # main
+              uses: camunda/infra-global-github-actions/rerun-failed-run@32a6e03de12f6c9c08a2e0590bb5aef2d69e9d6c # main
               with:
                   error-messages: |
                       lost communication with the server
