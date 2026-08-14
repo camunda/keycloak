@@ -847,9 +847,24 @@ jobs:
             - name: Retrigger job
               uses: camunda/infra-global-github-actions/rerun-failed-run@32a6e03de12f6c9c08a2e0590bb5aef2d69e9d6c # main
               with:
+                  # Matched as regexes, joined with `|`, against the logs of the failed steps and
+                  # the failure annotations of the run, by
+                  # `rerun-failed-run/check-annotations-and-logs`.
+                  #
+                  # The two registry entries cover transport and auth-service hiccups on
+                  # registry.camunda.cloud, which is the failure mode this matrix actually hits:
+                  # the same credentials succeed in the sibling jobs of the same run, and the
+                  # rerun passes. `Get "…/v2/":` is the login handshake, whatever follows it
+                  # (`unauthorized:` with an empty body, `context deadline exceeded`, EOF).
+                  #
+                  # Deliberately not listed: `denied: … will exceed the configured upper limit`,
+                  # the Harbor storage quota. That one is a real, persistent condition, and
+                  # retrying it only burns runner minutes and defers the alert.
                   error-messages: |
                       lost communication with the server
                       The runner has received a shutdown signal
+                      Get "https://registry\.camunda\.cloud/v2/":
+                      unauthorized to access repository: .*, action: push
                   run-id: ${{ github.run_id }}
                   repository: ${{ github.repository }}
                   vault-addr: ${{ secrets.VAULT_ADDR }}
