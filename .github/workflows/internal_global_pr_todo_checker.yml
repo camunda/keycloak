@@ -16,6 +16,13 @@ concurrency:
 
 jobs:
     call-todo-checker:
+        # A caller-level block is not additive: the called workflow's jobs get the intersection
+        # of what the caller grants and what they declare. `check-todos` declares exactly these
+        # two, and `pull-requests: write` is what lets it post the TODO comments -- dropping it
+        # here would silently disable them rather than fail.
+        permissions:
+            contents: read
+            pull-requests: write
         # No `secrets: inherit`: todo-checker-global reads no secret at all, it works off
         # GITHUB_TOKEN and the permissions it declares itself. Inheriting would hand it every
         # secret this repository holds for nothing.
