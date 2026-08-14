@@ -857,6 +857,9 @@ jobs:
                   # rerun passes. `Get "…/v2/":` is the login handshake, whatever follows it
                   # (`unauthorized:` with an empty body, `context deadline exceeded`, EOF).
                   #
+                  # The push entry names the two Harbor projects of this workflow rather than
+                  # `.*`, so it cannot swallow a push denial from docker.io.
+                  #
                   # Deliberately not listed: `denied: … will exceed the configured upper limit`,
                   # the Harbor storage quota. That one is a real, persistent condition, and
                   # retrying it only burns runner minutes and defers the alert.
@@ -864,7 +867,7 @@ jobs:
                       lost communication with the server
                       The runner has received a shutdown signal
                       Get "https://registry\.camunda\.cloud/v2/":
-                      unauthorized to access repository: .*, action: push
+                      unauthorized to access repository: (keycloak-ee|team-infrastructure-experience)/keycloak, action: push
                   run-id: ${{ github.run_id }}
                   repository: ${{ github.repository }}
                   vault-addr: ${{ secrets.VAULT_ADDR }}
