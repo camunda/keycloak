@@ -99,7 +99,7 @@ jobs:
             matrix:
                 keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
         steps:
-            - uses: camunda/infra-global-github-actions/start-build-monitor@32a6e03de12f6c9c08a2e0590bb5aef2d69e9d6c # main
+            - uses: camunda/infra-global-github-actions/start-build-monitor@787bec31b4ae6b70702321d0331676e88cfea9c5 # main
 
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -107,7 +107,7 @@ jobs:
                   persist-credentials: false
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@887ed647c59e94535464fdfe2cfa0f33cffee468 # 2.3.3
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@26224a8e51a019dadec867d2c6413b81db1c4411 # 2.3.4
 
             - name: Import secrets
               uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4.0.0
@@ -165,7 +165,7 @@ jobs:
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@32a6e03de12f6c9c08a2e0590bb5aef2d69e9d6c # main
+              uses: camunda/infra-global-github-actions/build-docker-image@787bec31b4ae6b70702321d0331676e88cfea9c5 # main
               with:
                   registry_host: ${{ env.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -222,7 +222,7 @@ jobs:
         runs-on: ubuntu-24.04
         needs: [build-image]
         steps:
-            - uses: camunda/infra-global-github-actions/matrix-outputs-read@32a6e03de12f6c9c08a2e0590bb5aef2d69e9d6c # main
+            - uses: camunda/infra-global-github-actions/matrix-outputs-read@787bec31b4ae6b70702321d0331676e88cfea9c5 # main
               id: read
               with:
                   matrix-step-name: build-image
@@ -246,7 +246,7 @@ jobs:
                   persist-credentials: false
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@887ed647c59e94535464fdfe2cfa0f33cffee468 # 2.3.3
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@26224a8e51a019dadec867d2c6413b81db1c4411 # 2.3.4
 
             - name: Set Keycloak Image Name
               id: set-keycloak-image-name
@@ -332,7 +332,7 @@ jobs:
             - build-image
             - read-build-image-output
         steps:
-            - uses: camunda/infra-global-github-actions/start-build-monitor@32a6e03de12f6c9c08a2e0590bb5aef2d69e9d6c # main
+            - uses: camunda/infra-global-github-actions/start-build-monitor@787bec31b4ae6b70702321d0331676e88cfea9c5 # main
 
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -351,7 +351,7 @@ jobs:
                   libreadline-dev tk tk-dev
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@887ed647c59e94535464fdfe2cfa0f33cffee468 # 2.3.3
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@26224a8e51a019dadec867d2c6413b81db1c4411 # 2.3.4
 
             - name: Set Keycloak Image Name
               id: set-keycloak-image-name
@@ -642,7 +642,7 @@ jobs:
                   persist-credentials: false
 
             - name: Install if required common software tooling
-              uses: camunda/infra-global-github-actions/common-tooling@32a6e03de12f6c9c08a2e0590bb5aef2d69e9d6c # main
+              uses: camunda/infra-global-github-actions/common-tooling@787bec31b4ae6b70702321d0331676e88cfea9c5 # main
               with:
                   node-enabled: false
                   java-enabled: false
@@ -651,7 +651,7 @@ jobs:
                   buildx-install: true
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@887ed647c59e94535464fdfe2cfa0f33cffee468 # 2.3.3
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@26224a8e51a019dadec867d2c6413b81db1c4411 # 2.3.4
 
             - name: Import secrets
               uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4.0.0
@@ -845,7 +845,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Retrigger job
-              uses: camunda/infra-global-github-actions/rerun-failed-run@32a6e03de12f6c9c08a2e0590bb5aef2d69e9d6c # main
+              uses: camunda/infra-global-github-actions/rerun-failed-run@787bec31b4ae6b70702321d0331676e88cfea9c5 # main
               with:
                   # Matched as regexes, joined with `|`, against the logs of the failed steps and
                   # the failure annotations of the run, by
@@ -894,7 +894,7 @@ jobs:
         steps:
             - name: Notify in Slack in case of failure
               id: slack-notification
-              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@887ed647c59e94535464fdfe2cfa0f33cffee468 # 2.3.3
+              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@26224a8e51a019dadec867d2c6413b81db1c4411 # 2.3.4
               with:
                   vault_addr: ${{ secrets.VAULT_ADDR }}
                   vault_role_id: ${{ secrets.VAULT_ROLE_ID }}
