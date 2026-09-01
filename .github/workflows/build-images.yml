@@ -99,7 +99,7 @@ jobs:
             matrix:
                 keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
         steps:
-            - uses: camunda/infra-global-github-actions/start-build-monitor@475528365f4010480dccff71ccac554cc3352e7c # main
+            - uses: camunda/infra-global-github-actions/start-build-monitor@ee746fa695a43480b4294e944a6bf6e01b4f8459 # main
 
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -165,7 +165,7 @@ jobs:
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@475528365f4010480dccff71ccac554cc3352e7c # main
+              uses: camunda/infra-global-github-actions/build-docker-image@ee746fa695a43480b4294e944a6bf6e01b4f8459 # main
               with:
                   registry_host: ${{ env.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -222,7 +222,7 @@ jobs:
         runs-on: ubuntu-24.04
         needs: [build-image]
         steps:
-            - uses: camunda/infra-global-github-actions/matrix-outputs-read@475528365f4010480dccff71ccac554cc3352e7c # main
+            - uses: camunda/infra-global-github-actions/matrix-outputs-read@ee746fa695a43480b4294e944a6bf6e01b4f8459 # main
               id: read
               with:
                   matrix-step-name: build-image
@@ -332,7 +332,7 @@ jobs:
             - build-image
             - read-build-image-output
         steps:
-            - uses: camunda/infra-global-github-actions/start-build-monitor@475528365f4010480dccff71ccac554cc3352e7c # main
+            - uses: camunda/infra-global-github-actions/start-build-monitor@ee746fa695a43480b4294e944a6bf6e01b4f8459 # main
 
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -642,7 +642,7 @@ jobs:
                   persist-credentials: false
 
             - name: Install if required common software tooling
-              uses: camunda/infra-global-github-actions/common-tooling@475528365f4010480dccff71ccac554cc3352e7c # main
+              uses: camunda/infra-global-github-actions/common-tooling@ee746fa695a43480b4294e944a6bf6e01b4f8459 # main
               with:
                   node-enabled: false
                   java-enabled: false
@@ -845,7 +845,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Retrigger job
-              uses: camunda/infra-global-github-actions/rerun-failed-run@475528365f4010480dccff71ccac554cc3352e7c # main
+              uses: camunda/infra-global-github-actions/rerun-failed-run@ee746fa695a43480b4294e944a6bf6e01b4f8459 # main
               with:
                   # Matched as regexes, joined with `|`, against the logs of the failed steps and
                   # the failure annotations of the run, by
