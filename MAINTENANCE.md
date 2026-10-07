@@ -23,6 +23,22 @@ _Note: Ensure to keep this document updated with any changes in maintenance proc
 
 _Nothing referenced yet._
 
+### On-demand build of a specific version
+
+Renovate only tracks the newest base image of each source. To build and publish an older patch line, run the `build-images` workflow manually with a replacement for `keycloak-<major>/bases.yml`:
+
+```bash
+gh workflow run build-images.yml \
+  -f keycloak_major=26 \
+  -f publish=true \
+  -f bases_override='{sources: {prem: {image: {repository: registry.camunda.cloud/vendor-ee/keycloak, tag: <tag>@sha256:<digest>}}}}'
+```
+
+- Only the sources listed in `bases_override` are built, tested and published.
+- Each tag must be pinned with its index digest (see the `skopeo` commands in `bases.yml`).
+- Only the exact version tags are published (for example `bitnami-ee-<tag>` and `bitnami-ee-<semver>`). The `<major>` and `latest` tags are not changed.
+- Leave `publish` unchecked to run only the build and the tests.
+
 ## Dependencies
 
 ### Upstream Dependencies: dependencies of this project
