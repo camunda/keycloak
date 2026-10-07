@@ -15,7 +15,7 @@ jobs:
         # stops the job inheriting the repository default, which is write.
         permissions:
             contents: read
-        uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@07d834a5174bbe971e1c0ab961a8605d389953a8 # 2.3.7
+        uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@fc5fa6ee1e142bf583e9f01e749bc31654ff07ac # 2.3.8
         # Explicit rather than `secrets: inherit`, which hands every secret this repository holds
         # to a workflow whose main job installs and executes third-party pre-commit hook code.
         # These three are all it reads, and only on the auto-fix path.
