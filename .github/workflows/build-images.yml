@@ -499,8 +499,9 @@ jobs:
 
                   echo "postgres_version=${postgres_version}" | tee -a "$GITHUB_ENV"
 
-                  : # the Aurora host is pinned to a single major (no templating), only the local
-                  : # postgres container follows the version declared by upstream Keycloak
+                  : # the Aurora host is hardcoded since infra reduced to a limited number of Aurora PostgreSQL
+                  : # versions, see https://github.com/camunda/infra-core/blob/stage/camunda-ci-eks/terraform/aws/prod/aurora-postgresql.tf
+                  : # only the local postgres container follows the version declared by upstream Keycloak
                   : # apply template on the address
                   postgres_host="${DB_HOST_TEMPLATE//\{\{ postgres_version \}\}/${postgres_version}}"
                   echo "postgres_host=${postgres_host}" | tee -a "$GITHUB_ENV"
