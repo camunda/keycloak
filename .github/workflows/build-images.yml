@@ -340,7 +340,7 @@ jobs:
                       postgres_replicas: 0
                       keycloak_jdbc_driver: aws-wrapper:postgresql
                       keycloak_db_driver: software.amazon.jdbc.Driver
-                      keycloak_db_host_template: camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com
+                      keycloak_db_host_template: camunda-ci-eks-aurora-postgresql-18.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com
                       keycloak_db_jdbc_query: wrapperPlugins=iam&ssl=true&sslmode=require
                       keycloak_db_port: '5432'
 
@@ -348,7 +348,7 @@ jobs:
                       postgres_replicas: 0
                       keycloak_jdbc_driver: aws-wrapper:postgresql
                       keycloak_db_driver: software.amazon.jdbc.Driver
-                      keycloak_db_host_template: camunda-ci-eks-aurora-postgresql-{{ postgres_version }}.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com
+                      keycloak_db_host_template: camunda-ci-eks-aurora-postgresql-18.cluster-clnwzia8ptad.eu-central-1.rds.amazonaws.com
                       keycloak_db_jdbc_query: wrapperPlugins=iam&ssl=true&sslmode=require
                       keycloak_db_port: '5432'
                       # Add the gcp runner when GCloud SQL is available
@@ -499,6 +499,8 @@ jobs:
 
                   echo "postgres_version=${postgres_version}" | tee -a "$GITHUB_ENV"
 
+                  : # the Aurora host is pinned to a single major (no templating), only the local
+                  : # postgres container follows the version declared by upstream Keycloak
                   : # apply template on the address
                   postgres_host="${DB_HOST_TEMPLATE//\{\{ postgres_version \}\}/${postgres_version}}"
                   echo "postgres_host=${postgres_host}" | tee -a "$GITHUB_ENV"
