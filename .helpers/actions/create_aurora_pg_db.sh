@@ -8,5 +8,8 @@ psql postgres -c "CREATE USER \"${PGUSER_IRSA}\" WITH LOGIN;" \
   -c "GRANT rds_iam TO \"${PGUSER_IRSA}\";" \
   -c "GRANT ALL PRIVILEGES ON DATABASE \"${PGDATABASE}\" TO \"${PGUSER_IRSA}\";"
 
+# PostgreSQL 15+ no longer grants CREATE on the public schema to every role
+psql "${PGDATABASE}" -c "GRANT ALL ON SCHEMA public TO \"${PGUSER_IRSA}\";"
+
 psql postgres -c "SELECT aurora_version();" \
   -c "SELECT version();" -c "\du"
