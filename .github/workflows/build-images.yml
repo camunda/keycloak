@@ -513,16 +513,12 @@ jobs:
 
             - name: Tear up Aurora PG (aws only)
               if: startsWith(matrix.runner_desc.runner, 'aws')
-              # the superuser authenticates through IAM, a password login is rejected by Aurora
-              run: |
-                  set -euo pipefail
-                  PGPASSWORD="$(aws rds generate-db-auth-token --hostname "$PGHOST" --port "$PGPORT" --region "$AWS_REGION" --username "$PGUSER")"
-                  export PGPASSWORD
-                  ./.helpers/actions/create_aurora_pg_db.sh
+              run: ./.helpers/actions/create_aurora_pg_db.sh
               env:
                   PGDATABASE: ${{ env.postgres_database }}
                   PGHOST: ${{ env.postgres_host }}
                   PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
+                  PGPASSWORD: ${{ env.postgres_superuser_password }}
                   PGSSLMODE: require
                   PGUSER: ${{ env.postgres_superuser }}
                   PGUSER_IRSA: ${{ env.postgres_user }}
@@ -641,16 +637,12 @@ jobs:
 
             - name: Tear down Aurora PG (aws only)
               if: startsWith(matrix.runner_desc.runner, 'aws') && always()
-              # the superuser authenticates through IAM, a password login is rejected by Aurora
-              run: |
-                  set -euo pipefail
-                  PGPASSWORD="$(aws rds generate-db-auth-token --hostname "$PGHOST" --port "$PGPORT" --region "$AWS_REGION" --username "$PGUSER")"
-                  export PGPASSWORD
-                  ./.helpers/actions/delete_aurora_pg_db.sh
+              run: ./.helpers/actions/delete_aurora_pg_db.sh
               env:
                   PGDATABASE: ${{ env.postgres_database }}
                   PGHOST: ${{ env.postgres_host }}
                   PGPORT: ${{ matrix.runner_desc.keycloak_db_port }}
+                  PGPASSWORD: ${{ env.postgres_superuser_password }}
                   PGSSLMODE: require
                   PGUSER: ${{ env.postgres_superuser }}
 
