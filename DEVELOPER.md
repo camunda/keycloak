@@ -28,7 +28,7 @@ just --list
 The base image is defined in the `bases.yml` file. You must decide between:
 
 * `quay`: the **official** Keycloak image (from Quay.io) - ✅ **Recommended and actively maintained**
-* `hub`: the **open-source** Bitnami Legacy Keycloak image (from `docker.io/bitnamilegacy`) - ⚠️ **No longer updated**
+* `prem`: the Bitnami **enterprise** Keycloak image (from `registry.camunda.cloud/vendor-ee`) - requires access to the Camunda registry
 > [!NOTE]
 > The YAML schema is a valid Helm values schema. This choice was made for easier maintenance with Renovate parsing.
 
@@ -36,11 +36,11 @@ The base image is defined in the `bases.yml` file. You must decide between:
 
 Use the following command to extract the base image name and digest using [`yq`](https://mikefarah.gitbook.io/yq/) (Go version):
 
-#### For Bitnami images (hub/prem)
+#### For Bitnami Enterprise images (prem)
 
 ```bash
-# Choose 'hub' or 'prem'
-BASE_SOURCE="hub"
+# Use the 'prem' source
+BASE_SOURCE="prem"
 
 # Extract base image name and digest
 BASE_IMAGE_NAME="$(yq e ".sources.$BASE_SOURCE.image.repository" bases.yml)"
@@ -56,7 +56,7 @@ docker build \
   --build-arg BASE_IMAGE_NAME="$BASE_IMAGE_NAME" \
   --build-arg BASE_IMAGE_TAG="$BASE_IMAGE_TAG" \
   --build-arg BASE_IMAGE_DIGEST="$BASE_IMAGE_DIGEST" \
-  -t "docker.io/camunda/keycloak:bitnami-$KEYCLOAK_VERSION" .
+  -t "registry.camunda.cloud/keycloak-ee/keycloak:bitnami-ee-$KEYCLOAK_VERSION" .
 ```
 
 #### For Quay images
@@ -163,19 +163,6 @@ When adding a new version of Keycloak, follow these steps:
 
 4. **Final Image Tags:**
    - The final image will have the following tags:
-     - **Bitnami-based public images (`docker.io/camunda/keycloak`)**:
-       - With prefix (new naming):
-         - `camunda/keycloak:bitnami-24` (mutable - triggered by any change in the base image of Keycloak)
-         - `camunda/keycloak:bitnami-24.0.1` (mutable - triggered by any change part of the base image of Keycloak)
-         - `camunda/keycloak:bitnami-24.0.1-1` (mutable - triggered by any change not part of the base image of Keycloak)
-         - `camunda/keycloak:bitnami-24.0.1-1-${date in yyyy-mm-dd-xxx format}` (immutable, recommended for production usage)
-         - `camunda/keycloak:bitnami-latest` (latest bitnami version)
-       - Without prefix (backward compatibility):
-         - `camunda/keycloak:24` (mutable - backward compatible)
-         - `camunda/keycloak:24.0.1` (mutable - backward compatible)
-         - `camunda/keycloak:24.0.1-1` (mutable - backward compatible)
-         - `camunda/keycloak:24.0.1-1-${date in yyyy-mm-dd-xxx format}` (immutable - backward compatible)
-         - `camunda/keycloak:latest-bitnami` (latest bitnami version - backward compatible)
      - **Bitnami Enterprise images (`registry.camunda.cloud/keycloak-ee/keycloak`)**:
        - With prefix (new naming):
          - `keycloak-ee/keycloak:bitnami-ee-24` (mutable - triggered by any change in the base image of Keycloak)

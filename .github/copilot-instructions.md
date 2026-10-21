@@ -1,9 +1,8 @@
 # Camunda Keycloak Container Images - Repository Context
 
 ## Repository Purpose
-This repository builds and maintains containerized Keycloak images for Camunda with three main variants:
+This repository builds and maintains containerized Keycloak images for Camunda with two main variants:
 - **Quay-based images** (`quay-*` tags): Official Keycloak from Quay.io with AWS JDBC wrapper and runtime configuration
-- **Bitnami-based images** (`bitnami-*` tags): Based on Bitnami Legacy Keycloak
 - **Enterprise images** (`bitnami-ee-*` tags): Premium enterprise-grade images
 
 ## Key Technical Architecture
@@ -58,7 +57,7 @@ KEYCLOAK_DATABASE_PASSWORD: ""  # Empty for IAM auth
 
 ### Bitnami Legacy Migration
 - Bitnami stopped publishing to Docker Hub (Aug 2025)
-- Using `bitnamilegacy` repository for continued support
+- The public `bitnamilegacy`-based images are no longer built
 - Recommending migration to Quay-based images
 
 ## Common Operations

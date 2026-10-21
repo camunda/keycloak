@@ -99,12 +99,12 @@ jobs:
                   : # if we release a specified version of keycloak, the matrix should only contain it
                   if [[ $GITHUB_REF =~ ^refs/tags/keycloak-([0-9]+)- ]]; then
                     keycloak_version=${BASH_REMATCH[1]}
-                    matrix_json=$(jq -n --arg v "$keycloak_version" '["\($v)-prem", "\($v)-hub", "\($v)-quay", "\($v)-quay-optimized"]')
+                    matrix_json=$(jq -n --arg v "$keycloak_version" '["\($v)-prem", "\($v)-quay", "\($v)-quay-optimized"]')
                   else
                     : # List folders matching the pattern keycloak-*
                     : # Export the list as an output in JSON format
                     versions=$(printf "%s\n" keycloak-*/ | sed 's/\/$//' | sed 's/keycloak-//')
-                    matrix_json=$(echo "$versions" | jq -R -s -c 'split("\n")[:-1] | map("\(.)-prem", "\(.)-hub", "\(.)-quay", "\(.)-quay-optimized") | flatten')
+                    matrix_json=$(echo "$versions" | jq -R -s -c 'split("\n")[:-1] | map("\(.)-prem", "\(.)-quay", "\(.)-quay-optimized") | flatten')
                   fi
 
                   echo "matrix_keycloak_versions=${matrix_json}" | tee -a "$GITHUB_OUTPUT"
@@ -743,13 +743,7 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  if [[ "${BASE_TYPE}" == "hub" ]]; then
-                    echo "publishing_registry=${CONTAINER_REGISTRY_HUB}" | tee -a "$GITHUB_OUTPUT"
-                    echo "publishing_registry_username=${DOCKERHUB_USER}" | tee -a "$GITHUB_OUTPUT"
-                    echo "publishing_registry_password=${DOCKERHUB_PASSWORD}" >> "$GITHUB_OUTPUT"
-                    # Image target for Hub
-                    echo "publishing_image_name=${CONTAINER_IMAGE_NAME_HUB}" | tee -a "$GITHUB_OUTPUT"
-                  elif [[ "${BASE_TYPE}" == "prem" ]]; then
+                  if [[ "${BASE_TYPE}" == "prem" ]]; then
                     echo "publishing_registry=${CONTAINER_REGISTRY_CAMUNDA}" | tee -a "$GITHUB_OUTPUT"
                     echo "publishing_registry_username=${MACHINE_USR}" | tee -a "$GITHUB_OUTPUT"
                     echo "publishing_registry_password=${MACHINE_PWD}" >> "$GITHUB_OUTPUT"
@@ -762,7 +756,7 @@ jobs:
                     # Image target for Hub with quay- prefix in tags
                     echo "publishing_image_name=${CONTAINER_IMAGE_NAME_HUB}" | tee -a "$GITHUB_OUTPUT"
                   else
-                    echo "❌ Error: Unsupported version suffix in '${KEYCLOAK_VERSION}'. Expected '-hub', '-prem', or '-quay'."
+                    echo "❌ Error: Unsupported version suffix in '${KEYCLOAK_VERSION}'. Expected '-prem' or '-quay'."
                     exit 1
                   fi
 
@@ -816,14 +810,11 @@ jobs:
                     else
                       tag_prefix="quay-"
                     fi
-                  elif [[ "${{ steps.version-vars.outputs.base_type }}" == "hub" ]]; then
-                    semver_tag=$(echo "${base_image_tag}"  | awk -F'-' '{print $1}')
-                    tag_prefix="bitnami-"
                   elif [[ "${{ steps.version-vars.outputs.base_type }}" == "prem" ]]; then
                     semver_tag=$(echo "${base_image_tag}"  | awk -F'-' '{print $1}')
                     tag_prefix="bitnami-ee-"
                   else
-                    echo "❌ Error: Unsupported base_type '${{ steps.version-vars.outputs.base_type }}'. Expected 'hub', 'prem', or 'quay'."
+                    echo "❌ Error: Unsupported base_type '${{ steps.version-vars.outputs.base_type }}'. Expected 'prem' or 'quay'."
                     exit 1
                   fi
 
@@ -839,7 +830,7 @@ jobs:
                     source="${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
                     docker buildx imagetools create -t "${target}:${tag_prefix}${base_image_tag}" "${source}"
                     docker buildx imagetools create -t "${target}:${tag_prefix}${semver_tag}" "${source}"
-                    if [[ "${{ steps.version-vars.outputs.base_type }}" == "hub" || "${{ steps.version-vars.outputs.base_type }}" == "prem" ]]; then
+                    if [[ "${{ steps.version-vars.outputs.base_type }}" == "prem" ]]; then
                       docker buildx imagetools create -t "${target}:${base_image_tag}" "${source}"
                       docker buildx imagetools create -t "${target}:${semver_tag}" "${source}"
                     fi
@@ -861,7 +852,7 @@ jobs:
 
                   # For backward compatibility, also publish bitnami images without prefix
                   base_type="${{ steps.version-vars.outputs.base_type }}"
-                  if [[ "$base_type" == "hub" || "$base_type" == "prem" ]]; then
+                  if [[ "$base_type" == "prem" ]]; then
                     docker buildx imagetools create \
                       -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${{ steps.version-vars.outputs.base_version }}" \
                       "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
@@ -885,13 +876,8 @@ jobs:
                     docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:${tag_prefix}latest" \
                       "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
 
-                    # For backward compatibility, also create non-prefixed latest for bitnami hub images
-                    # (prem images are in a different registry so no conflict with quay)
-                    if [[ "${{ steps.version-vars.outputs.base_type }}" == "hub" ]]; then
-                      docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:latest-bitnami" \
-                        "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
-                    elif [[ "${{ steps.version-vars.outputs.base_type }}" == "prem" ]]; then
-                      # Prem images are in separate registry, so they can have their own latest
+                    # Prem images are in separate registry, so they can have their own latest
+                    if [[ "${{ steps.version-vars.outputs.base_type }}" == "prem" ]]; then
                       docker buildx imagetools create -t "${{ steps.set-keycloak-version.outputs.publishing_image_target_name }}:latest" \
                         "${{ steps.set-keycloak-version.outputs.keycloak_image_name }}"
                     fi

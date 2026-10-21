@@ -3,7 +3,7 @@ name: Extract Version Variables
 description: Extract and parse Keycloak version variables from matrix version string
 inputs:
     keycloak_version:
-        description: The Keycloak version string (e.g., "24-hub", "24-quay-optimized")
+        description: The Keycloak version string (e.g., "24-prem", "24-quay-optimized")
         required: true
     include_optimized:
         description: 'Whether to include is_optimized output (default: true)'
@@ -21,7 +21,7 @@ outputs:
         description: Base version number (e.g., "24")
         value: ${{ steps.parse.outputs.base_version }}
     base_type:
-        description: Base type (e.g., "hub", "prem", "quay")
+        description: Base type (e.g., "prem", "quay")
         value: ${{ steps.parse.outputs.base_type }}
     is_optimized:
         description: Whether this is an optimized build (true/false)
@@ -45,7 +45,7 @@ runs:
           run: |
               set -euo pipefail
 
-              version_name="${KEYCLOAK_VERSION}"                  # e.g. "24-hub", "24-prem", "24-quay", or "24-quay-optimized"
+              version_name="${KEYCLOAK_VERSION}"                  # e.g. "24-prem", "24-quay", or "24-quay-optimized"
 
               # Handle quay-optimized case first
               if [[ "$version_name" == *"-quay-optimized" ]]; then
@@ -57,7 +57,7 @@ runs:
 
               # Now extract normally
               base_version="${version_name%-*}"                   # e.g. "24"
-              base_type="${version_name##*-}"                     # e.g. "hub", "prem", "quay"
+              base_type="${version_name##*-}"                     # e.g. "prem", "quay"
 
               # Set image_type for provider check if requested
               if [[ "${INCLUDE_IMAGE_TYPE}" == "true" ]]; then

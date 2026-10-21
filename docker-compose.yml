@@ -22,7 +22,7 @@ services:
             replicas: ${COMPOSE_POSTGRES_DEPLOY_REPLICAS:-1}
 
     keycloak:
-        image: ${COMPOSE_KEYCLOAK_IMAGE:-camunda/keycloak:bitnami-latest}
+        image: ${COMPOSE_KEYCLOAK_IMAGE:-registry.camunda.cloud/keycloak-ee/keycloak:bitnami-ee-latest}
         environment:
             # Bitnami >= 26.3.3
             KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
