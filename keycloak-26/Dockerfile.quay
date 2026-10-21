@@ -65,6 +65,21 @@ ARG AWS_JDBC_WRAPPER_VERSION=4.5.0
 COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/providers/ /opt/keycloak/providers/
 COPY --chown=keycloak:keycloak --from=minimal-build /opt/keycloak/themes/identity /opt/keycloak/themes/identity
 
+# Remove the eMudhra-chained roots from the JVM trust store, matched by subject (aliases differ per image).
+# shortcut: the base ships no working `trust`/awk, so the store is patched in place; drop this step once
+# the pinned base digest ships the fixed ca-certificates (>= 2026.2.92_v9.0.319).
+USER 0
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN keytool -list -v -cacerts -storepass changeit | while IFS= read -r line; do \
+        case "$line" in \
+            "Alias name: "*) alias="${line#Alias name: }" ;; \
+            "Owner: CN=emSign ECC Root CA - G3,"*|"Owner: CN=AAA Certificate Services,"*) \
+                keytool -delete -noprompt -cacerts -storepass changeit -alias "$alias" ;; \
+        esac; \
+    done
+# hadolint ignore=DL3066
+USER keycloak
+
 # Conditionally pre-build Keycloak for optimized startup (optimized mode)
 # This step pre-configures Keycloak with the features and providers we need
 # Set BUILD_OPTIMIZED=false to disable optimized build (useful for runtime configuration flexibility)

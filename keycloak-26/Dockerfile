@@ -88,6 +88,15 @@ USER 0
 RUN chown keycloak:keycloak -R /opt/bitnami/keycloak/ && \
     chmod +x /opt/bitnami/scripts/*.sh
 
+# The Bitnami JDK ships its own frozen cacerts. Rebuild it from the OS store so that each
+# ca-certificates update (e.g. the eMudhra distrust in 20250419~deb12u2) also reaches the JVM.
+# hadolint ignore=DL3008
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates p11-kit && \
+    rm -rf /var/lib/apt/lists/* && \
+    trust extract --overwrite --format=java-cacerts --filter=ca-anchors --purpose=server-auth \
+        /opt/bitnami/java/lib/security/cacerts
+
 # The keycloak user id is not stable across the three bases this image is built from,
 # so it is referenced by name rather than by number. Verified on the pinned digests:
 # keycloak-25's bitnami base has keycloak=1001, while all three 26 bases -- bitnami,
