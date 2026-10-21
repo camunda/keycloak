@@ -323,6 +323,18 @@ jobs:
 
                   python3 ./.github/scripts/build-check/check_providers.py "${{ env.keycloak_image_name }}" "${{ steps.version-vars.outputs.image_type }}"
 
+            - name: Check the JVM trust store has no eMudhra-chained root
+              if: startsWith(matrix.keycloak_version, '26-')
+              run: |
+                  set -euo pipefail
+
+                  owners=$(docker run --rm --entrypoint keytool "${{ env.keycloak_image_name }}" -list -v -cacerts -storepass changeit | grep '^Owner: ')
+                  echo "JVM trust store: $(echo "$owners" | wc -l) certificates"
+                  if echo "$owners" | grep -E '^Owner: CN=(emSign ECC Root CA - G3|AAA Certificate Services),'; then
+                    echo "❌ Distrusted root found in the JVM trust store"
+                    exit 1
+                  fi
+
     test-postgres-integ:
         strategy:
             fail-fast: false # don't propagate failing jobs
