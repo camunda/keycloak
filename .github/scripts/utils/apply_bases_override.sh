@@ -3,7 +3,7 @@
 # Script: apply_bases_override.sh
 # Description: Replaces keycloak-<major>/bases.yml with the YAML given in BASES_OVERRIDE, for an
 #              on-demand build of a specific base image. The override is validated first: only the
-#              known sources (hub, prem, quay) are accepted, each with a plain repository and a
+#              known sources (prem, quay) are accepted, each with a plain repository and a
 #              digest-pinned tag. On success it prints the build matrix (JSON) for the overridden
 #              sources. On failure nothing is written.
 # Usage: BASES_OVERRIDE='<yaml>' apply_bases_override.sh <major>
@@ -30,9 +30,9 @@ sources="$(yq e '.sources | keys | .[]' "$parsed" 2>/dev/null)" || die "bases_ov
 matrix=()
 while IFS= read -r source; do
     case "$source" in
-        hub | prem) matrix+=("${major}-${source}") ;;
+        prem) matrix+=("${major}-${source}") ;;
         quay) matrix+=("${major}-quay" "${major}-quay-optimized") ;;
-        *) die "unknown source '${source}', expected hub, prem or quay" ;;
+        *) die "unknown source '${source}', expected prem or quay" ;;
     esac
     repository="$(yq e ".sources.${source}.image.repository" "$parsed")"
     tag="$(yq e ".sources.${source}.image.tag" "$parsed")"

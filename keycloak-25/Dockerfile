@@ -1,8 +1,8 @@
 # Consume it from the bases.yml
 # docker build \
-#  --build-arg BASE_IMAGE_NAME="$(yq e '.sources.hub.image.repository' bases.yml | cut -d@ -f1)" \
-#  --build-arg BASE_IMAGE_TAG="$(yq e '.sources.hub.image.tag' bases.yml | cut -d@ -f1)" \
-#  --build-arg BASE_IMAGE_DIGEST="$(yq e '.sources.hub.image.tag' bases.yml | cut -d@ -f2)" \
+#  --build-arg BASE_IMAGE_NAME="$(yq e '.sources.prem.image.repository' bases.yml | cut -d@ -f1)" \
+#  --build-arg BASE_IMAGE_TAG="$(yq e '.sources.prem.image.tag' bases.yml | cut -d@ -f1)" \
+#  --build-arg BASE_IMAGE_DIGEST="$(yq e '.sources.prem.image.tag' bases.yml | cut -d@ -f2)" \
 #  -t your-image-name .
 ARG BASE_IMAGE_NAME=""
 ARG BASE_IMAGE_TAG=""
@@ -10,8 +10,8 @@ ARG BASE_IMAGE_DIGEST=""
 
 # ============================================================================
 # DEPRECATED - Bitnami-based Keycloak image
-# The upstream Bitnami base has moved to docker.io/bitnamilegacy and receives no
-# further updates (see README). This variant is frozen: its AWS Advanced JDBC
+# Only the enterprise base (vendor-ee) is built; the public bitnamilegacy base
+# receives no updates and is no longer built (see README). This variant is frozen: its AWS Advanced JDBC
 # Wrapper stays at 2.6.8 (the last 2.x release) and is no longer tracked by Renovate.
 # Use the Quay-based
 # image (Dockerfile.quay) for continued updates, including newer wrapper versions.

@@ -12,12 +12,12 @@ This Docker image provides a generic Keycloak setup based on [bitnami/keycloak](
 
 ## Image Variants
 
-This repository provides three main image variants:
+This repository provides two main image variants:
 
 > **⚠️ Important Note about Bitnami Images**
-> Due to [Bitnami's catalog changes](https://github.com/bitnami/containers/issues/83267), starting August 28th, 2025, new Bitnami container images are no longer published to Docker Hub. This repository now consumes images from the `docker.io/bitnamilegacy` repository for continued support.
+> Due to [Bitnami's catalog changes](https://github.com/bitnami/containers/issues/83267), starting August 28th, 2025, new Bitnami container images are no longer published to Docker Hub. The `docker.io/bitnamilegacy` base receives no updates, so this repository no longer builds the public Bitnami-based images (`docker.io/camunda/keycloak:bitnami-*` and the non-prefixed tags). The tags published before stay available but receive no further updates, including security fixes.
 
-Users should consider migrating to **Quay-based images** which are actively maintained and recommended for production use.
+Users of the public Bitnami-based images must migrate to the **Quay-based images**.
 
 
 ### 🦆 Quay-based Images (`docker.io/camunda/keycloak:quay-*` and `latest`) **[Recommended]**
@@ -32,15 +32,10 @@ Pre-built configuration variant of Quay-based images with optimized startup time
 - **Production-ready**: Includes AWS JDBC wrapper, health/metrics endpoints, and XA transactions disabled
 - **Reduced configuration**: Fewer runtime environment variables needed
 
-### 🐳 Bitnami-based Images (`docker.io/camunda/keycloak:bitnami-*`)
-Based on the [Bitnami Legacy Keycloak image](https://hub.docker.com/r/bitnamilegacy/keycloak), these images use Bitnami's environment variable conventions and are well-suited for users already familiar with Bitnami's ecosystem. They use the `bitnami-` prefix in their tags and are publicly available on Docker Hub. For backward compatibility, these images are also available without the prefix.
-
-**Note**: These images are based on `bitnamilegacy` repository and receive no further updates from Bitnami. Their bundled AWS Advanced JDBC Wrapper is frozen at `2.6.8` and is no longer tracked by Renovate. Migrate to the Quay-based images for continued updates (including newer AWS Advanced JDBC Wrapper versions).
-
 ### 🏢 Bitnami Enterprise Images (`registry.camunda.cloud/keycloak-ee/keycloak:bitnami-ee-*`)
 Premium enterprise-grade images based on Bitnami's enterprise edition. They use the `bitnami-ee-` prefix in their tags and are available on the Camunda enterprise registry for licensed customers. For backward compatibility, these images are also available without the prefix in their own registry.
 
-All variants include the AWS JDBC wrapper and the Camunda Identity theme functionality. Note that the wrapper version differs across variants: the deprecated Bitnami images are frozen at `2.6.8`, while the Quay images track newer releases.
+All variants include the AWS JDBC wrapper and the Camunda Identity theme functionality. Note that the wrapper version differs across variants: the Bitnami Enterprise images are frozen at `2.6.8`, while the Quay images track newer releases.
 
 ## Getting Started
 
@@ -53,16 +48,6 @@ All variants include the AWS JDBC wrapper and the Camunda Identity theme functio
 Make sure you have Docker installed on your machine.
 
 ### ⚙️ Starting the Container
-
-#### Bitnami-based Images
-
-To start the Bitnami-based image, run:
-
-```bash
-docker run --name mykeycloak -p 8443:8443 \
-        -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=change_me \
-        docker.io/camunda/keycloak:bitnami-26
-```
 
 #### Quay-based Images
 
@@ -85,10 +70,7 @@ Keycloak will start in production mode, using secured HTTPS communication and wi
 - ✅ Follow upstream Keycloak conventions
 - ✅ Are actively maintained and supported
 
-**Bitnami-based images** should only be used for:
-- ⚠️ Temporary migration scenarios
-- ⚠️ Development environments (with understanding of limited updates)
-- ⚠️ Specific compatibility requirements with existing Bitnami deployments
+**Public Bitnami-based images** (`camunda/keycloak:bitnami-*` and the non-prefixed tags) are no longer built. Migrate to the Quay-based images.
 
 ### 🏷️ Available Tags on Docker Hub
 
@@ -97,13 +79,10 @@ Explore the available tags for the Camunda Keycloak Docker images on Docker Hub:
 #### Quay-based Images (✅ Recommended)
 - **[camunda/keycloak:quay-*](https://hub.docker.com/r/camunda/keycloak/tags)** - Based on official Keycloak from Quay.io, uses `quay-` prefix
 - Base image tags at [quay.io/keycloak/keycloak](https://quay.io/repository/keycloak/keycloak?tab=tags)
-#### Bitnami-based Images (⚠️ Legacy - Limited Updates)
-- **[camunda/keycloak](https://hub.docker.com/r/camunda/keycloak/tags)** - Based on Bitnami Legacy Keycloak
-- Base image tags at [hub.docker.com/bitnamilegacy/keycloak](https://hub.docker.com/r/bitnamilegacy/keycloak/tags)
 
 
 #### Tag Conventions
-For **Bitnami-based images**:
+For **Bitnami Enterprise images** (with `bitnami-ee-` prefix, also published without the prefix in `registry.camunda.cloud/keycloak-ee/keycloak`):
 - `:<base image version>-<yyyy-mm-dd>-<iteration>`: e.g., `24-2024-03-04-004` 🏷️
 - `:<base image version>`: e.g., `24.0.1-0`
 - `:<major keycloak version>`: e.g., `24`
@@ -266,10 +245,10 @@ To use this image in the Helm chart [bitnami/keycloak](https://artifacthub.io/pa
 
 > **⚠️ Migration Recommendation**: For new deployments, consider using the [Keycloak Operator](https://www.keycloak.org/operator/installation) with Quay-based images instead of Bitnami Helm charts, as they provide better long-term support and follow official Keycloak best practices.
 
-For existing Bitnami deployments, you can use the [bitnami/keycloak](https://artifacthub.io/packages/helm/bitnami/keycloak) Helm chart:
+For existing Bitnami deployments, you can use the Bitnami Enterprise image with the [bitnami/keycloak](https://artifacthub.io/packages/helm/bitnami/keycloak) Helm chart:
 
 ```yaml
-image: docker.io/camunda/keycloak:bitnami-26
+image: registry.camunda.cloud/keycloak-ee/keycloak:bitnami-ee-26
 extraEnvVars:
   - name: KEYCLOAK_EXTRA_ARGS
     value: "--db-driver=software.amazon.jdbc.Driver --transaction-xa-enabled=false --log-level=INFO,software.amazon.jdbc:INFO"
