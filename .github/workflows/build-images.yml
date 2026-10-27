@@ -124,7 +124,8 @@ jobs:
             matrix:
                 keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
         steps:
-            - uses: camunda/infra-global-github-actions/start-build-monitor@7b31f83bbaa79b0fe698d0b71cae0bc9189b7ac9 # main
+            - uses: camunda/infra-global-github-actions/start-build-monitor@ead99f6c9c536f5c47e443929d47e8fcfdb05a81 # start-build-monitor-1.0.1
+              continue-on-error: true
 
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -244,10 +245,6 @@ jobs:
               with:
                   job_name: ${{ github.job }}/${{ matrix.keycloak_version }}
                   build_status: ${{ job.status }}
-                  secret_vault_address: ${{ secrets.VAULT_ADDR }}
-                  secret_vault_jwt_path: ${{ secrets.VAULT_JWT_PATH }}
-                  secret_vault_jwt_role: ${{ secrets.VAULT_JWT_ROLE }}
-                  secret_vault_jwt_audience: ${{ secrets.VAULT_JWT_AUDIENCE }}
 
     ## Read matrix outputs
     read-build-image-output:
@@ -263,6 +260,9 @@ jobs:
 
     test-base-image:
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            id-token: write
         needs:
             - list-keycloak-versions
             - build-image
@@ -272,6 +272,9 @@ jobs:
             matrix:
                 keycloak_version: ${{ fromJson(needs.list-keycloak-versions.outputs.matrix_keycloak_versions) }}
         steps:
+            - uses: camunda/infra-global-github-actions/start-build-monitor@ead99f6c9c536f5c47e443929d47e8fcfdb05a81 # start-build-monitor-1.0.1
+              continue-on-error: true
+
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
               with:
@@ -335,6 +338,14 @@ jobs:
                     exit 1
                   fi
 
+            - name: Observe build status
+              if: always()
+              continue-on-error: true
+              uses: ./.github/actions/observe-build-status
+              with:
+                  job_name: ${{ github.job }}/${{ matrix.keycloak_version }}
+                  build_status: ${{ job.status }}
+
     test-postgres-integ:
         strategy:
             fail-fast: false # don't propagate failing jobs
@@ -376,7 +387,8 @@ jobs:
             - build-image
             - read-build-image-output
         steps:
-            - uses: camunda/infra-global-github-actions/start-build-monitor@7b31f83bbaa79b0fe698d0b71cae0bc9189b7ac9 # main
+            - uses: camunda/infra-global-github-actions/start-build-monitor@ead99f6c9c536f5c47e443929d47e8fcfdb05a81 # start-build-monitor-1.0.1
+              continue-on-error: true
 
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -665,13 +677,12 @@ jobs:
               with:
                   job_name: ${{ github.job }}/${{ matrix.runner_desc.runner }}/${{ matrix.keycloak_version }}
                   build_status: ${{ job.status }}
-                  secret_vault_address: ${{ secrets.VAULT_ADDR }}
-                  secret_vault_jwt_path: ${{ secrets.VAULT_JWT_PATH }}
-                  secret_vault_jwt_role: ${{ secrets.VAULT_JWT_ROLE }}
-                  secret_vault_jwt_audience: ${{ secrets.VAULT_JWT_AUDIENCE }}
 
     publish-image:
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            id-token: write
         # to release all versions of keycloak, tag it using the date (e.g.: `2024-03-10-001`)
         # to release only one version keycloak, tag it using the date prefixed by the version of keycloak (e.g.: `keycloak-23-2024-03-10-001`)
         # an on-demand build (bases_override) is published only when `publish` is checked
@@ -686,6 +697,9 @@ jobs:
             - test-postgres-integ
             - test-base-image
         steps:
+            - uses: camunda/infra-global-github-actions/start-build-monitor@ead99f6c9c536f5c47e443929d47e8fcfdb05a81 # start-build-monitor-1.0.1
+              continue-on-error: true
+
             - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
               with:
@@ -895,13 +909,36 @@ jobs:
                     fi
                   fi
 
+            - name: Observe build status
+              if: always()
+              continue-on-error: true
+              uses: ./.github/actions/observe-build-status
+              with:
+                  job_name: ${{ github.job }}/${{ matrix.keycloak_version }}
+                  build_status: ${{ job.status }}
+
     # Rerun failed jobs running on self-hosted runners in case of network issues or node preemption
     rerun-failed-jobs:
         needs:
             - test-postgres-integ
         if: failure() && fromJSON(github.run_attempt) < 3 && inputs.notify_back_error_message == ''
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            id-token: write
         steps:
+            - uses: camunda/infra-global-github-actions/start-build-monitor@ead99f6c9c536f5c47e443929d47e8fcfdb05a81 # start-build-monitor-1.0.1
+              continue-on-error: true
+
+            - name: Checkout observe-build-status wrapper
+              if: always()
+              continue-on-error: true
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  path: .observe-build-status
+                  sparse-checkout: .github/actions/observe-build-status
+                  persist-credentials: false
+
             - name: Retrigger job
               uses: camunda/infra-global-github-actions/rerun-failed-run@7b31f83bbaa79b0fe698d0b71cae0bc9189b7ac9 # main
               with:
@@ -932,6 +969,13 @@ jobs:
                   vault-role-id: ${{ secrets.VAULT_ROLE_ID }}
                   vault-secret-id: ${{ secrets.VAULT_SECRET_ID }}
                   notify-back-on-error: 'true'
+
+            - name: Observe build status
+              if: always()
+              continue-on-error: true
+              uses: ./.observe-build-status/.github/actions/observe-build-status
+              with:
+                  build_status: ${{ job.status }}
 
     notify-on-failure:
         runs-on: ubuntu-latest
