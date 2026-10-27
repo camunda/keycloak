@@ -923,22 +923,7 @@ jobs:
             - test-postgres-integ
         if: failure() && fromJSON(github.run_attempt) < 3 && inputs.notify_back_error_message == ''
         runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            id-token: write
         steps:
-            - uses: camunda/infra-global-github-actions/start-build-monitor@ead99f6c9c536f5c47e443929d47e8fcfdb05a81 # start-build-monitor-1.0.1
-              continue-on-error: true
-
-            - name: Checkout observe-build-status wrapper
-              if: always()
-              continue-on-error: true
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-              with:
-                  path: .observe-build-status
-                  sparse-checkout: .github/actions/observe-build-status
-                  persist-credentials: false
-
             - name: Retrigger job
               uses: camunda/infra-global-github-actions/rerun-failed-run@7b31f83bbaa79b0fe698d0b71cae0bc9189b7ac9 # main
               with:
@@ -969,13 +954,6 @@ jobs:
                   vault-role-id: ${{ secrets.VAULT_ROLE_ID }}
                   vault-secret-id: ${{ secrets.VAULT_SECRET_ID }}
                   notify-back-on-error: 'true'
-
-            - name: Observe build status
-              if: always()
-              continue-on-error: true
-              uses: ./.observe-build-status/.github/actions/observe-build-status
-              with:
-                  build_status: ${{ job.status }}
 
     notify-on-failure:
         runs-on: ubuntu-latest
