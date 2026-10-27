@@ -1,9 +1,10 @@
 ---
 repos:
     - repo: https://github.com/camunda/infraex-common-config
-      rev: 2.3.11 # use tags until renovate supports sha: https://github.com/renovatebot/renovate/issues/22567
+      rev: 2.4.0 # use tags until renovate supports sha: https://github.com/renovatebot/renovate/issues/22567
       hooks:
           - id: update-action-readmes-docker
+          - id: action-pin-spacing
 
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v6.0.0
