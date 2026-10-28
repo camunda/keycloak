@@ -121,10 +121,16 @@ jobs:
 
     release:
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            id-token: write
         needs:
             - check-changes
         if: needs.check-changes.outputs.has_changes == 'true'
         steps:
+            - uses: camunda/infra-global-github-actions/start-build-monitor@ead99f6c9c536f5c47e443929d47e8fcfdb05a81 # start-build-monitor-1.0.1
+              continue-on-error: true
+
             - name: Generate token for GitHub
               id: generate-github-token
               uses: camunda/infra-global-github-actions/generate-github-app-token-from-vault-secrets@7b31f83bbaa79b0fe698d0b71cae0bc9189b7ac9 # main
@@ -212,6 +218,13 @@ jobs:
                       --generate-notes \
                       --target "${{ github.sha }}"
                   fi
+
+            - name: Observe build status
+              if: always()
+              continue-on-error: true
+              uses: ./.github/actions/observe-build-status
+              with:
+                  build_status: ${{ job.status }}
 
     report-failure:
         name: Report failures

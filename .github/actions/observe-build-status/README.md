@@ -2,7 +2,8 @@
 
 ## Description
 
-Records the build status remotely for analytic purposes.
+Records the build status remotely for analytic purposes using Workload Identity Federation.
+Callers must grant id-token: write and run start-build-monitor first.
 This action isn't meant to be copy-pasted to other repositories.
 Each repository should vendor its own version of this action.
 
@@ -15,10 +16,6 @@ Each repository should vendor its own version of this action.
 | `user_reason` | <p>Optional string (200 chars max) the user can submit to indicate the reason why a build ended with a certain status.</p> | `false` | `""` |
 | `user_description` | <p>Optional string (200 chars max) for the build entry.</p> | `false` | `""` |
 | `job_name` | <p>Optional string, the job whose status is being observed; defaults to $GITHUB_JOB when omitted</p> | `false` | `""` |
-| `secret_vault_address` | <p>Vault server URL</p> | `false` | `""` |
-| `secret_vault_jwt_path` | <p>Vault JWT auth mount path</p> | `false` | `""` |
-| `secret_vault_jwt_role` | <p>Vault JWT auth role</p> | `false` | `""` |
-| `secret_vault_jwt_audience` | <p>Vault JWT GitHub audience</p> | `false` | `""` |
 
 
 ## Runs
@@ -50,30 +47,6 @@ This action is a `composite` action.
 
     job_name:
     # Optional string, the job whose status is being observed; defaults to $GITHUB_JOB when omitted
-    #
-    # Required: false
-    # Default: ""
-
-    secret_vault_address:
-    # Vault server URL
-    #
-    # Required: false
-    # Default: ""
-
-    secret_vault_jwt_path:
-    # Vault JWT auth mount path
-    #
-    # Required: false
-    # Default: ""
-
-    secret_vault_jwt_role:
-    # Vault JWT auth role
-    #
-    # Required: false
-    # Default: ""
-
-    secret_vault_jwt_audience:
-    # Vault JWT GitHub audience
     #
     # Required: false
     # Default: ""
