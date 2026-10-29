@@ -236,6 +236,7 @@ jobs:
         permissions:
             contents: read
             issues: read
+            id-token: write
         needs:
             - check-changes
             - release
