@@ -19,6 +19,6 @@ just 1.59.0
 
 pre-commit 4.7.0
 
-python 3.15.1
+python 3.15.2
 
 yq 4.54.1

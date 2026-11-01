@@ -198,7 +198,7 @@ jobs:
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@7b31f83bbaa79b0fe698d0b71cae0bc9189b7ac9 # main
+              uses: camunda/infra-global-github-actions/build-docker-image@9965a08067900e11c602a050b8821ec92f49544b # main
               with:
                   registry_host: ${{ env.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -251,7 +251,7 @@ jobs:
         runs-on: ubuntu-latest
         needs: [build-image]
         steps:
-            - uses: camunda/infra-global-github-actions/matrix-outputs-read@7b31f83bbaa79b0fe698d0b71cae0bc9189b7ac9 # main
+            - uses: camunda/infra-global-github-actions/matrix-outputs-read@9965a08067900e11c602a050b8821ec92f49544b # main
               id: read
               with:
                   matrix-step-name: build-image
@@ -706,7 +706,7 @@ jobs:
                   persist-credentials: false
 
             - name: Install if required common software tooling
-              uses: camunda/infra-global-github-actions/common-tooling@7b31f83bbaa79b0fe698d0b71cae0bc9189b7ac9 # main
+              uses: camunda/infra-global-github-actions/common-tooling@9965a08067900e11c602a050b8821ec92f49544b # main
               with:
                   node-enabled: false
                   java-enabled: false
@@ -925,7 +925,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Retrigger job
-              uses: camunda/infra-global-github-actions/rerun-failed-run@7b31f83bbaa79b0fe698d0b71cae0bc9189b7ac9 # main
+              uses: camunda/infra-global-github-actions/rerun-failed-run@9965a08067900e11c602a050b8821ec92f49544b # main
               with:
                   # Matched as regexes, joined with `|`, against the logs of the failed steps and
                   # the failure annotations of the run, by
