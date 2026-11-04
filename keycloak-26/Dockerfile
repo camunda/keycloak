@@ -97,6 +97,18 @@ RUN apt-get update && \
     trust extract --overwrite --format=java-cacerts --filter=ca-anchors --purpose=server-auth \
         /opt/bitnami/java/lib/security/cacerts
 
+# CVE-2026-114820 (JDK-8395690) also distrusts emSign Root CA - G1/G2. Debian (Mozilla data) keeps them,
+# so delete them from the JVM store, matched by subject.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN store=/opt/bitnami/java/lib/security/cacerts; \
+    keytool -list -v -keystore "$store" -storepass changeit | while IFS= read -r line; do \
+        case "$line" in \
+            "Alias name: "*) alias="${line#Alias name: }" ;; \
+            "Owner: CN=emSign Root CA - G1,"*|"Owner: CN=emSign Root CA - G2,"*) \
+                keytool -delete -noprompt -keystore "$store" -storepass changeit -alias "$alias" ;; \
+        esac; \
+    done
+
 # The keycloak user id is not stable across the three bases this image is built from,
 # so it is referenced by name rather than by number. Verified on the pinned digests:
 # keycloak-25's bitnami base has keycloak=1001, while all three 26 bases -- bitnami,

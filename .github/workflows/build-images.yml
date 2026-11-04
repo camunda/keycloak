@@ -333,7 +333,7 @@ jobs:
 
                   owners=$(docker run --rm --entrypoint keytool "${{ env.keycloak_image_name }}" -list -v -cacerts -storepass changeit | grep '^Owner: ')
                   echo "JVM trust store: $(echo "$owners" | wc -l) certificates"
-                  if echo "$owners" | grep -E '^Owner: CN=(emSign ECC Root CA - G3|AAA Certificate Services),'; then
+                  if echo "$owners" | grep -E '^Owner: CN=(emSign ECC Root CA - G3|AAA Certificate Services|emSign Root CA - G1|emSign Root CA - G2),'; then
                     echo "❌ Distrusted root found in the JVM trust store"
                     exit 1
                   fi
