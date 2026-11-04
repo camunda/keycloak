@@ -73,7 +73,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN keytool -list -v -cacerts -storepass changeit | while IFS= read -r line; do \
         case "$line" in \
             "Alias name: "*) alias="${line#Alias name: }" ;; \
-            "Owner: CN=emSign ECC Root CA - G3,"*|"Owner: CN=AAA Certificate Services,"*) \
+            "Owner: CN=emSign ECC Root CA - G3,"*|"Owner: CN=AAA Certificate Services,"*|"Owner: CN=emSign Root CA - G1,"*|"Owner: CN=emSign Root CA - G2,"*) \
                 keytool -delete -noprompt -cacerts -storepass changeit -alias "$alias" ;; \
         esac; \
     done
