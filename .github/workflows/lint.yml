@@ -16,7 +16,7 @@ jobs:
         permissions:
             contents: read
             id-token: write
-        uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@e2923304b40dfc031b3f595bcc1445e90c981adb # 3.0.0
+        uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@37bcb8168f0990c0c1786f55a350206289519c2d # 3.0.2
         # Explicit rather than `secrets: inherit`, which hands every secret this repository holds
         # to a workflow whose main job installs and executes third-party pre-commit hook code.
         # These four are all it reads, and only on the auto-fix path.
