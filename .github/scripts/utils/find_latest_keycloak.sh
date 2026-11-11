@@ -5,6 +5,6 @@
 # Usage: find_latest_keycloak.sh
 
 set -Eeuo pipefail
+shopt -s failglob
 
-# shellcheck disable=SC2012 # ls sorts the keycloak-* folder names, tail takes the last
-ls -1d --color=never "$(pwd)"/keycloak-* | tail -n 1 | awk -F'[-/]' '{print $(NF-0)}'
+printf '%s\n' "$(pwd)"/keycloak-* | tail -n 1 | awk -F'[-/]' '{print $(NF-0)}'
