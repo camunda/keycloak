@@ -7,4 +7,4 @@
 set -Eeuo pipefail
 shopt -s failglob
 
-printf '%s\n' "$(pwd)"/keycloak-* | tail -n 1 | awk -F'[-/]' '{print $(NF-0)}'
+printf '%s\n' "$(pwd)"/keycloak-* | sort | tail -n 1 | awk -F'[-/]' '{print $(NF-0)}'
