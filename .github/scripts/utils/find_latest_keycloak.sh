@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 # Script: find_latest_keycloak.sh
@@ -7,4 +6,5 @@
 
 set -Eeuo pipefail
 
+# shellcheck disable=SC2012 # ls sorts the keycloak-* folder names, tail takes the last
 ls -1d --color=never "$(pwd)"/keycloak-* | tail -n 1 | awk -F'[-/]' '{print $(NF-0)}'
