@@ -4,22 +4,25 @@ name: lint
 on:
     workflow_dispatch:
     pull_request:
+    merge_group:
     push:
-        branches: [main]
+        branches:
+            - main
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+    contents: read
 
 jobs:
     lint:
-        # A caller-level block is not additive: the called workflow's jobs get the intersection
-        # of what the caller grants and what they declare. `contents: read` is exactly what
-        # lint-global declares for itself, so this states the grant without narrowing it -- and
-        # stops the job inheriting the repository default, which is write.
         permissions:
             contents: read
             id-token: write
-        uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@37bcb8168f0990c0c1786f55a350206289519c2d # 3.0.2
-        # Explicit rather than `secrets: inherit`, which hands every secret this repository holds
-        # to a workflow whose main job installs and executes third-party pre-commit hook code.
-        # These four are all it reads, and only on the auto-fix path.
+        # Terraform writes this file, so the caller follows main
+        uses: camunda/infraex-common-config/.github/workflows/lint-global.yml@main # zizmor: ignore[unpinned-uses]
         secrets:
             VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
             VAULT_JWT_PATH: ${{ secrets.VAULT_JWT_PATH }}
