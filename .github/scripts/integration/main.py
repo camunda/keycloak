@@ -1,6 +1,6 @@
 import time
-from keycloak import KeycloakAdmin
-from keycloak import KeycloakOpenIDConnection
+
+from keycloak import KeycloakAdmin, KeycloakOpenIDConnection
 from keycloak.exceptions import KeycloakPostError
 
 max_retries = 30

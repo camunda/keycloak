@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-import sys
-import subprocess
 import argparse
+import subprocess
+import sys
 
 # Required AWS components that must be present in all Keycloak images.
 # Each entry is a group of acceptable names; at least one member must be present.
