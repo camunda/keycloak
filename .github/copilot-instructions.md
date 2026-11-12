@@ -88,6 +88,9 @@ KEYCLOAK_JDBC_PARAMS="wrapperPlugins=iam" \
 docker-compose -f docker-compose.quay.yml config
 ```
 
+### Linting
+- `lint / baseline`: the central hook list of camunda/infraex-common-config ([Baseline](https://github.com/camunda/infraex-common-config/blob/main/README.md#baseline)). Local run: clone that repository into `.infraex-common-config`, then run `pre-commit run --config .infraex-common-config/baseline/.pre-commit-config.yaml --all-files`. Do not stage that folder.
+
 ## File Structure Context
 - `keycloak-*/`: Version-specific directories with Dockerfiles and base configurations
 - `bases.yml`: Contains base image references with digest pinning
