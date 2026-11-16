@@ -133,7 +133,7 @@ jobs:
                   persist-credentials: false
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@37bcb8168f0990c0c1786f55a350206289519c2d # 3.0.2
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@6ae8fbc5933ee582ab503ff511eefbe56ed4ca87 # 3.0.7
 
             - name: Apply on-demand bases override
               if: ${{ inputs.bases_override != '' }}
@@ -198,7 +198,7 @@ jobs:
 
             - name: Build image using Camunda docker build
               id: build-image-step
-              uses: camunda/infra-global-github-actions/build-docker-image@f49af13e839834ccc2ed45cdcfcbc03166d41712 # main
+              uses: camunda/infra-global-github-actions/build-docker-image@8be41360dabd3f6955420d8e5d7f230c3f6c27f7 # main
               with:
                   registry_host: ${{ env.CONTAINER_REGISTRY_CI }}
                   registry_username: ${{ steps.secrets.outputs.MACHINE_USR }}
@@ -251,7 +251,7 @@ jobs:
         runs-on: ubuntu-latest
         needs: [build-image]
         steps:
-            - uses: camunda/infra-global-github-actions/matrix-outputs-read@f49af13e839834ccc2ed45cdcfcbc03166d41712 # main
+            - uses: camunda/infra-global-github-actions/matrix-outputs-read@8be41360dabd3f6955420d8e5d7f230c3f6c27f7 # main
               id: read
               with:
                   matrix-step-name: build-image
@@ -281,7 +281,7 @@ jobs:
                   persist-credentials: false
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@37bcb8168f0990c0c1786f55a350206289519c2d # 3.0.2
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@6ae8fbc5933ee582ab503ff511eefbe56ed4ca87 # 3.0.7
 
             - name: Set Keycloak Image Name
               id: set-keycloak-image-name
@@ -407,7 +407,7 @@ jobs:
                   libreadline-dev tk tk-dev
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@37bcb8168f0990c0c1786f55a350206289519c2d # 3.0.2
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@6ae8fbc5933ee582ab503ff511eefbe56ed4ca87 # 3.0.7
 
             - name: Set Keycloak Image Name
               id: set-keycloak-image-name
@@ -706,7 +706,7 @@ jobs:
                   persist-credentials: false
 
             - name: Install if required common software tooling
-              uses: camunda/infra-global-github-actions/common-tooling@f49af13e839834ccc2ed45cdcfcbc03166d41712 # main
+              uses: camunda/infra-global-github-actions/common-tooling@8be41360dabd3f6955420d8e5d7f230c3f6c27f7 # main
               with:
                   node-enabled: false
                   java-enabled: false
@@ -715,7 +715,7 @@ jobs:
                   buildx-install: true
 
             - name: Install asdf tools with cache
-              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@37bcb8168f0990c0c1786f55a350206289519c2d # 3.0.2
+              uses: camunda/infraex-common-config/./.github/actions/asdf-install-tooling@6ae8fbc5933ee582ab503ff511eefbe56ed4ca87 # 3.0.7
 
             - name: Apply on-demand bases override
               if: ${{ inputs.bases_override != '' }}
@@ -925,7 +925,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Retrigger job
-              uses: camunda/infra-global-github-actions/rerun-failed-run@f49af13e839834ccc2ed45cdcfcbc03166d41712 # main
+              uses: camunda/infra-global-github-actions/rerun-failed-run@8be41360dabd3f6955420d8e5d7f230c3f6c27f7 # main
               with:
                   # Matched as regexes, joined with `|`, against the logs of the failed steps and
                   # the failure annotations of the run, by
@@ -975,7 +975,7 @@ jobs:
         steps:
             - name: Notify in Slack in case of failure
               id: slack-notification
-              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@37bcb8168f0990c0c1786f55a350206289519c2d # 3.0.2
+              uses: camunda/infraex-common-config/.github/actions/report-failure-on-slack@6ae8fbc5933ee582ab503ff511eefbe56ed4ca87 # 3.0.7
               with:
                   vault_addr: ${{ secrets.VAULT_ADDR }}
                   vault_jwt_path: ${{ secrets.VAULT_JWT_PATH }}
