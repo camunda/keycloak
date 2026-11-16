@@ -81,6 +81,12 @@ repos:
             entry: .pre-commit-hooks/update_readme_version.sh
             types: [text]
             stages: [pre-commit, pre-push, manual]
+          - id: test-apply-bases-override
+            name: test-apply-bases-override
+            language: script
+            entry: .github/scripts/utils/test_apply_bases_override.sh
+            files: ^\.github/scripts/utils/(test_)?apply_bases_override\.sh$
+            pass_filenames: false
 
     - repo: https://github.com/adrienverge/yamllint
       rev: v1.38.0
