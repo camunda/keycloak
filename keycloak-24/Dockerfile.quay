@@ -18,7 +18,7 @@ FROM docker.io/almalinux:minimal@sha256:dfc4e05e3965fc933f9e256eb2e63a7a7a1eb1a5
 ARG AWS_JDBC_WRAPPER_VERSION=4.6.0
 
 # Install required packages for building
-# hadolint ignore=DL3041
+# hadolint ignore=DL3041 # AlmaLinux serves only the current maven build, so a pinned version fails the build after the next update
 RUN microdnf install -y maven && \
     microdnf clean all
 
@@ -35,11 +35,10 @@ RUN mkdir -p /opt/keycloak/providers /opt/keycloak/themes/identity
 # synchronous apache-client, so these Netty jars are unused and are removed to keep the
 # bundled, version-aligned Netty on the classpath.
 # See https://github.com/camunda/camunda-deployment-references/issues/2809
-# hadolint ignore=DL3003
 RUN curl -fL "https://repo1.maven.org/maven2/software/amazon/jdbc/aws-advanced-jdbc-wrapper/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.pom" \
     -o /tmp/pom.xml && \
     mkdir -p /tmp/.m2 && \
-    cd /tmp && mvn -f pom.xml -Dmaven.repo.local=/tmp/.m2/repository dependency:copy-dependencies -DoutputDirectory=/opt/keycloak/providers && \
+    mvn -f /tmp/pom.xml -Dmaven.repo.local=/tmp/.m2/repository dependency:copy-dependencies -DoutputDirectory=/opt/keycloak/providers && \
     cp /tmp/.m2/repository/software/amazon/*/*/*/*.jar /opt/keycloak/providers/ && \
     rm -f /opt/keycloak/providers/netty-*.jar && \
     curl -fL "https://github.com/aws/aws-advanced-jdbc-wrapper/releases/download/${AWS_JDBC_WRAPPER_VERSION}/aws-advanced-jdbc-wrapper-${AWS_JDBC_WRAPPER_VERSION}.jar" \

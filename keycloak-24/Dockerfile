@@ -21,7 +21,6 @@ ARG BASE_IMAGE_DIGEST=""
 FROM docker.io/camunda/identity:latest@sha256:0a731ff58fb248c7d1bae2cd8e315128100dbbeb547e6a9b4551e8761e43b777 AS identity
 
 # Building builder image
-# hadolint ignore=DL3006
 FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST} AS builder
 
 # AWS Advanced JDBC Wrapper is frozen for this deprecated image (see banner above);
@@ -31,7 +30,7 @@ ARG AWS_JDBC_WRAPPER_VERSION=2.6.8
 USER 0
 
 # install maven (silence alert about version pinning of maven)
-# hadolint ignore=DL3008
+# hadolint ignore=DL3008 # Debian 12 serves only the current maven build, so a pinned version fails the build after the next update
 RUN mkdir /home/keycloak && chown keycloak /home/keycloak && \
     apt-get update && apt-get install maven -y --no-install-recommends
 
