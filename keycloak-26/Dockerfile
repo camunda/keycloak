@@ -67,7 +67,6 @@ RUN /opt/bitnami/keycloak/bin/kc.sh build
 
 ##### FINAL Keycloak IMAGE # ####
 
-# hadolint ignore=DL3006
 FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG}@${BASE_IMAGE_DIGEST}
 # leave the values below unset to use the default value at the top of the file
 ARG BASE_IMAGE_NAME
