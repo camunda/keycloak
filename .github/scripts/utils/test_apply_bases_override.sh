@@ -12,7 +12,7 @@ digest="sha256:$(printf 'a%.0s' {1..64})"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-cp -R "$repo_root"/keycloak-* "$work"/
+cp -R "$repo_root"/.tool-versions "$repo_root"/keycloak-* "$work"/
 cd "$work"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
