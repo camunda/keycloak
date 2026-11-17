@@ -75,21 +75,22 @@ docker build \
 
 ### Testing Locally
 ```bash
-# Test with local PostgreSQL
-COMPOSE_KEYCLOAK_IMAGE=camunda/keycloak:local-quay-26 \
-docker-compose -f docker-compose.quay.yml up -d
+# Check the providers of the image (job test-base-image)
+python3 .github/scripts/build-check/check_providers.py camunda/keycloak:local-quay-26 quay
 
-# Test with IRSA configuration (will fail without real AWS RDS)
-KC_DB_DRIVER=software.amazon.jdbc.Driver \
-KC_TRANSACTION_XA_ENABLED=false \
-KEYCLOAK_DATABASE_HOST=test-rds.aws.example.com \
-KEYCLOAK_DATABASE_NAME=testdb \
-KEYCLOAK_JDBC_PARAMS="wrapperPlugins=iam" \
-docker-compose -f docker-compose.quay.yml config
+# Test with local PostgreSQL (job test-postgres-integ on ubuntu-latest)
+COMPOSE_KEYCLOAK_IMAGE=camunda/keycloak:local-quay-26 \
+KEYCLOAK_JDBC_DRIVER=postgresql \
+KC_DB_DRIVER=org.postgresql.Driver \
+docker compose -f docker-compose.quay.yml up -d
+pip install -r .github/scripts/integration/requirements.txt
+python3 .github/scripts/integration/main.py
 ```
 
 ### Linting
+- `lint / pre-commit`: the hooks of `.pre-commit-config.yaml`, with the `pre-commit` version that `.tool-versions` pins. Local run: `pre-commit run --all-files`.
 - `lint / baseline`: the central hook list of camunda/infraex-common-config ([Baseline](https://github.com/camunda/infraex-common-config/blob/main/README.md#baseline)). Local run: clone that repository into `.infraex-common-config`, then run `pre-commit run --config .infraex-common-config/baseline/.pre-commit-config.yaml --all-files`. Do not stage that folder.
+- `lint / renovate annotations`: each `# renovate:` annotation must extract exactly one dependency ([Version Annotations](https://github.com/camunda/infraex-common-config/blob/main/README.md#version-annotations)). Local run, with that clone and the Python module `json5`: `python3 .infraex-common-config/.github/workflows/scripts/check_renovate_annotations.py --preset .infraex-common-config/default.json5 --root .`.
 
 ## File Structure Context
 - `keycloak-*/`: Version-specific directories with Dockerfiles and base configurations
