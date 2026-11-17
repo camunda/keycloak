@@ -75,7 +75,8 @@ RUN keytool -list -v -cacerts -storepass changeit | while IFS= read -r line; do 
                 keytool -delete -noprompt -cacerts -storepass changeit -alias "$alias" ;; \
         esac; \
     done
-USER 1000
+# hadolint ignore=DL3066 # the upstream image does not guarantee the uid of the keycloak user, so the name is the stable reference
+USER keycloak
 
 # Conditionally pre-build Keycloak for optimized startup (optimized mode)
 # This step pre-configures Keycloak with the features and providers we need
