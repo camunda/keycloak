@@ -88,7 +88,7 @@ RUN chown keycloak:keycloak -R /opt/bitnami/keycloak/ && \
 
 # The Bitnami JDK ships its own frozen cacerts. Rebuild it from the OS store so that each
 # ca-certificates update (e.g. the eMudhra distrust in 20250419~deb12u2) also reaches the JVM.
-# hadolint ignore=DL3008
+# hadolint ignore=DL3008 # each ca-certificates update must reach the JVM, so the package is not pinned
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates p11-kit && \
     rm -rf /var/lib/apt/lists/* && \
