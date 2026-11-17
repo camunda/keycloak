@@ -45,8 +45,8 @@ KEYCLOAK_DATABASE_PASSWORD: ""  # Empty for IAM auth
 ```
 
 ## Testing Strategy
-- **Local PostgreSQL**: Tests basic connectivity with AWS wrapper and with standard postgres driver
-- **AWS Aurora + IRSA**: Tests IAM authentication in AWS environment
+- **Local PostgreSQL**: Tests basic connectivity with the standard postgres driver (`org.postgresql.Driver`)
+- **AWS Aurora + IRSA**: Tests IAM authentication in AWS environment with the AWS wrapper (`software.amazon.jdbc.Driver`)
 - **Multi-architecture**: Builds for linux/amd64 and linux/arm64
 - **Integration Tests**: Python-based Keycloak admin API tests
 
