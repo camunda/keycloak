@@ -75,6 +75,7 @@ docker build \
 
 ### Testing Locally
 ```bash
+# Run from the repository root, not from keycloak-26
 # Check the providers of the image (job test-base-image)
 python3 .github/scripts/build-check/check_providers.py camunda/keycloak:local-quay-26 quay
 
@@ -82,7 +83,7 @@ python3 .github/scripts/build-check/check_providers.py camunda/keycloak:local-qu
 COMPOSE_KEYCLOAK_IMAGE=camunda/keycloak:local-quay-26 \
 KEYCLOAK_JDBC_DRIVER=postgresql \
 KC_DB_DRIVER=org.postgresql.Driver \
-docker compose -f docker-compose.quay.yml up -d
+docker compose -f docker-compose.quay.yml up --wait --wait-timeout 300
 pip install -r .github/scripts/integration/requirements.txt
 python3 .github/scripts/integration/main.py
 ```
