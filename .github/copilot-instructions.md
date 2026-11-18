@@ -79,8 +79,11 @@ docker build \
 # Check the providers of the image (job test-base-image)
 python3 .github/scripts/build-check/check_providers.py camunda/keycloak:local-quay-26 quay
 # Keycloak 26 only: the JVM trust store has no distrusted root (job test-base-image)
-! docker run --rm --entrypoint keytool camunda/keycloak:local-quay-26 -list -v -cacerts -storepass changeit \
-  | grep -E '^Owner: CN=(emSign ECC Root CA - G3|AAA Certificate Services|emSign Root CA - G1|emSign Root CA - G2),'
+(
+  set -euo pipefail
+  owners=$(docker run --rm --entrypoint keytool camunda/keycloak:local-quay-26 -list -v -cacerts -storepass changeit | grep '^Owner: ')
+  ! echo "$owners" | grep -E '^Owner: CN=(emSign ECC Root CA - G3|AAA Certificate Services|emSign Root CA - G1|emSign Root CA - G2),'
+)
 
 # Test with local PostgreSQL (job test-postgres-integ on ubuntu-latest), in the PostgreSQL version of the Keycloak release
 COMPOSE_POSTGRES_IMAGE="docker.io/postgres:$(curl -s https://raw.githubusercontent.com/keycloak/keycloak/release/26.0/pom.xml | awk -F'[><]' '/<postgresql.version>/{print $3}')" \
