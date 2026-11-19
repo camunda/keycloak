@@ -7,7 +7,7 @@ sources:
         # skopeo --override-os linux inspect docker://registry.camunda.cloud/vendor-ee/keycloak:<tag> --raw | jq '.Digest'
         image:
             repository: registry.camunda.cloud/vendor-ee/keycloak
-            tag: 26.8.2-debian-12-r0@sha256:82feee5f6110f8c4bddef1689a0e0aedc15a547d0f09ad47b05e45107681c431
+            tag: 26.8.2-debian-12-r1@sha256:99e4d979498cd6e0930bc165fdd7498bce4a3487f242967f8bb3dff07642bfeb
 
     quay:
         # List of all available images with associated sha:
