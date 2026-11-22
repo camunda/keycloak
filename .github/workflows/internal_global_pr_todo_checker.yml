@@ -26,4 +26,4 @@ jobs:
         # No `secrets: inherit`: todo-checker-global reads no secret at all, it works off
         # GITHUB_TOKEN and the permissions it declares itself. Inheriting would hand it every
         # secret this repository holds for nothing.
-        uses: camunda/infraex-common-config/.github/workflows/todo-checker-global.yml@6ae8fbc5933ee582ab503ff511eefbe56ed4ca87 # 3.0.7
+        uses: camunda/infraex-common-config/.github/workflows/todo-checker-global.yml@d1967bd5edabe99334bbfd594e7552c99813f11b # 3.0.12
