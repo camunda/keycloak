@@ -19,7 +19,7 @@ jobs:
             packages: read # pull the crev image from GHCR
             pull-requests: write # post the review
             statuses: write # crev/escalation status
-        uses: camunda/infraex-common-config/.github/workflows/crev-review-global.yml@d1967bd5edabe99334bbfd594e7552c99813f11b # 3.0.12
+        uses: camunda/infraex-common-config/.github/workflows/crev-review-global.yml@ab4b2b3604eea14f2b41b77bbc9a66bbf2e51df4 # 3.0.13
         with:
             model: deepseek/deepseek-v4.1-flash
             verifier-model: z-ai/glm-5.3
